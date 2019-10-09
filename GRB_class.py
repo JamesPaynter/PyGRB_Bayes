@@ -162,9 +162,9 @@ class BATSETTEList(object):
             self.interpolated_counts = new_counts
             self.interpolated_bins   = new_bins
             print('Finished data interpolation.')
-            np.save(diff_str, difference, allow_pickle = False)
+            np.save(diff_str,  difference, allow_pickle = False)
             np.save(count_str, new_counts, allow_pickle = False)
-            np.save(bin_str,   new_bins, allow_pickle = False)
+            np.save(bin_str,   new_bins,   allow_pickle = False)
         return new_bins, new_counts
 
         # if self.verbose:
