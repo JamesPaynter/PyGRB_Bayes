@@ -177,12 +177,18 @@ class BATSETTEList(object):
 
     def tte_bayesian_blocks(self, channel = 'sum'):
         ''' from astropy import scargle.BB '''
+        string = 'tte_bayesian_blocks'
+        edges_str = 'tte_bayesian_blocks'
         if self.verbose:
             print('Initiating Bayesian Blocks')
         if channel == 'sum':
             counts = np.sum(self.counts, axis = 1)
+            string += '_sum' + '.pdf'
+            edges_str += '_sum'
         else:
-            counts = self.counts[:,channel]
+            counts = self.counts[:,int(channel - 1)]
+            string += '_' + str(channel) + '.pdf'
+            edges_str += '_' + str(channel)
         edges = bayesian_blocks(t = self.bin_left,
                                 ## heaviside flattens array to binary
                                 ## (some bins have 2 photons)
@@ -193,8 +199,9 @@ class BATSETTEList(object):
                                 dt = self.sampling_rate)
         if self.verbose:
             print('Plotting Bayesian Blocks.')
+        np.save(edges_str, edges, allow_pickle = False)
         plt.hist(self.interpolated_counts, bins = edges)
-        plt.show()
+        plt.save(string)
 
 
     def plot_arrival_histogram(self, channel = 'sum', numbins = 100):
@@ -240,3 +247,7 @@ class BATSEGRB(BATSE_BFITS, BATSETTEList):
 GRB = BATSEGRB(3770, 'TTE_list')
 # GRB.bin_and_plot()
 GRB.tte_bayesian_blocks()
+GRB.tte_bayesian_blocks(1)
+GRB.tte_bayesian_blocks(2)
+GRB.tte_bayesian_blocks(3)
+GRB.tte_bayesian_blocks(4)
