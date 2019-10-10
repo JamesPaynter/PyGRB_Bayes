@@ -246,8 +246,4 @@ class BATSEGRB(BATSE_BFITS, BATSETTEList):
 
 GRB = BATSEGRB(3770, 'TTE_list')
 # GRB.bin_and_plot()
-GRB.tte_bayesian_blocks()
-GRB.tte_bayesian_blocks(1)
-GRB.tte_bayesian_blocks(2)
-GRB.tte_bayesian_blocks(3)
-GRB.tte_bayesian_blocks(4)
+# GRB.tte_bayesian_blocks()
