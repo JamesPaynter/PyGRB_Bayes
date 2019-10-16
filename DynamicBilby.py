@@ -33,21 +33,21 @@ class BilbyObject(RateFunctionWrapper):
                         priors_pulse_start  = -10,# IMPORTANT  ##cuts GRB rates
                         priors_pulse_end    =  50,# IMPORTANT ##cuts GRB rates
                         priors_bg_lo        = 1e-1, #
-                        priors_bg_hi        = 3e3,  #
+                        priors_bg_hi        = 1e4,  #
                         priors_td_lo        = 0,    # IMPORTANT
                         priors_td_hi        = 30,   # IMPORTANT
                         priors_mr_lo        = 0.2, #
                         priors_mr_hi        = 1,    #
-                        priors_tau_lo       = 1,
-                        priors_tau_hi       = 1e3,
-                        priors_xi_lo        = 1,
+                        priors_tau_lo       = 1e-3,
+                        priors_tau_hi       = 1e1,
+                        priors_xi_lo        = 1e-2,
                         priors_xi_hi        = 1e3,
                         priors_gamma_min    = 1e-1,
                         priors_gamma_max    = 1e1,
                         priors_nu_min       = 1e-1,
                         priors_nu_max       = 1e1,
-                        priors_scale_min    = 1e3,
-                        priors_scale_max    = 1e8):
+                        priors_scale_min    = 1e2,
+                        priors_scale_max    = 1e9):
 
         super(BilbyObject, self).__init__()
 
@@ -83,26 +83,10 @@ class BilbyObject(RateFunctionWrapper):
         self.verbose = verbose
         self.keys = []
         self.priors = bilbyPriorDict()
-        # self.bilby_kwargs = self.priors.copy()
-        self.make_priors(FRED = 1, FREDx = 0, gaussian = 0, lens = True)
-        self.populate_priors()
-        for key in self.priors:
-            print(key)
-        print(self.priors)
-
 
         self.GRB = BATSEpreprocess.BATSESignal(
             self.trigger, times = (self.start, self.end),
             datatype = self.datatype, bgs = False)
-
-        self.model      = 'two pulse'
-        self.tlabel     = self.get_trigger_label()
-        self.fstring    = self.get_file_string()
-        self.outdir     = self.get_directory_name()
-        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
-        self.one_pulse_lens_main()
-        self.plot_rates(priors = self.priors.copy(),
-                        rate_function = self.one_pulse_lens_rate)
 
     def get_trigger_label(self):
         tlabel = str(self.trigger)
@@ -112,10 +96,13 @@ class BilbyObject(RateFunctionWrapper):
 
     def get_directory_name(self):
         directory = self.tlabel + '_model_comparison_' + str(self.nSamples)
-        if self.model == 'lens_model':
+        if 'lens' in self.model:
             directory += '/lens_model'
         else:
-            directory += '/multipulse_model'
+            directory += '/null_model'
+        directory += '_' + str(self.num_pulses)
+        if 'FREDx' in self.model:
+            directory += '_FREDx'
         return directory
 
     def get_file_string(self):
@@ -136,12 +123,19 @@ class BilbyObject(RateFunctionWrapper):
         file_string += str(self.nSamples) + '_'
         return file_string
 
-    def make_priors(self, FRED, FREDx, gaussian, lens):
+    def make_priors(self, FRED, FREDx, gaussian, lens, constraint):
+        self.keys   = []
+        self.priors = bilbyPriorDict(conversion_function = constraint)
         self.add_background_prior()
         self.add_pulse_priors(FRED, FREDx)
         self.add_gaussian_priors(gaussian)
         if lens:
             self.add_lens_priors()
+        self.populate_priors()
+        self.tlabel     = self.get_trigger_label()
+        self.fstring    = self.get_file_string()
+        self.outdir     = self.get_directory_name()
+        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
 
     def add_background_prior(self):
         list = ['background']
@@ -159,27 +153,30 @@ class BilbyObject(RateFunctionWrapper):
 
     def add_pulse_priors(self, count_FRED, count_FREDx):
         list = ['start', 'scale', 'tau', 'xi']
-        for i in range(1, count_FRED + 1):
-            keys = ['{}_{}'.format(list[k], i) for k in range(len(list))]
-            self.keys += keys
-            for key in keys:
-                self.priors[key] = None
+        if count_FRED is not None:
+            for i in count_FRED:
+                keys = ['{}_{}'.format(list[k], i) for k in range(len(list))]
+                self.keys += keys
+                for key in keys:
+                    self.priors[key] = None
 
-        list.append('gamma')
-        list.append('nu')
-        for i in range(count_FRED + 1, count_FREDx + count_FRED + 1):
-            keys = ['{}_{}'.format(list[k], i) for k in range(len(list))]
-            self.keys += keys
-            for key in keys:
-                self.priors[key] = None
+        if count_FREDx is not None:
+            list.append('gamma')
+            list.append('nu')
+            for i in count_FREDx:
+                keys = ['{}_{}'.format(list[k], i) for k in range(len(list))]
+                self.keys += keys
+                for key in keys:
+                    self.priors[key] = None
 
     def add_gaussian_priors(self, count):
-        list = ['gauss_strt', 'mu', 'sigma']
-        for i in range(1, count + 1):
-            keys = ['{}_{}'.format(list[k], i) for k in range(len(list))]
-            self.keys += keys
-            for key in keys:
-                self.priors[key] = None
+        if count is not None:
+            list = ['start', 'scale', 'sigma']
+            for i in count:
+                keys = ['{}_{}'.format(list[k], i) for k in range(len(list))]
+                self.keys += keys
+                for key in keys:
+                    self.priors[key] = None
 
     def populate_priors(self):
         ''' initialise priors
@@ -251,35 +248,20 @@ class BilbyObject(RateFunctionWrapper):
                 self.priors[key] = bilbyLogUniform(
                     minimum = self.priors_nu_min,
                     maximum = self.priors_nu_max,
-                    latex_label='$\\nu_{}'.format(n), unit = ' ')
-
-
-            elif 'gauss_strt' in key:
-                self.priors[key] = bilbyUniform(
-                    minimum = self.priors_pulse_start,
-                    maximum = self.priors_pulse_end,
-                    latex_label=' ', unit = ' ')
-
-            elif 'mu' in key:
-                print('Mu priors not set')
-                self.priors[key] = bilbyLogUniform(
-                    minimum = self.priors_tau_rise_min,
-                    maximum = self.priors_tau_rise_max,
-                    latex_label= ' ', unit = ' ')
+                    latex_label='$\\nu_{}$'.format(n), unit = ' ')
 
             elif 'sigma' in key:
                 print('Sigma priors not set')
                 self.priors[key] = bilbyLogUniform(
-                    minimum = self.priors_tau_rise_min,
-                    maximum = self.priors_tau_rise_max,
-                    latex_label= ' ', unit = ' ')
+                    minimum = self.priors_xi_lo,
+                    maximum = self.priors_xi_hi,
+                    latex_label= '$\\sigma_{}'.format(n), unit = ' ')
 
             elif 't_0' in key:
                 pass
 
             else:
                 print('Key not found : {}'.format(key))
-
 
     def plot_rates(self, priors, rate_function):
         heights = [5, 1, 1, 1, 1]
@@ -333,31 +315,19 @@ class BilbyObject(RateFunctionWrapper):
         l = self.outdir + '/' + self.fstring + '_rates.pdf'
         fig2.savefig(l)
 
-    @staticmethod
-    def generate_constraints(parameters):
-        for key in kwargs:
-            for i in range(10):
-                if 'start' in key:
-                    n = str(i)
-                    if int(n) > num_pulses:
-                        num_pulses = int(n)
-
-        constraints = ['constraint' + str(i) for i in range(num_pulses)]
-        return parameters
-
-    def one_pulse_lens_main(self):
+    def main(self,  rate_function, channels = np.arange(4)):
         widths     = self.GRB.bin_right - self.GRB.bin_left
         deltat     = np.diff(self.GRB.bin_left)
         evidences  = []
 
-        for i in range(4):
+        for i in channels:
             self.priors['t_0'] = bilbyDeltaFunction(
                 peak = float(self.GRB.bin_left[0]), name = None,
                 latex_label = None, unit = None )
 
             counts       = np.rint(self.GRB.counts[:,i]).astype('uint')
             likelihood   = bilbyPoissonLikelihood(  deltat, counts,
-                                                    self.one_pulse_lens_rate)
+                                                    rate_function)
 
             result_label = self.fstring + '_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
@@ -377,30 +347,33 @@ class BilbyObject(RateFunctionWrapper):
             plotname = self.outdir + '/' + result_label +'_corner.pdf'
             result.plot_corner(filename = plotname)
             evidences.append(result.log_bayes_factor)
+
+        self.plot_rates(priors = self.priors.copy(),
+                        rate_function = rate_function)
         return evidences
 
+    def two_FRED(self):
+        self.model  = 'two FRED pulse'
+        self.num_pulses = 2
+        self.make_priors(FRED = self.num_pulses, FREDx = 0, gaussian = 0, lens = False)
+        self.main(self.two_pulse_rate)
+
+    def one_FREDx_one_Gauss(self):
+        self.model  = 'one FREDx one Gauss'
+        self.num_pulses = 1
+        def constraint(parameters):
+            parameters['constraint2'] = (   parameters['start_2'] -
+                                            parameters['start_1'] )
+            return parameters
+        self.make_priors(   FREDx = [1], FRED = None,
+                            gaussian = [2], lens = False,
+                            constraint = constraint)
+        self.main(self.one_FREDx_one_Gauss_rate)
+
 if __name__ == '__main__':
-    test = BilbyObject(973, times = (-2, 50), datatype = 'discsc', nSamples = 200, sampler = 'Nestle')
-
-#
-#
-# dict = {}
-# dict['arg1'] = 5
-# dict['arg2'] = 13
-#
-#
-# def do_something(**kwargs):
-#     for key in kwargs:
-#         print(key, ' : ', kwargs[key])
-#     def function(kwargs = kwargs):
-#         # print(kwargs)
-#         return kwargs['arg2']
-#     return function
-#
-# func = do_something(**dict)
-# a = func()
-# print(a)
-
+    test = BilbyObject(6630, times = (-2, 30),
+                datatype = 'discsc', nSamples = 401, sampler = 'Nestle')
+    test.one_FREDx_one_Gauss()
 
 
     #

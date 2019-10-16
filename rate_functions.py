@@ -22,16 +22,35 @@ class RateFunctionWrapper(object):
 
     @staticmethod
     def one_FREDx_rate(     delta_t, t_0, background,
-                            start_1, scale_1, rise_1, decay_1, gamma_1, nu_1):
+                            start_1, scale_1, tau_1, xi_1, gamma_1, nu_1):
         times = np.cumsum(delta_t)
         times = np.insert(times, 0, 0.0)
         times+= t_0
         widths = np.hstack((delta_t, delta_t[-1]))
 
-        times1 = (times - start1) * np.heaviside(times - start1, 0) + 1e-12
+        times_1 = (times - start_1) * np.heaviside(times - start_1, 0) + 1e-12
 
-        rates = background + scale1 * np.exp(- np.power(( rise1 / times1), gamma)
-                                             - np.power((times1 / decay1), nu) )
+        rates = background + scale_1 * np.exp(
+                    - np.power(xi_1 * (tau_1 / times_1), gamma_1)
+                    - np.power(xi_1 * (times_1 / tau_1), nu_1)   )
+        return np.multiply(rates, widths)
+
+    @staticmethod
+    def one_FREDx_one_Gauss_rate(     delta_t, t_0, background,
+                            start_1, scale_1, tau_1, xi_1, gamma_1, nu_1,
+                            start_2, scale_2, sigma_2):
+        times = np.cumsum(delta_t)
+        times = np.insert(times, 0, 0.0)
+        times+= t_0
+        widths = np.hstack((delta_t, delta_t[-1]))
+
+        times_1 = (times - start_1) * np.heaviside(times - start_1, 0) + 1e-12
+        times_2 = (times - start_2) * np.heaviside(times - start_2, 0) + 1e-12
+
+        rates = background + scale_1 * np.exp(
+                    - np.power(xi_1 * (tau_1 / times_1), gamma_1)
+                    - np.power(xi_1 * (times_1 / tau_1), nu_1)   )
+        rates+= scale_2 * np.exp(- np.power(times_2 / sigma_2, 2) )
         return np.multiply(rates, widths)
 
     @staticmethod
@@ -46,8 +65,6 @@ class RateFunctionWrapper(object):
         times_1 = ( times - start_1) * np.heaviside(times - start_1, 0) + 1e-12
         times_0 = ((times - start_1 - time_delay) * np.heaviside(
                                 times - start_1 - time_delay, 0) + 1e-12 )
-        # print(times_1)
-        # print(tau_1)
         rates  = scale_1 * np.exp(- xi_1 * ((tau_1 / times_1)
                                         + (times_1 / tau_1)))
 
@@ -59,8 +76,8 @@ class RateFunctionWrapper(object):
 
     @staticmethod
     def two_pulse_rate(     delta_t, t_0, background,
-                            start_1, scale_1, rise_1, decay_1,
-                            start_2, scale_2, rise_2, decay_2):
+                            start_1, scale_1, tau_1, xi_1,
+                            start_2, scale_2, tau_2, xi_2):
 
         times = np.cumsum(delta_t)
         times = np.insert(times, 0, 0.0)
@@ -71,7 +88,7 @@ class RateFunctionWrapper(object):
         times_2 = (times - start_2) * np.heaviside(times - start_2, 0) + 1e-12
 
         rates =( background + scale_1 * np.exp(- xi_1 * ((tau_1 / times_1)
-                                                    + (times_1 / tau_1)) )
-                            + scale_2 * np.exp(- xi_1 * ((tau_2 / times_2)
-                                                    + (times_2 / tau_2)) ) )
+                                                     + (times_1 / tau_1)) )
+                            + scale_2 * np.exp(- xi_2 * ((tau_2 / times_2)
+                                                     + (times_2 / tau_2)) ) )
         return np.multiply(rates, widths)
