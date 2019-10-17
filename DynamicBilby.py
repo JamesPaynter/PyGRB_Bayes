@@ -21,6 +21,15 @@ from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 import BATSEpreprocess
 from rate_functions import RateFunctionWrapper
 
+class EmptyGRB(object):
+    '''EmptyGRB for Bilby signal injections. '''
+
+    def __init__(self):
+        super(EmptyGRB, self).__init__()
+        self.bin_left   = None
+        self.bin_right  = None
+        self.rates      = None
+
 class BilbyObject(RateFunctionWrapper):
     ''' Wrapper object for Bayesian analysis. '''
 
@@ -61,6 +70,7 @@ class BilbyObject(RateFunctionWrapper):
         self.nSamples            = nSamples
         self.model               = model
         self.trigger             = trigger
+
         self.priors_pulse_start  = priors_pulse_start
         self.priors_pulse_end    = priors_pulse_end
         self.priors_bg_lo        = priors_bg_lo
@@ -87,6 +97,7 @@ class BilbyObject(RateFunctionWrapper):
         self.GRB = BATSEpreprocess.BATSESignal(
             self.trigger, times = (self.start, self.end),
             datatype = self.datatype, bgs = False)
+        print(np.shape(self.GRB.rates))
 
     def get_trigger_label(self):
         tlabel = str(self.trigger)
@@ -263,7 +274,7 @@ class BilbyObject(RateFunctionWrapper):
             else:
                 print('Key not found : {}'.format(key))
 
-    def plot_rates(self, priors, rate_function):
+    def plot_rates(self, priors, rate_function, channels):
         heights = [5, 1, 1, 1, 1]
 
         fig2 = plt.figure(constrained_layout=False)
@@ -279,7 +290,7 @@ class BilbyObject(RateFunctionWrapper):
 
         nbins = int( (self.GRB.bin_left[-1] - self.GRB.bin_left[0]) / 0.004 )
         bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
-        for i in range(4):
+        for i in channels:
             result_label = self.fstring + '_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
 
@@ -315,7 +326,42 @@ class BilbyObject(RateFunctionWrapper):
         l = self.outdir + '/' + self.fstring + '_rates.pdf'
         fig2.savefig(l)
 
-    def main(self,  rate_function, channels = np.arange(4)):
+    def inject_signal(self):
+        self.model  = 'one FRED pulse'
+        self.num_pulses = 1
+        self.make_priors(   FRED = [1], FREDx = None,
+                            gaussian = None, lens = True,
+                            constraint = None)
+
+        sample = self.priors.sample()
+        sample['background'] = 2
+        sample['time_delay'] = 17
+        sample['magnification_ratio'] = 0.4
+        sample['start_1'] = 2
+        sample['scale_1'] = 3e5
+        sample['tau_1']   = 2
+        sample['xi_1']    = 3
+
+        print(sample)
+        self.GRB = EmptyGRB()
+        times = np.arange(800) * 0.064 - 2 ## = 51.2
+        dt = np.diff(times)
+        t_0 = -2
+        test_rates = self.one_FRED_lens_rate(dt, t_0, **sample)
+        noise_rates = np.random.poisson(test_rates)
+        plt.plot(times, test_rates)
+        plt.plot(times, noise_rates, c='k', alpha = 0.3)
+        plot_name = self.outdir + '/injected_signal'
+        plt.savefig(plot_name)
+
+        final_rates = np.zeros((len(times),1))
+        final_rates[:,0] = noise_rates
+        self.GRB.bin_left, self.GRB.rates = times, final_rates
+        self.GRB.bin_right = self.GRB.bin_left + 0.064
+        widths = self.GRB.bin_right - self.GRB.bin_left
+        self.GRB.counts = self.GRB.rates * widths
+
+    def main(self,  rate_function, channels = np.arange(4), test = False):
         widths     = self.GRB.bin_right - self.GRB.bin_left
         deltat     = np.diff(self.GRB.bin_left)
         evidences  = []
@@ -324,21 +370,25 @@ class BilbyObject(RateFunctionWrapper):
             self.priors['t_0'] = bilbyDeltaFunction(
                 peak = float(self.GRB.bin_left[0]), name = None,
                 latex_label = None, unit = None )
-
-            counts       = np.rint(self.GRB.counts[:,i]).astype('uint')
+            if not test:
+                counts   = np.rint(self.GRB.counts[:,i]).astype('uint')
+            else:
+                counts   =  np.rint(self.GRB.counts).astype('uint')
             likelihood   = bilbyPoissonLikelihood(  deltat, counts,
                                                     rate_function)
 
             result_label = self.fstring + '_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
-
-            result = bilby.run_sampler( likelihood = likelihood,
-                                        priors     = self.priors,
-                                        sampler    = self.sampler,
-                                        nlive      = self.nSamples,
-                                        outdir     = self.outdir,
-                                        label      = result_label,
-                                        save       = True)
+            try:
+                result = bilby.result.read_in_result(filename=open_result)
+            except:
+                result = bilby.run_sampler( likelihood = likelihood,
+                                            priors     = self.priors,
+                                            sampler    = self.sampler,
+                                            nlive      = self.nSamples,
+                                            outdir     = self.outdir,
+                                            label      = result_label,
+                                            save       = True)
             try:
                 del self.priors['t_0']
             except:
@@ -349,131 +399,35 @@ class BilbyObject(RateFunctionWrapper):
             evidences.append(result.log_bayes_factor)
 
         self.plot_rates(priors = self.priors.copy(),
-                        rate_function = rate_function)
+                        rate_function = rate_function,
+                        channels = channels)
         return evidences
 
-    def two_FRED(self):
+    def two_FRED(self, **kwargs):
         self.model  = 'two FRED pulse'
         self.num_pulses = 2
-        self.make_priors(FRED = self.num_pulses, FREDx = 0, gaussian = 0, lens = False)
-        self.main(self.two_pulse_rate)
-
-    def one_FREDx_one_Gauss(self):
-        self.model  = 'one FREDx one Gauss'
-        self.num_pulses = 1
         def constraint(parameters):
             parameters['constraint2'] = (   parameters['start_2'] -
                                             parameters['start_1'] )
             return parameters
-        self.make_priors(   FREDx = [1], FRED = None,
-                            gaussian = [2], lens = False,
+        self.make_priors(   FRED = [1, 2], FREDx = None,
+                            gaussian = None, lens = False,
                             constraint = constraint)
-        self.main(self.one_FREDx_one_Gauss_rate)
+        for key in self.priors:
+            print(key)
+        evidences = self.main(self.two_FRED_rate, **kwargs)
+
+    def one_FRED_lens(self, **kwargs):
+        self.model  = 'one FRED lens'
+        self.num_pulses = 1
+        self.make_priors(   FRED = [1], FREDx = None,
+                            gaussian = None, lens = True,
+                            constraint = None)
+        evidences = self.main(self.one_FRED_lens_rate, **kwargs)
 
 if __name__ == '__main__':
     test = BilbyObject(6630, times = (-2, 30),
                 datatype = 'discsc', nSamples = 401, sampler = 'Nestle')
-    test.one_FREDx_one_Gauss()
-
-
-    #
-    # @staticmethod
-    # def generate_rates(delta_t, **kwargs):
-    # # def generate_rates(delta_t, t_0, background, start_1, scale_1, rise_1, decay_1):
-    #     print('***************')
-    #     print(kwargs)
-    #     print('***************')
-    #     for key in kwargs:
-    #         print(key)
-    #     times  = np.cumsum(delta_t)
-    #     times  = np.insert(times, 0, 0.0)
-    #     times += t_0
-    #     widths = np.hstack((delta_t, delta_t[-1]))
-    #     starts = []
-    #     for key in kwargs:
-    #         if 'start' in key:
-    #             starts.append(int(re.sub(r"\D", "", key)))
-    #     if len(starts) > 1:
-    #         num_pulses = np.max(np.array(starts))
-    #     else:
-    #         num_pulses = 1
-    #     print(num_pulses)
-    #     rates = np.zeros(len(times))
-    #
-    #     keys  = ['start_', 'scale_', 'rise_', 'decay_', 'times_']
-    #     for i in range(num_pulses):
-    #         keyss = [keys[j] + str(i + 1) for j in range(len(keys))]
-    #         time__      = times - kwargs[keyss[0]]
-    #         time_______ = (time__) * np.heaviside(time__, 0) + 1e-12
-    #         print(time_______)
-    #         print('kwargs[keyss[1]] : ', kwargs[keyss[1]])
-    #         print('kwargs[keyss[2]] : ', kwargs[keyss[2]])
-    #         print('kwargs[keyss[3]] : ', kwargs[keyss[3]])
-    #         rates += kwargs[keyss[1]] * np.exp(
-    #                 - np.power( ( kwargs[keyss[2]] / time_______), 1)
-    #                 - np.power( ( time_______ / kwargs[keyss[3]]), 1))
-    #
-    #     rates += kwargs['background']
-    #     print(rates)
-    #     return np.multiply(rates, widths)
-    #
-    #
-    # @staticmethod
-    # def generate_rates1(delta_t, **outer_kwargs):
-    #     ''' Dynamically generate the rate function based on the
-    #         input parameters.
-    #
-    #         HOW TO GENERATE A STATIC FUNCTION ONCE, THIS FUNCTION WILL CALL
-    #         ALL THESE EXTRA KEYS ETC EVERY FUNCTION CALL
-    #
-    #         IT ONLY NEEDS TO BE DONE ONCE it will be the same after
-    #     '''
-    #     extra_params = {}
-    #     num_pulses   = 0
-    #     starts = []
-    #     for key in outer_kwargs:
-    #         if 'start' in key:
-    #             starts.append(int(re.sub(r"\D", "", key)))
-    #     starts = np.array(starts)
-    #     if len(starts) > 1:
-    #         num_pulses = np.max(starts)
-    #     else:
-    #         num_pulses = 1
-    #     print('The number of pulses is {}'.format(num_pulses))
-    #     list = ['times']
-    #     # for key in extra_params:
-    #     #     print(key)
-    #
-    #     # if 'lens' in model:
-    #     #     pass
-    #     # else:
-    #     #     pass
-    #     def rate_function(delta_t, t_0, **inner_kwargs):
-    #         times  = np.cumsum(delta_t)
-    #         times  = np.insert(times, 0, 0.0)
-    #         times += t_0
-    #         widths = np.hstack((delta_t, delta_t[-1]))
-    #
-    #         kwargs = inner_kwargs or outer_kwargs
-    #         extra_keys   = []
-    #         extra_params = {}
-    #         for i in range(1, num_pulses + 1):
-    #             extra_keys  += ['{}_{}'.format(list[k],i)
-    #                             for k in range(len(list))]
-    #             extra_params = {k: None for k in extra_keys}
-    #         for i in range(1, num_pulses + 1):
-    #             start_key = 'start_' + str(i)
-    #             times_key = 'times_' + str(i)
-    #             extra_params[times_key] =  ((times - kwargs[start_key]
-    #             ) * np.heaviside(times - kwargs[start_key], 0) + 1e-12 )
-    #
-    #         rates = np.zeros(len(times))
-    #         keys  = ['start_', 'scale_', 'rise_', 'decay_', 'times_']
-    #         for i in range(1, num_pulses + 1):
-    #             for j in range(len(keys)):
-    #                 keys[j] += str(i)
-    #             rates += ( kwargs[keys[1]] *
-    #                     np.exp( - (kwargs[keys[2]] / extra_params[keys[4]])
-    #                             - extra_params[keys[4]] / kwargs[keys[3]]) )
-    #         return np.multiply(rates, widths)
-    #     return rate_function
+    test.inject_signal()
+    evidences = test.two_FRED(channels = [0], test = True)
+    evidences = test.one_FRED_lens(channels = [0], test = True)

@@ -54,7 +54,7 @@ class RateFunctionWrapper(object):
         return np.multiply(rates, widths)
 
     @staticmethod
-    def one_pulse_lens_rate(    delta_t, t_0, background,
+    def one_FRED_lens_rate(    delta_t, t_0, background,
                                 time_delay, magnification_ratio,
                                 start_1, scale_1, tau_1, xi_1):
         times = np.cumsum(delta_t)
@@ -75,7 +75,7 @@ class RateFunctionWrapper(object):
 
 
     @staticmethod
-    def two_pulse_rate(     delta_t, t_0, background,
+    def two_FRED_rate(      delta_t, t_0, background,
                             start_1, scale_1, tau_1, xi_1,
                             start_2, scale_2, tau_2, xi_2):
 
