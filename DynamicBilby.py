@@ -91,13 +91,22 @@ class BilbyObject(RateFunctionWrapper):
         self.priors_scale_max    = priors_scale_max
 
         self.verbose = verbose
-        self.keys = []
-        self.priors = bilbyPriorDict()
+        self.keys    = []
+        self.priors  = bilbyPriorDict()
 
         self.GRB = BATSEpreprocess.BATSESignal(
             self.trigger, times = (self.start, self.end),
             datatype = self.datatype, bgs = False)
-        print(np.shape(self.GRB.rates))
+
+        self.num_pulses = 0
+        self.tlabel     = self.get_trigger_label()
+        self.fstring    = self.get_file_string()
+        self.outdir     = self.get_directory_name()
+        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
+        for i in range(4):
+            plt.plot(self.GRB.bin_left, self.GRB.rates[:,i])
+        plot_name = self.outdir + '/injected_signal'
+        plt.savefig(plot_name)
 
     def get_trigger_label(self):
         tlabel = str(self.trigger)
@@ -230,6 +239,11 @@ class BilbyObject(RateFunctionWrapper):
                     minimum = self.priors_pulse_start,
                     maximum = self.priors_pulse_end,
                     latex_label = '$\\Delta_{}$'.format(n), unit = 'sec')
+                if int(n) > 1:
+                    c_key = 'constraint_{}'.format(n)
+                    self.priors[c_key] = bilbyConstraint(
+                                            minimum = 0,
+                                            maximum = self.GRB.bin_right[-1])
 
             elif 'scale' in key:
                 self.priors[key] = bilbyLogUniform(
@@ -288,21 +302,20 @@ class BilbyObject(RateFunctionWrapper):
         f2_ax5 = fig2.add_subplot(spec2[4, 0])
         residual_axes = [f2_ax2, f2_ax3, f2_ax4, f2_ax5]
 
-        nbins = int( (self.GRB.bin_left[-1] - self.GRB.bin_left[0]) / 0.004 )
+        nbins = int( (self.GRB.bin_left[-1] - self.GRB.bin_left[0]) / 0.005 )
         bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
         for i in channels:
             result_label = self.fstring + '_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
 
-            try:
-                result = bilby.result.read_in_result(filename=open_result)
-            except:
-                pass
+            result = bilby.result.read_in_result(filename=open_result)
             MAP = dict()
-            try:
-                del priors['constraint2']
-            except:
-                pass
+            for i in range(1, self.num_pulses + 1):
+                try:
+                    key = 'constraint_' + str(i)
+                    del priors[key]
+                except:
+                    pass
             for parameter in priors:
                 summary = result.get_one_dimensional_median_and_error_bar(parameter)
                 MAP[parameter] = summary.median
@@ -327,7 +340,7 @@ class BilbyObject(RateFunctionWrapper):
         fig2.savefig(l)
 
     def inject_signal(self):
-        self.model  = 'one FRED pulse'
+        self.model  = 'one FRED pulse lens'
         self.num_pulses = 1
         self.make_priors(   FRED = [1], FREDx = None,
                             gaussian = None, lens = True,
@@ -406,13 +419,12 @@ class BilbyObject(RateFunctionWrapper):
     def two_FRED(self, **kwargs):
         self.model  = 'two FRED pulse'
         self.num_pulses = 2
-        def constraint(parameters):
-            parameters['constraint2'] = (   parameters['start_2'] -
-                                            parameters['start_1'] )
+        def two_pulse_constraints(parameters):
+            parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
             return parameters
         self.make_priors(   FRED = [1, 2], FREDx = None,
                             gaussian = None, lens = False,
-                            constraint = constraint)
+                            constraint = two_pulse_constraints)
         for key in self.priors:
             print(key)
         evidences = self.main(self.two_FRED_rate, **kwargs)
@@ -426,8 +438,9 @@ class BilbyObject(RateFunctionWrapper):
         evidences = self.main(self.one_FRED_lens_rate, **kwargs)
 
 if __name__ == '__main__':
-    test = BilbyObject(6630, times = (-2, 30),
-                datatype = 'discsc', nSamples = 401, sampler = 'Nestle')
-    test.inject_signal()
-    evidences = test.two_FRED(channels = [0], test = True)
-    evidences = test.one_FRED_lens(channels = [0], test = True)
+    test = BilbyObject(973, times = (-2, 50),
+                datatype = 'discsc', nSamples = 50, sampler = 'Nestle')
+
+    # test.inject_signal()
+    evidences = test.one_FRED_lens(channels = [0], test = False)
+    evidences = test.two_FRED(channels = [0], test = False)
