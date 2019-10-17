@@ -152,6 +152,7 @@ class BilbyObject(RateFunctionWrapper):
         if lens:
             self.add_lens_priors()
         self.populate_priors()
+        self.priors.conversion_function = constraint
         self.tlabel     = self.get_trigger_label()
         self.fstring    = self.get_file_string()
         self.outdir     = self.get_directory_name()
@@ -242,8 +243,8 @@ class BilbyObject(RateFunctionWrapper):
                 if int(n) > 1:
                     c_key = 'constraint_{}'.format(n)
                     self.priors[c_key] = bilbyConstraint(
-                                            minimum = 0,
-                                            maximum = self.GRB.bin_right[-1])
+                        minimum = 0,
+                        maximum = self.GRB.bin_right[-1])
 
             elif 'scale' in key:
                 self.priors[key] = bilbyLogUniform(
@@ -419,9 +420,6 @@ class BilbyObject(RateFunctionWrapper):
     def two_FRED(self, **kwargs):
         self.model  = 'two FRED pulse'
         self.num_pulses = 2
-        def two_pulse_constraints(parameters):
-            parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
-            return parameters
         self.make_priors(   FRED = [1, 2], FREDx = None,
                             gaussian = None, lens = False,
                             constraint = two_pulse_constraints)
@@ -437,10 +435,15 @@ class BilbyObject(RateFunctionWrapper):
                             constraint = None)
         evidences = self.main(self.one_FRED_lens_rate, **kwargs)
 
+def two_pulse_constraints(parameters):
+    parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
+    return parameters
+
+
 if __name__ == '__main__':
     test = BilbyObject(973, times = (-2, 50),
                 datatype = 'discsc', nSamples = 50, sampler = 'Nestle')
 
     # test.inject_signal()
-    evidences = test.one_FRED_lens(channels = [0], test = False)
     evidences = test.two_FRED(channels = [0], test = False)
+    evidences = test.one_FRED_lens(channels = [0], test = False)
