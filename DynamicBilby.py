@@ -145,7 +145,10 @@ class BilbyObject(RateFunctionWrapper):
 
     def make_priors(self, FRED, FREDx, gaussian, lens, constraint):
         self.keys   = []
-        self.priors = bilbyPriorDict(conversion_function = constraint)
+        if constraint:
+            self.priors = bilbyPriorDict(conversion_function = constraint)
+        else:
+            self.priors = bilbyPriorDict()
         self.add_background_prior()
         self.add_pulse_priors(FRED, FREDx)
         self.add_gaussian_priors(gaussian)
@@ -244,7 +247,7 @@ class BilbyObject(RateFunctionWrapper):
                     c_key = 'constraint_{}'.format(n)
                     self.priors[c_key] = bilbyConstraint(
                         minimum = 0,
-                        maximum = self.GRB.bin_right[-1])
+                        maximum = float(self.GRB.bin_right[-1]) )
 
             elif 'scale' in key:
                 self.priors[key] = bilbyLogUniform(
@@ -306,6 +309,8 @@ class BilbyObject(RateFunctionWrapper):
         nbins = int( (self.GRB.bin_left[-1] - self.GRB.bin_left[0]) / 0.005 )
         bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
         for i in channels:
+            print(channels)
+            print(i)
             result_label = self.fstring + '_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
 
@@ -433,6 +438,8 @@ class BilbyObject(RateFunctionWrapper):
         self.make_priors(   FRED = [1], FREDx = None,
                             gaussian = None, lens = True,
                             constraint = None)
+        for key in self.priors:
+            print(key)
         evidences = self.main(self.one_FRED_lens_rate, **kwargs)
 
 def two_pulse_constraints(parameters):
@@ -442,7 +449,7 @@ def two_pulse_constraints(parameters):
 
 if __name__ == '__main__':
     test = BilbyObject(973, times = (-2, 50),
-                datatype = 'discsc', nSamples = 50, sampler = 'Nestle')
+                datatype = 'discsc', nSamples = 70, sampler = 'Nestle')
 
     # test.inject_signal()
     evidences = test.two_FRED(channels = [0], test = False)
