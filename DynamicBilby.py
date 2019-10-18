@@ -155,7 +155,6 @@ class BilbyObject(RateFunctionWrapper):
         if lens:
             self.add_lens_priors()
         self.populate_priors()
-        self.priors.conversion_function = constraint
         self.tlabel     = self.get_trigger_label()
         self.fstring    = self.get_file_string()
         self.outdir     = self.get_directory_name()
