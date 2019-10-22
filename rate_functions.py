@@ -7,17 +7,17 @@ class RateFunctionWrapper(object):
         super(RateFunctionWrapper, self).__init__()
 
     @staticmethod
-    def one_pulse_rate(     delta_t, t_0, background,
+    def one_FRED_rate(      delta_t, t_0, background,
                             start_1, scale_1, tau_1, xi_1):
         times = np.cumsum(delta_t)
         times = np.insert(times, 0, 0.0)
         times+= t_0
-        widths = np.hstack((delta_t, delta_t[-1]))
+        widths= np.hstack((delta_t, delta_t[-1]))
 
         times_1 = (times - start_1) * np.heaviside(times - start_1, 0) + 1e-12
 
-        rates = background + scale_1 * np.exp(- xi_1 * ((tau_1 / times_1)
-                                                    + (times_1 / tau_1)) )
+        rates = background + scale_1 * np.exp(- xi_1 *
+                                ( (tau_1 / times_1) + (times_1 / tau_1) ) )
         return np.multiply(rates, widths)
 
     @staticmethod
