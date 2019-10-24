@@ -571,31 +571,31 @@ def two_pulse_constraints(parameters):
     return parameters
 
 
-def load_test():
+def load_test(sampler = 'dynesty'):
     test = BilbyObject(trigger = 1, times = (-2, 50), test = True,
-                datatype = 'discsc', nSamples = 205, sampler = 'Nestle',
+                datatype = 'discsc', nSamples = 205, sampler = sampler,
                 priors_pulse_start = -5, priors_pulse_end = 50,
                 priors_td_lo = 0,  priors_td_hi = 30)
     test.inject_signal()
     return test
 
-def load_3770():
+def load_3770(sampler = 'dynesty'):
     test = BilbyObject(3770, times = (-.1, 1),
-                datatype = 'tte', nSamples = 500, sampler = 'Nestle',
+                datatype = 'tte', nSamples = 500, sampler = sampler,
                 priors_pulse_start = -.1, priors_pulse_end = 1.0,
                 priors_td_lo = 0,  priors_td_hi = 1.0)
     return test
 
-def load_973():
+def load_973(sampler = 'dynesty'):
     test = BilbyObject(973, times = (-2, 50),
-                datatype = 'discsc', nSamples = 250, sampler = 'Nestle',
+                datatype = 'discsc', nSamples = 500, sampler = sampler,
                 priors_pulse_start = -5, priors_pulse_end = 50,
                 priors_td_lo = 0,  priors_td_hi = 30)
     return test
 
-def load_2571():
+def load_2571(sampler = 'dynesty'):
     test = BilbyObject(2571, times = (-2, 40),
-                datatype = 'discsc', nSamples = 250, sampler = 'Nestle',
+                datatype = 'discsc', nSamples = 250, sampler = sampler,
                 priors_pulse_start = -5, priors_pulse_end = 30,
                 priors_td_lo = 0,  priors_td_hi = 15)
     return test
@@ -603,9 +603,9 @@ def load_2571():
 
 if __name__ == '__main__':
     # test = load_3770()
-    # test = load_973()
+    test = load_973()
     # test = load_test()
-    test = load_2571()
+    # test = load_2571()
 
     evidences_2_FRED, errors_2_FRED = test.two_FRED(channels = [0], test = False)
     evidences_1_lens, errors_1_lens = test.one_FRED_lens(channels = [0], test = False)
