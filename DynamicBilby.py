@@ -24,8 +24,8 @@ from rate_functions import RateFunctionWrapper
 
 from matplotlib import rc
 
-# rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern']})
-# rc('text', usetex=True)
+rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern']})
+rc('text', usetex=True)
 
 
 
@@ -45,7 +45,7 @@ class BilbyObject(RateFunctionWrapper):
 
     def __init__(self,  trigger, times, datatype,
                         priors_pulse_start, priors_pulse_end,
-                        priors_td_lo, priors_td_hi,
+                        priors_td_lo = None, priors_td_hi = None,
                         test                = False,
                         satellite           = 'BATSE',
                         model               = 'lens_model',
@@ -57,10 +57,10 @@ class BilbyObject(RateFunctionWrapper):
                         priors_bg_hi        = 1e4,  #
                         priors_mr_lo        = 0.2, #
                         priors_mr_hi        = 1,    #
-                        priors_tau_lo       = 1,
+                        priors_tau_lo       = 1e-2,
                         priors_tau_hi       = 1e2,
                         priors_xi_lo        = 1e-2,
-                        priors_xi_hi        = 5,
+                        priors_xi_hi        = 1e1,
                         priors_gamma_min    = 1e-1,
                         priors_gamma_max    = 1e1,
                         priors_nu_min       = 1e-1,
@@ -313,10 +313,10 @@ class BilbyObject(RateFunctionWrapper):
 
     def plot_rates(self, priors, rate_function, channels, save_all = False):
         heights = [5, 1, 1, 1, 1]
-        width = 6.891
-        # width = 3.321
-        height = (6.891 / 1.8) * 2
-        # height = (3.321 / 2) * 4
+        # width = 6.891
+        width = 3.321
+        # height = (6.891 / 1.8) * 2
+        height = (3.321 / 1.8) * 2
         if len(channels) > 1:
             fig2  = plt.figure( figsize = (width, height),
                                 constrained_layout=False)
@@ -357,13 +357,16 @@ class BilbyObject(RateFunctionWrapper):
                 # difference = integrated - rates_fit
                 difference = self.GRB.rates[:,i] - rates_fit
                 # f2_ax1.plot(bins[0:-1], integrated, c = self.colours[i], linewidth=0.5, drawstyle ='steps')
-                f2_ax1.plot(self.GRB.bin_left, self.GRB.rates[:,i], c = self.colours[i], drawstyle='steps-mid', linewidth = 0.5)
+                f2_ax1.plot(self.GRB.bin_left, self.GRB.rates[:,i],
+                c = self.colours[i], drawstyle='steps-mid', linewidth = 0.5)
                 f2_ax1.plot(self.GRB.bin_left, rates_fit, 'k', linewidth = 0.5) #, label = plot_legend)
 
-                residual_axes[i].plot(self.GRB.bin_left, difference, c = self.colours[i], drawstyle='steps-mid', linewidth = 0.5)
+                residual_axes[i].plot(self.GRB.bin_left, difference,
+                c = self.colours[i], drawstyle='steps-mid', linewidth = 0.5)
 
             f2_ax1.set_xticks(())
-            f2_ax1.set_xlim(left = self.GRB.bin_left[0], right = self.GRB.bin_left[-1])
+            f2_ax1.set_xlim(left  = self.GRB.bin_left[0], 
+                            right = self.GRB.bin_left[-1])
             # f2_ax1.legend(fontsize = 11)
             f2_ax2.set_xticks(())
             # f2_ax2.yaxis.set_major_locator(MaxNLocator(nbins=2,prune='lower'))
@@ -371,17 +374,21 @@ class BilbyObject(RateFunctionWrapper):
             print(yticks)
             # f2_ax2.set_yticks([1:])
             f2_ax2.set_yticks(f2_ax2.get_yticks()[2:4])
-            f2_ax2.set_xlim(left = self.GRB.bin_left[0], right = self.GRB.bin_left[-1])
+            f2_ax2.set_xlim(left  = self.GRB.bin_left[0], 
+                            right = self.GRB.bin_left[-1])
             f2_ax3.set_xticks(())
             f2_ax3.set_yticks(f2_ax3.get_yticks()[1:3])
             # f2_ax3.yaxis.set_major_locator(MaxNLocator(nbins=2,prune='lower'))
-            f2_ax3.set_xlim(left = self.GRB.bin_left[0], right = self.GRB.bin_left[-1])
+            f2_ax3.set_xlim(left  = self.GRB.bin_left[0], 
+                            right = self.GRB.bin_left[-1])
             f2_ax4.set_xticks(())
             f2_ax4.set_yticks(f2_ax4.get_yticks()[1:3])
             # f2_ax4.yaxis.set_major_locator(MaxNLocator(nbins=2,prune='lower'))
-            f2_ax4.set_xlim(left = self.GRB.bin_left[0], right = self.GRB.bin_left[-1])
+            f2_ax4.set_xlim(left  = self.GRB.bin_left[0], 
+                            right = self.GRB.bin_left[-1])
             f2_ax5.set_yticks(f2_ax5.get_yticks()[1:3])
-            f2_ax5.set_xlim(left = self.GRB.bin_left[0], right = self.GRB.bin_left[-1])
+            f2_ax5.set_xlim(left  = self.GRB.bin_left[0], 
+                            right = self.GRB.bin_left[-1])
             l = self.outdir + '/' + self.fstring + '_rates.pdf'
             plt.rcParams.update({'font.size': 8})
             fig2.savefig(l)
@@ -483,7 +490,7 @@ class BilbyObject(RateFunctionWrapper):
         self.GRB.rates = self.GRB.counts / widths
 
 
-    def main(self,  rate_function,
+    def main(self,  rate_function, plot = True,
                     channels = np.arange(4),
                     test = False,
                     save_all = False):
@@ -534,14 +541,38 @@ class BilbyObject(RateFunctionWrapper):
             except:
                 pass
 
-            plotname = self.outdir + '/' + result_label +'_corner.pdf'
-            result.plot_corner(filename = plotname)
+            if plot:
+                plotname = self.outdir + '/' + result_label +'_corner.pdf'
+                result.plot_corner(filename = plotname)
             evidences.append(result.log_evidence)
             errors.append(result.log_evidence_err)
 
-        self.plot_rates(priors = self.priors.copy(),
-                        rate_function = rate_function,
-                        channels = channels)
+        if plot:
+            self.plot_rates(priors = self.priors.copy(),
+                            rate_function = rate_function,
+                            channels = channels)
+        return evidences, errors
+
+    def one_FRED(self, **kwargs):
+        self.model  = 'one FRED'
+        self.num_pulses = 1
+        self.make_priors(   FRED = [1], FREDx = None,
+                            gaussian = None, lens = False,
+                            constraint = None)
+        for key in self.priors:
+            print(key)
+        evidences, errors = self.main(self.one_FRED_rate, **kwargs)
+        return evidences, errors
+
+    def one_FREDx(self, **kwargs):
+        self.model  = 'one FREDx'
+        self.num_pulses = 1
+        self.make_priors(   FRED = None, FREDx = [1],
+                            gaussian = None, lens = False,
+                            constraint = None)
+        for key in self.priors:
+            print(key)
+        evidences, errors = self.main(self.one_FREDx_rate, **kwargs)
         return evidences, errors
 
     def two_FRED(self, **kwargs):
@@ -565,6 +596,12 @@ class BilbyObject(RateFunctionWrapper):
             print(key)
         evidences, errors = self.main(self.one_FRED_lens_rate, **kwargs)
         return evidences, errors
+
+
+## end class
+
+
+
 
 def two_pulse_constraints(parameters):
     parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
@@ -600,23 +637,32 @@ def load_2571(sampler = 'dynesty'):
                 priors_td_lo = 0,  priors_td_hi = 15)
     return test
 
+def compare_lens_no_lens_one_pulse(function, channels = [0,1,2,3],
+                                    sampler = 'Nestle', **kwargs):
+
+        GRB = function(sampler, **kwargs)
+        evidences_2_FRED, errors_2_FRED = GRB.two_FRED(
+                                            channels = channels,
+                                            test = False, plot = False)
+        evidences_1_lens, errors_1_lens = GRB.one_FRED_lens(
+                                            channels = channels,
+                                            test = False, plot = False)
+        for i in channels:
+            print('---------------')
+            print('For channel {}'.format(i+1))
+            print('The FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
+                    evidences_2_FRED[i], errors_2_FRED[i]))
+            print('The lensing evidence is : {0:.3f} +/- {1:.3f}'.format(
+                    evidences_1_lens[i], errors_1_lens[i]))
+            BF = evidences_1_lens[i] - evidences_2_FRED[i]
+            if evidences_2_FRED[i] > evidences_1_lens[i]:
+                print('The winner is FRED')
+            else:
+                print('The winner is lensing')
+            print('Bayes Factor: ', BF)
 
 if __name__ == '__main__':
-    # test = load_3770()
-    # test = load_973()
-    # test = load_test()
-    test = load_2571()
-
-    evidences_2_FRED, errors_2_FRED = test.two_FRED(channels = [0,1,2,3], test = False)
-    evidences_1_lens, errors_1_lens = test.one_FRED_lens(channels = [0,1,2,3], test = False)
-    for i in range(1):
-        print('---------------')
-        print('For channel {}'.format(i+1))
-        print('The FRED evidence is : {0:.3f} +/- {1:.3f}'.format(evidences_2_FRED[i], errors_2_FRED[i]))
-        print('The lensing evidence is : {0:.3f} +/- {1:.3f}'.format(evidences_1_lens[i], errors_1_lens[i]))
-        BF = evidences_1_lens[i] - evidences_2_FRED[i]
-        if evidences_2_FRED[i] > evidences_1_lens[i]:
-            print('The winner is FRED')
-        else:
-            print('The winner is lensing')
-        print('Bayes Factor: ', BF)
+    # test = load_3770('Nestle')
+    # test = load_973('Nestle')
+    # test = load_test('Nestle')
+    compare_lens_no_lens_one_pulse(load_2571)

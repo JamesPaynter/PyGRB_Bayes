@@ -37,6 +37,8 @@ class TestPlots(BilbyObject):
             ax.plot(times, rates, xk[i], linewidth = 0.5, label = label[i])
 
         ax.set_xlim(times[0], times[-1])
+        ax.set_xlabel('time (s)')
+        ax.set_ylabel('counts')
         plt.locator_params(axis='y', nbins=4)
         plt.legend(frameon=False, loc = 1)
         plt.rcParams.update({'font.size': 8})
@@ -63,7 +65,7 @@ class TestPlots(BilbyObject):
 
         return times, test_rates
 
-    def inject_4_channel_lens(self):
+    def inject_4_channel_lens(self, bg, st, sc, ta, xi):
         width  = 3.321
         height = 3.321 / 1.6
         fig, ax = plt.subplots(figsize = (width, height), constrained_layout=True)
@@ -79,21 +81,26 @@ class TestPlots(BilbyObject):
         sample['tau_1']                 = ta
         sample['xi_1']                  = xi
 
-        print(sample)
-
         times  = np.arange(800) * 0.064 - 2
         dt     = np.diff(times)
         t_0    = -2
-        test_rates = self.one_FRED_rate(dt, t_0, **sample)
 
-
-        ax.plot(times, rates, linewidth = 0.5, label = label[i])
+        scales = np.array([0.5, 0.7, 1.0, 0.3]) * sample['scale_1']
+        for i in range(4):
+            sample['tau_1'] *= 0.8
+            sample['scale_1'] = scales[i]
+            counts = self.one_FRED_rate(dt, t_0, **sample)
+            noise_counts = np.random.poisson(counts)
+            rates = noise_counts / 0.064
+            ax.plot(times, rates, linewidth = 0.5, c = self.colours[i])
 
         ax.set_xlim(times[0], times[-1])
+        ax.set_xlabel('time (s)')
+        ax.set_ylabel('counts / sec')
         plt.locator_params(axis='y', nbins=4)
-        plt.legend(frameon=False, loc = 1)
+        # plt.legend(frameon=False, loc = 1)
         plt.rcParams.update({'font.size': 8})
-        plt.savefig('TestRates.pdf')
+        plt.savefig('Test4ChannelRates.pdf')
 
 
 
@@ -129,7 +136,7 @@ class TestRecovery(BilbyObject):
         CI90   = np.zeros(length)
         CI99   = np.zeros(length)
         ## with bg as given 1e6 is a good minimum Scale
-        scales = np.geomspace(1e8, 1e9, length)[::-1]
+        scales = np.geomspace(1e7, 1e8, length)[::-1]
         for k in range(length):
             sample['scale_1'] = scales[k]
             test_rates = self.one_FRED_lens_rate(dt, t_0, **sample)
@@ -170,14 +177,18 @@ class TestRecovery(BilbyObject):
             break
 
 
-if __name__ == '__main__':
-    # test = TestPlots(trigger = 973, times = (-2,50), datatype = 'discsc',
-    #                     sampler = 'Nestle')
-    #
-    # test.generate_figure_pulses()
-    test = TestRecovery(trigger = 000, times = (-2, 50), test = True,
-                datatype = 'discsc', nSamples = 100, sampler = 'Nestle',
-                priors_pulse_start = -5, priors_pulse_end = 50,
-                priors_td_lo = 0,  priors_td_hi = 30)
 
-    test.get_recovery_plot(10)
+if __name__ == '__main__':
+    test = TestPlots(trigger = 973, times = (-2,50), datatype = 'discsc',
+                        sampler = 'Nestle',
+                        priors_pulse_start = -5, priors_pulse_end = 50,)
+
+    test.generate_figure_pulses()
+    test.inject_4_channel_lens( bg = 3000,  st = 2, sc = 3e4,
+                                ta = 6, xi = 0.6)
+    # test = TestRecovery(trigger = 000, times = (-2, 50), test = True,
+    #             datatype = 'discsc', nSamples = 100, sampler = 'Nestle',
+    #             priors_pulse_start = -5, priors_pulse_end = 50,
+    #             priors_td_lo = 0,  priors_td_hi = 30)
+    #
+    # test.get_recovery_plot(10)
