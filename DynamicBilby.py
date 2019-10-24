@@ -58,9 +58,9 @@ class BilbyObject(RateFunctionWrapper):
                         priors_mr_lo        = 0.2, #
                         priors_mr_hi        = 1,    #
                         priors_tau_lo       = 1,
-                        priors_tau_hi       = 1e3,
+                        priors_tau_hi       = 1e2,
                         priors_xi_lo        = 1e-2,
-                        priors_xi_hi        = 1e3,
+                        priors_xi_hi        = 5,
                         priors_gamma_min    = 1e-1,
                         priors_gamma_max    = 1e1,
                         priors_nu_min       = 1e-1,
@@ -311,7 +311,7 @@ class BilbyObject(RateFunctionWrapper):
             else:
                 print('Key not found : {}'.format(key))
 
-    def plot_rates(self, priors, rate_function, channels):
+    def plot_rates(self, priors, rate_function, channels, save_all = False):
         heights = [5, 1, 1, 1, 1]
         width = 6.891
         # width = 3.321
@@ -334,6 +334,9 @@ class BilbyObject(RateFunctionWrapper):
             bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
             for i in channels:
                 result_label = self.fstring + '_result_' + self.clabels[i]
+                if save_all:
+                    self.counter += 1
+                    result_label += str(self.counter)
                 open_result  = self.outdir + '/' + result_label +'_result.json'
 
                 result = bilby.result.read_in_result(filename=open_result)
@@ -380,6 +383,7 @@ class BilbyObject(RateFunctionWrapper):
             f2_ax5.set_yticks(f2_ax5.get_yticks()[1:3])
             f2_ax5.set_xlim(left = self.GRB.bin_left[0], right = self.GRB.bin_left[-1])
             l = self.outdir + '/' + self.fstring + '_rates.pdf'
+            plt.rcParams.update({'font.size': 8})
             fig2.savefig(l)
 
         else:
@@ -397,6 +401,9 @@ class BilbyObject(RateFunctionWrapper):
             f2_ax2 = fig2.add_subplot(spec2[1, 0])
             for i in channels:
                 result_label = self.fstring + '_result_' + self.clabels[i]
+                if save_all:
+                    self.counter += 1
+                    result_label += str(self.counter)
                 open_result  = self.outdir + '/' + result_label +'_result.json'
 
                 result = bilby.result.read_in_result(filename=open_result)
@@ -448,34 +455,38 @@ class BilbyObject(RateFunctionWrapper):
                             gaussian = None, lens = True,
                             constraint = None)
 
+        bin_size = 0.064
         sample = self.priors.sample()
-        sample['background'] = 3000 / 0.064
+        sample['background'] = 3000 #* bin_size
+        sample['start_1']    = 2
+        sample['scale_1']    = 3e5  #* bin_size
+        sample['tau_1']      = 2
+        sample['xi_1']       = 3 ## (do i need to / 0.064 ???)
         sample['time_delay'] = 17
         sample['magnification_ratio'] = 0.4
-        sample['start_1'] = 2
-        sample['scale_1'] = 3e7
-        sample['tau_1']   = 2
-        sample['xi_1']    = 3
 
-        times = np.arange(800) * 0.064 - 2 ## = 51.2
-        dt = np.diff(times)
-        t_0 = -2
-        test_rates = self.one_FRED_lens_rate(dt, t_0, **sample)
-        noise_rates = np.random.poisson(test_rates)
-        plt.plot(times, test_rates)
-        plt.plot(times, noise_rates, c='k', alpha = 0.3)
+        t_0     = -2
+        times   = np.arange(800) * bin_size - t_0 ## = 51.2
+        dt      = np.diff(times)
+        test_counts  = self.one_FRED_lens_rate(dt, t_0, **sample)
+        noise_counts = np.random.poisson(test_counts)
+        plt.plot(times, test_counts)
+        plt.plot(times, noise_counts, c='k', alpha = 0.3)
         plot_name = self.outdir + '/injected_signal'
         plt.savefig(plot_name)
 
-        final_rates = np.zeros((len(times),1))
-        final_rates[:,0] = noise_rates
-        self.GRB.bin_left, self.GRB.rates = times, final_rates
-        self.GRB.bin_right = self.GRB.bin_left + 0.064
+        final_counts = np.zeros((len(times),1))
+        final_counts[:,0] = noise_counts
+        self.GRB.bin_left, self.GRB.counts = times, final_counts
+        self.GRB.bin_right = self.GRB.bin_left + bin_size
         widths = self.GRB.bin_right - self.GRB.bin_left
-        self.GRB.counts = self.GRB.rates * widths
+        self.GRB.rates = self.GRB.counts / widths
 
 
-    def main(self,  rate_function, channels = np.arange(4), test = False):
+    def main(self,  rate_function,
+                    channels = np.arange(4),
+                    test = False,
+                    save_all = False):
         widths     = self.GRB.bin_right - self.GRB.bin_left
         deltat     = np.diff(self.GRB.bin_left)
         evidences  = []
@@ -492,7 +503,11 @@ class BilbyObject(RateFunctionWrapper):
             likelihood   = bilbyPoissonLikelihood(  deltat, counts,
                                                     rate_function)
 
+
             result_label = self.fstring + '_result_' + self.clabels[i]
+            if save_all:
+                self.counter += 1
+                result_label += str(self.counter)
             open_result  = self.outdir + '/' + result_label +'_result.json'
 
             if not test:
@@ -568,7 +583,7 @@ if __name__ == '__main__':
     #             priors_td_lo = 0,  priors_td_hi = 30)
 
     test = BilbyObject(trigger = 1, times = (-2, 50), test = True,
-                datatype = 'discsc', nSamples = 201, sampler = 'Nestle',
+                datatype = 'discsc', nSamples = 205, sampler = 'Nestle',
                 priors_pulse_start = -5, priors_pulse_end = 50,
                 priors_td_lo = 0,  priors_td_hi = 30)
     test.inject_signal()

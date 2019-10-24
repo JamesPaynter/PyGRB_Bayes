@@ -123,14 +123,15 @@ class TestRecovery(BilbyObject):
         dt = np.diff(times)
         t_0 = -2
 
+        self.counter = 0
         length = 10
         modes  = np.zeros(length)
         CI90   = np.zeros(length)
         CI99   = np.zeros(length)
-        ## with bg as given 1e6 is a good minimumS
-        scales = np.geomspace(1e8, 1e9, length)
-        for scale in scales:
-            sample['scale_1'] = scale
+        ## with bg as given 1e6 is a good minimum Scale
+        scales = np.geomspace(1e8, 1e9, length)[::-1]
+        for k in range(length):
+            sample['scale_1'] = scales[k]
             test_rates = self.one_FRED_lens_rate(dt, t_0, **sample)
             BayesFactors = np.zeros(nSamples)
             for j in range(nSamples):
@@ -146,8 +147,10 @@ class TestRecovery(BilbyObject):
                 self.GRB.bin_right = self.GRB.bin_left + 0.064
                 widths = self.GRB.bin_right - self.GRB.bin_left
                 self.GRB.counts = self.GRB.rates * widths
-                evidences_2_FRED, errors_2_FRED = test.two_FRED(channels = [0], test = True)
-                evidences_1_lens, errors_1_lens = test.one_FRED_lens(channels = [0], test = True)
+                evidences_2_FRED, errors_2_FRED = test.two_FRED(
+                                channels = [0], test = True, save_all = True)
+                evidences_1_lens, errors_1_lens = test.one_FRED_lens(
+                                channels = [0], test = True, save_all = True)
                 BayesFactors[j] = (evidences_1_lens[0] - evidences_2_FRED[0])
 
             [modeBayesFactor], _ = scipy.stats.mode(BayesFactors, axis=None)
@@ -156,7 +159,9 @@ class TestRecovery(BilbyObject):
             print(modeBayesFactor)
             print(CI90BayesFactor)
             print(CI99BayesFactor)
-
+            modes[k] = modeBayesFactor
+            CI90[k]  = CI90BayesFactor
+            CI99[k]  = CI99BayesFactor
             plt.close('all')
             fig, ax = plt.subplots()
             ax.hist(BayesFactors)
