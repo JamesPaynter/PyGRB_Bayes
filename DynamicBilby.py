@@ -24,8 +24,8 @@ from rate_functions import RateFunctionWrapper
 
 from matplotlib import rc
 
-rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern']})
-rc('text', usetex=True)
+# rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern']})
+# rc('text', usetex=True)
 
 
 
@@ -595,7 +595,7 @@ def load_973(sampler = 'dynesty'):
 
 def load_2571(sampler = 'dynesty'):
     test = BilbyObject(2571, times = (-2, 40),
-                datatype = 'discsc', nSamples = 250, sampler = sampler,
+                datatype = 'discsc', nSamples = 500, sampler = sampler,
                 priors_pulse_start = -5, priors_pulse_end = 30,
                 priors_td_lo = 0,  priors_td_hi = 15)
     return test
@@ -603,12 +603,12 @@ def load_2571(sampler = 'dynesty'):
 
 if __name__ == '__main__':
     # test = load_3770()
-    test = load_973()
+    # test = load_973()
     # test = load_test()
-    # test = load_2571()
+    test = load_2571()
 
-    evidences_2_FRED, errors_2_FRED = test.two_FRED(channels = [0], test = False)
-    evidences_1_lens, errors_1_lens = test.one_FRED_lens(channels = [0], test = False)
+    evidences_2_FRED, errors_2_FRED = test.two_FRED(channels = [0,1,2,3], test = False)
+    evidences_1_lens, errors_1_lens = test.one_FRED_lens(channels = [0,1,2,3], test = False)
     for i in range(1):
         print('---------------')
         print('For channel {}'.format(i+1))

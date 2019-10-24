@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+#SBATCH --job-name=dynamo2
+#SBATCH --output=dynamo2.txt
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --time=48:00:00
+## SBATCH --mem-per-cpu=4000
+
+#%Module module load Python/3.7.3-spartan_gcc-8.1.0
+#%Module module load pymc3/3.7-Python-3.7.3-spartan_gcc-8.1.0
+#%Module module load numpy/1.16.4-Python-3.7.3-spartan_gcc-8.1.0
+#%Module module load matplotlib/3.1.1-Python-3.7.3-spartan_gcc-8.1.0
+#%Module module load dynesty/1.0.0-Python-3.7.3-spartan_gcc-8.1.0
+#%Module module load pymultinest/2.7-Python-3.7.3-spartan_gcc-8.1.0
+#%Module module load corner/2.0.1-Python-3.7.3-spartan_gcc-8.1.0
+#%Module module load bilby/0.5.6-Python-3.7.3-spartan_gcc-8.1.0
+#%Module module load astropy/3.2.1-Python-3.7.3-spartan_gcc-8.1.0
+
+python DynamicBilby.py
