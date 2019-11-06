@@ -54,70 +54,56 @@ class ResidualAnalysis(BilbyObject):
             axes.plot(  self.GRB.bin_left, residuals + i * 2e3,
                         color = self.colours[i])
 
-            self.res_sine_gaussian_priors()
-            self.residual_priors['t_0'] = bilbyDeltaFunction(
-                                peak = float(self.GRB.bin_left[0]), name = None,
-                                latex_label = None, unit = None )
-            residual_counts = np.rint(residuals * 0.064).astype('uint')
-            likelihood   = bilbyGaussianLikelihood(  deltat, residual_counts,
+            residual_priors             = bilbyPriorDict()
+            residual_priors['sg_A']     = bilbyLogUniform(1e-2,1e2,latex_label='$A$')
+            residual_priors['sg_t_0']   = bilbyUniform(0,10,latex_label='$t_0$')
+            residual_priors['sg_tau']   = bilbyLogUniform(1e-2,1e2,latex_label='$\\tau$')
+            residual_priors['sg_omega'] = bilbyLogUniform(1e-1,1e2,latex_label='$\\omega$')
+            residual_priors['sg_phi']   = bilbyUniform(-np.pi,np.pi,latex_label='$\\phi$')
+            ## if sigma gets too large then it will just fit a straight line
+            ## easier to be wrong in sigma than fit 5 params
+            residual_priors['sigma']    = bilbyUniform(0, 1e2, 'sigma')
+
+            # residual_counts = np.rint(residuals * 0.064).astype('uint')
+
+            likelihood   = bilbyGaussianLikelihood( self.GRB.bin_left, residuals,
                                                     self.sine_gaussian)
+
             result_label = self.fstring + '_res_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
             result = bilby.run_sampler( likelihood = likelihood,
-                                        priors     = self.residual_priors,
+                                        priors     = residual_priors,
                                         sampler    = self.sampler,
-                                        nlive      = self.nSamples,
+                                        nlive      = 200,
                                         outdir     = self.outdir,
                                         label      = result_label,
                                         save       = True)
-            try:
-                del self.residual_priors['t_0']
-            except:
-                pass
 
             plotname = self.outdir + '/' + result_label +'_res_corner.pdf'
             result.plot_corner(filename = plotname)
-            priors = self.residual_priors.copy()
             MAP2 = dict()
-            for j in range(1, self.num_pulses + 1):
-                try:
-                    key = 'constraint_' + str(j)
-                    del priors[key]
-                except:
-                    pass
-            for parameter in priors:
+            for parameter in residual_priors:
                 summary = result.get_one_dimensional_median_and_error_bar(
                                 parameter)
                 MAP2[parameter] = summary.median
-            res_fit  = (self.sine_gaussian(np.diff(self.GRB.bin_left),
+            try:
+                del MAP2['sigma']
+            except:
+                pass
+            res_fit  = (self.sine_gaussian(self.GRB.bin_left,
                                         **MAP2) / widths)
-
-
-
             axes.plot(  self.GRB.bin_left, res_fit + i * 2e3, 'k-')
 
         axes.set_xlim(  left = self.GRB.bin_left[0],
                         right = self.GRB.bin_left[-1])
-
-        figure.savefig('residuals.pdf')
+        plotname = self.outdir + '/' + self.fstring +'_residuals.pdf'
+        figure.savefig(plotname)
 
 
     @staticmethod
-    def sine_gaussian( dt, t_0, sg_A, sg_t_0, sg_tau, sg_omega, sg_phi):
-        times = np.cumsum(dt)
-        times = np.insert(times, 0, 0.0)
-        times+= t_0
-        return (sg_A * np.exp(- np.square((times - sg_t_0) / sg_tau)) *
-                np.cos(sg_omega + sg_phi) )
-
-    def res_sine_gaussian_priors(self):
-        self.residual_priors = bilbyPriorDict()
-        self.residual_priors['sg_A']     = bilbyLogUniform(1e-2,1e2,latex_label='$A$')
-        self.residual_priors['sg_t_0']   = bilbyUniform(3,7,latex_label='$t_0$')
-        self.residual_priors['sg_tau']   = bilbyLogUniform(1e-2,1e2,latex_label='$\\tau$')
-        self.residual_priors['sg_omega'] = bilbyLogUniform(1e-2,1e2,latex_label='$\\omega$')
-        self.residual_priors['sigma'] = bilbyLogUniform(1e-2,1e2,latex_label='$\\sigma$')
-        self.residual_priors['sg_phi']   = bilbyUniform(0,2*np.pi,latex_label='$\\phi$')
+    def sine_gaussian( time, sg_A, sg_t_0, sg_tau, sg_omega, sg_phi):
+        return (sg_A * np.exp(- np.square((time - sg_t_0) / sg_tau)) *
+                np.cos(sg_omega * time + sg_phi) )
 
 
 if __name__ == '__main__':

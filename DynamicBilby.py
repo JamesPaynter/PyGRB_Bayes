@@ -332,6 +332,8 @@ class BilbyObject(RateFunctionWrapper):
 
             nbins = int( (self.GRB.bin_left[-1] - self.GRB.bin_left[0]) / 0.005 )
             bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
+
+            offsets = [0, 4000, 8000, -3000]
             for i in channels:
                 result_label = self.fstring + '_result_' + self.clabels[i]
                 if save_all:
@@ -357,15 +359,16 @@ class BilbyObject(RateFunctionWrapper):
                 # difference = integrated - rates_fit
                 difference = self.GRB.rates[:,i] - rates_fit
                 # f2_ax1.plot(bins[0:-1], integrated, c = self.colours[i], linewidth=0.5, drawstyle ='steps')
-                f2_ax1.plot(self.GRB.bin_left, self.GRB.rates[:,i],
-                c = self.colours[i], drawstyle='steps-mid', linewidth = 0.5)
-                f2_ax1.plot(self.GRB.bin_left, rates_fit, 'k', linewidth = 0.5) #, label = plot_legend)
+                f2_ax1.plot(self.GRB.bin_left, self.GRB.rates[:,i] + offsets[i],
+                c = self.colours[i], drawstyle='steps-mid', linewidth = 0.4)
+                f2_ax1.plot(self.GRB.bin_left, rates_fit + offsets[i],
+                'k', linewidth = 0.4) #, label = plot_legend)
 
                 residual_axes[i].plot(self.GRB.bin_left, difference,
-                c = self.colours[i], drawstyle='steps-mid', linewidth = 0.5)
+                c = self.colours[i], drawstyle='steps-mid', linewidth = 0.4)
 
             f2_ax1.set_xticks(())
-            f2_ax1.set_xlim(left  = self.GRB.bin_left[0], 
+            f2_ax1.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
             # f2_ax1.legend(fontsize = 11)
             f2_ax2.set_xticks(())
@@ -374,23 +377,27 @@ class BilbyObject(RateFunctionWrapper):
             print(yticks)
             # f2_ax2.set_yticks([1:])
             f2_ax2.set_yticks(f2_ax2.get_yticks()[2:4])
-            f2_ax2.set_xlim(left  = self.GRB.bin_left[0], 
+            f2_ax2.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
             f2_ax3.set_xticks(())
             f2_ax3.set_yticks(f2_ax3.get_yticks()[1:3])
             # f2_ax3.yaxis.set_major_locator(MaxNLocator(nbins=2,prune='lower'))
-            f2_ax3.set_xlim(left  = self.GRB.bin_left[0], 
+            f2_ax3.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
             f2_ax4.set_xticks(())
             f2_ax4.set_yticks(f2_ax4.get_yticks()[1:3])
             # f2_ax4.yaxis.set_major_locator(MaxNLocator(nbins=2,prune='lower'))
-            f2_ax4.set_xlim(left  = self.GRB.bin_left[0], 
+            f2_ax4.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
             f2_ax5.set_yticks(f2_ax5.get_yticks()[1:3])
-            f2_ax5.set_xlim(left  = self.GRB.bin_left[0], 
+            f2_ax5.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
             l = self.outdir + '/' + self.fstring + '_rates.pdf'
             plt.rcParams.update({'font.size': 8})
+            plt.subplots_adjust(left=0.15)
+            plt.subplots_adjust(right=0.98)
+            plt.subplots_adjust(top=0.98)
+            plt.subplots_adjust(bottom=0.1)
             fig2.savefig(l)
 
         else:
@@ -618,7 +625,7 @@ def load_test(sampler = 'dynesty'):
 
 def load_3770(sampler = 'dynesty'):
     test = BilbyObject(3770, times = (-.1, 1),
-                datatype = 'tte', nSamples = 500, sampler = sampler,
+                datatype = 'tte', nSamples = 5000, sampler = sampler,
                 priors_pulse_start = -.1, priors_pulse_end = 1.0,
                 priors_td_lo = 0,  priors_td_hi = 1.0)
     return test
@@ -641,12 +648,12 @@ def compare_lens_no_lens_one_pulse(function, channels = [0,1,2,3],
                                     sampler = 'Nestle', **kwargs):
 
         GRB = function(sampler, **kwargs)
-        evidences_2_FRED, errors_2_FRED = GRB.two_FRED(
-                                            channels = channels,
-                                            test = False, plot = False)
+        # evidences_2_FRED, errors_2_FRED = GRB.two_FRED(
+        #                                     channels = channels,
+        #                                     test = False, plot = True)
         evidences_1_lens, errors_1_lens = GRB.one_FRED_lens(
                                             channels = channels,
-                                            test = False, plot = False)
+                                            test = False, plot = True)
         for i in channels:
             print('---------------')
             print('For channel {}'.format(i+1))
@@ -665,4 +672,4 @@ if __name__ == '__main__':
     # test = load_3770('Nestle')
     # test = load_973('Nestle')
     # test = load_test('Nestle')
-    compare_lens_no_lens_one_pulse(load_2571)
+    compare_lens_no_lens_one_pulse(load_3770)

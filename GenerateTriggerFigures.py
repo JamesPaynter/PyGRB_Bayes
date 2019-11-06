@@ -58,12 +58,12 @@ class TriggerPlots(BilbyObject):
 
 
 if __name__ == '__main__':
-    Trigger = TriggerPlots(trigger = 3770, times = (-.1, 1),
-                model = 'lens_model_1',
-                range = [(0.37, 0.42), (0.50, 1.5)],
-                datatype = 'tte', nSamples = 1000, sampler = 'nestle',
-                priors_pulse_start = -.1, priors_pulse_end = 1.0,
-                priors_td_lo = 0,  priors_td_hi = 1.0)
+    # Trigger = TriggerPlots(trigger = 3770, times = (-.1, 1),
+    #             model = 'lens_model_1',
+    #             range = [(0.37, 0.42), (0.50, 1.5)],
+    #             datatype = 'tte', nSamples = 500, sampler = 'nestle',
+    #             priors_pulse_start = -.1, priors_pulse_end = 1.0,
+    #             priors_td_lo = 0,  priors_td_hi = 1.0)
 
     # Trigger = TriggerPlots(trigger = 973, times = (-2, 50),
     #             model = 'lens_model_1',
@@ -72,13 +72,13 @@ if __name__ == '__main__':
     #             priors_pulse_start = -5, priors_pulse_end = 50,
     #             priors_td_lo = 0,  priors_td_hi = 1.0)
 
-    # Trigger = TriggerPlots(trigger = 2571, times = (-10, 40),
-    #             model = 'lens_model_1',
-    #             range = [(7.75, 8.03), (0.6, .9)],
-    #             # range = [(7.75, 8.45), (0.27, .9)],
-    #             datatype = 'discsc', nSamples = 500, sampler = 'nestle',
-    #             priors_pulse_start = -5, priors_pulse_end = 50,
-    #             priors_td_lo = 0,  priors_td_hi = 1.0)
+    Trigger = TriggerPlots(trigger = 2571, times = (-10, 40),
+                model = 'lens_model_1',
+                # range = [(7.75, 8.03), (0.6, .9)],
+                range = [(7.75, 8.45), (0.27, .9)],
+                datatype = 'discsc', nSamples = 500, sampler = 'nestle',
+                priors_pulse_start = -5, priors_pulse_end = 50,
+                priors_td_lo = 0,  priors_td_hi = 1.0)
 
     Trigger.num_pulses = 1
     Trigger.tlabel     = Trigger.get_trigger_label()

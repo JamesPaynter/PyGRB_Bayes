@@ -104,6 +104,15 @@ def compare_FRED_FREDx(function, sampler = 'Nestle', **kwargs):
 
 
 if __name__ == '__main__':
+
+    compare_FRED_FREDx(load_8099, nSamples = 500)
+
+
+
+
+
+
+
     # test = load_3770('Nestle')
     # test = load_973('Nestle')
     # test = load_test('Nestle')
@@ -124,5 +133,3 @@ if __name__ == '__main__':
     #     else:
     #         print('The winner is lensing')
     #     print('Bayes Factor: ', BF)
-
-    compare_FRED_FREDx(load_8099, nSamples = 500)
