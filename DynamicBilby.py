@@ -320,25 +320,28 @@ class BilbyObject(RateFunctionWrapper):
         if len(channels) > 1:
             fig2  = plt.figure( figsize = (width, height),
                                 constrained_layout=False)
-            spec2 = gridspec.GridSpec(ncols=1, nrows=5, figure=fig2,
+            # ax    = fig2.add_subplot(111, frameon=False)
+            spec2 = gridspec.GridSpec(ncols=2, nrows=5, figure=fig2,
                                     height_ratios=heights,
+                                    width_ratios=[0.05, 0.95],
                                     hspace=0.0, wspace=0.0)
-            f2_ax1 = fig2.add_subplot(spec2[0, 0])
-            f2_ax2 = fig2.add_subplot(spec2[1, 0])
-            f2_ax3 = fig2.add_subplot(spec2[2, 0])
-            f2_ax4 = fig2.add_subplot(spec2[3, 0])
-            f2_ax5 = fig2.add_subplot(spec2[4, 0])
+            ax     = fig2.add_subplot(spec2[0:5, 0], frameon=False)
+            f2_ax1 = fig2.add_subplot(spec2[0, 1])
+            f2_ax2 = fig2.add_subplot(spec2[1, 1])
+            f2_ax3 = fig2.add_subplot(spec2[2, 1])
+            f2_ax4 = fig2.add_subplot(spec2[3, 1])
+            f2_ax5 = fig2.add_subplot(spec2[4, 1])
             residual_axes = [f2_ax2, f2_ax3, f2_ax4, f2_ax5]
 
             nbins = int( (self.GRB.bin_left[-1] - self.GRB.bin_left[0]) / 0.005 )
             bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
 
             offsets = [0, 4000, 8000, -3000]
+            # offsets = [0, 0, 0, -0]
             for i in channels:
                 result_label = self.fstring + '_result_' + self.clabels[i]
                 if save_all:
-                    self.counter += 1
-                    result_label += str(self.counter)
+                    result_label += '_' + str(self.counter)
                 open_result  = self.outdir + '/' + result_label +'_result.json'
 
                 result = bilby.result.read_in_result(filename=open_result)
@@ -354,7 +357,7 @@ class BilbyObject(RateFunctionWrapper):
                     MAP[parameter] = summary.median
                 MAP['t_0'] = float(self.GRB.bin_left[0])
                 widths = self.GRB.bin_right - self.GRB.bin_left
-                rates_fit  = rate_function(np.diff(self.GRB.bin_left), **MAP) / widths
+                rates_fit  = rate_function(np.diff(self.GRB.bin_left), **MAP) #/ widths
                 # integrated, binss = np.histogram(self.GRB.channels[i], bins=bins)
                 # difference = integrated - rates_fit
                 difference = self.GRB.rates[:,i] - rates_fit
@@ -392,12 +395,26 @@ class BilbyObject(RateFunctionWrapper):
             f2_ax5.set_yticks(f2_ax5.get_yticks()[1:3])
             f2_ax5.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
-            l = self.outdir + '/' + self.fstring + '_rates.pdf'
+
+            # f2_ax1.set_ylabel('counts / sec')
+            f2_ax5.set_xlabel('time since trigger (s)')
+            # fig2.add_subplot(111, frameon=False)
+            # hide tick and tick label of the big axis
+            ax.tick_params(labelcolor='none', top=False,
+                            bottom=False, left=False, right=False)
+            # plt.xlabel("common X")
+            ax.set_ylabel('counts / sec')
+
             plt.rcParams.update({'font.size': 8})
-            plt.subplots_adjust(left=0.15)
+            plt.subplots_adjust(left=0.16)
             plt.subplots_adjust(right=0.98)
             plt.subplots_adjust(top=0.98)
-            plt.subplots_adjust(bottom=0.1)
+            plt.subplots_adjust(bottom=0.13)
+            f2_ax1.ticklabel_format(axis = 'y', style = 'sci')
+            l = self.outdir + '/' + self.fstring + '_rates.pdf'
+            if save_all:
+                l = (self.outdir + '/' + self.fstring + '_rates_' + '_' +
+                        str(self.counter) + '.pdf' )
             fig2.savefig(l)
 
         else:
@@ -416,8 +433,7 @@ class BilbyObject(RateFunctionWrapper):
             for i in channels:
                 result_label = self.fstring + '_result_' + self.clabels[i]
                 if save_all:
-                    self.counter += 1
-                    result_label += str(self.counter)
+                    result_label += '_' + str(self.counter)
                 open_result  = self.outdir + '/' + result_label +'_result.json'
 
                 result = bilby.result.read_in_result(filename=open_result)
@@ -453,17 +469,25 @@ class BilbyObject(RateFunctionWrapper):
             f2_ax1.set_xticks(())
             yticks = f2_ax2.get_yticks()
             f2_ax2.set_yticks(f2_ax2.get_yticks()[2:4])
-
+            f2_ax1.ticklabel_format(axis = 'y', style = 'sci')
+            f2_ax1.set_ylabel('counts / sec')
+            f2_ax2.set_xlabel('time since trigger (s)')
             plt.locator_params(axis='y', nbins=4)
             # plt.legend(frameon=False, loc = 1)
             plt.rcParams.update({'font.size': 8})
-
+            plt.subplots_adjust(left=0.18)
+            plt.subplots_adjust(right=0.98)
+            plt.subplots_adjust(top=0.98)
+            plt.subplots_adjust(bottom=0.22)
             l = self.outdir + '/' + self.fstring + '_rates.pdf'
+            if save_all:
+                l = (self.outdir + '/' + self.fstring + '_rates' + '_' +
+                        str(self.counter) + '.pdf' )
             fig2.savefig(l)
 
 
-    def inject_signal(self):
-        self.model  = 'one FRED pulse lens'
+    def inject_signal(self, scale_override = None):
+        self.model      = 'one FRED pulse lens'
         self.num_pulses = 1
         self.make_priors(   FRED = [1], FREDx = None,
                             gaussian = None, lens = True,
@@ -471,11 +495,13 @@ class BilbyObject(RateFunctionWrapper):
 
         bin_size = 0.064
         sample = self.priors.sample()
-        sample['background'] = 3000 #* bin_size
+        sample['background'] = 100 * bin_size
         sample['start_1']    = 2
-        sample['scale_1']    = 3e5  #* bin_size
+        sample['scale_1']    = 3e4 * bin_size
+        if scale_override:
+            sample['scale_1']= scale_override * bin_size
         sample['tau_1']      = 2
-        sample['xi_1']       = 3 ## (do i need to / 0.064 ???)
+        sample['xi_1']       = 3 ## (do I need to / 0.064 ???)
         sample['time_delay'] = 17
         sample['magnification_ratio'] = 0.4
 
@@ -484,10 +510,6 @@ class BilbyObject(RateFunctionWrapper):
         dt      = np.diff(times)
         test_counts  = self.one_FRED_lens_rate(dt, t_0, **sample)
         noise_counts = np.random.poisson(test_counts)
-        plt.plot(times, test_counts)
-        plt.plot(times, noise_counts, c='k', alpha = 0.3)
-        plot_name = self.outdir + '/injected_signal'
-        plt.savefig(plot_name)
 
         final_counts = np.zeros((len(times),1))
         final_counts[:,0] = noise_counts
@@ -495,6 +517,19 @@ class BilbyObject(RateFunctionWrapper):
         self.GRB.bin_right = self.GRB.bin_left + bin_size
         widths = self.GRB.bin_right - self.GRB.bin_left
         self.GRB.rates = self.GRB.counts / widths
+
+        fig, ax = plt.subplots()
+        ax.plot(times, test_counts / bin_size, c='r', alpha = 1)
+        ax.plot(times, self.GRB.rates, c='k', alpha = 0.2, drawstyle = 'steps',
+                linewidth = 0.6)
+        ax.set_xlabel('Time since trigger (s)')
+        ax.set_ylabel('counts / sec')
+        plot_name = self.outdir + '/injected_signal.pdf'
+        if scale_override:
+            plot_name = (self.outdir + '/injected_signal_' +
+                            str(self.counter + 1) + '.pdf' )
+            print(plot_name)
+        fig.savefig(plot_name)
 
 
     def main(self,  rate_function, plot = True,
@@ -510,18 +545,16 @@ class BilbyObject(RateFunctionWrapper):
             self.priors['t_0'] = bilbyDeltaFunction(
                 peak = float(self.GRB.bin_left[0]), name = None,
                 latex_label = None, unit = None )
-            if not test:
-                counts   = np.rint(self.GRB.counts[:,i]).astype('uint')
-            else:
-                counts   =  np.rint(self.GRB.counts).astype('uint')
-            likelihood   = bilbyPoissonLikelihood(  deltat, counts,
-                                                    rate_function)
-
-
+            # if not test:
+            counts = np.rint(self.GRB.counts[:,i]).astype('uint')
+            # else:
+                # counts   = np.rint(self.GRB.counts).astype('uint')
+            likelihood = bilbyPoissonLikelihood(deltat, counts, rate_function)
             result_label = self.fstring + '_result_' + self.clabels[i]
+
             if save_all:
                 self.counter += 1
-                result_label += str(self.counter)
+                result_label += '_' + str(self.counter)
             open_result  = self.outdir + '/' + result_label +'_result.json'
 
             if not test:
@@ -557,7 +590,7 @@ class BilbyObject(RateFunctionWrapper):
         if plot:
             self.plot_rates(priors = self.priors.copy(),
                             rate_function = rate_function,
-                            channels = channels)
+                            channels = channels, save_all = save_all)
         return evidences, errors
 
     def one_FRED(self, **kwargs):
@@ -604,7 +637,9 @@ class BilbyObject(RateFunctionWrapper):
         evidences, errors = self.main(self.one_FRED_lens_rate, **kwargs)
         return evidences, errors
 
-
+def two_pulse_constraints(parameters):
+    parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
+    return parameters
 ## end class
 if __name__ == '__main__':
     print('Call functions from Call Centre or similar ')

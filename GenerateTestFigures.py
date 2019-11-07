@@ -118,7 +118,7 @@ class TestRecovery(BilbyObject):
                             constraint = None)
         sample = self.priors.sample()
 
-        sample['background'] = 3000 / 0.064
+        sample['background'] = 3000
         sample['time_delay'] = 17
         sample['magnification_ratio'] = 0.4
         sample['start_1']    = 2
@@ -126,9 +126,10 @@ class TestRecovery(BilbyObject):
         sample['tau_1']      = 2
         sample['xi_1']       = 3
 
-        times = np.arange(800) * 0.064 - 2 ## = 51.2
-        dt = np.diff(times)
         t_0 = -2
+        bin_size = 0.064
+        times = np.arange(800) * bin_size + t_0 ## = 51.2
+        dt = np.diff(times)
 
         self.counter = 0
         length = 10
@@ -139,21 +140,21 @@ class TestRecovery(BilbyObject):
         scales = np.geomspace(1e7, 1e8, length)[::-1]
         for k in range(length):
             sample['scale_1'] = scales[k]
-            test_rates = self.one_FRED_lens_rate(dt, t_0, **sample)
+            test_counts  = self.one_FRED_lens_rate(dt, t_0, **sample)
             BayesFactors = np.zeros(nSamples)
             for j in range(nSamples):
-                noise_rates = np.random.poisson(test_rates)
-                final_rates = np.zeros((len(times),1))
-                final_rates[:,0] = noise_rates
+                noise_counts = np.random.poisson(test_counts)
+                final_counts = np.zeros((len(times),1))
+                final_counts[:,0] = noise_counts
                 if j == 0:
-                    plt.plot(times, test_rates)
-                    plt.plot(times, noise_rates, c='k', alpha = 0.3)
+                    plt.plot(times, test_counts)
+                    plt.plot(times, noise_counts, c='k', alpha = 0.3)
                     plot_name = self.outdir + '/injected_signal'
                     plt.savefig(plot_name)
-                self.GRB.bin_left, self.GRB.rates = times, final_rates
-                self.GRB.bin_right = self.GRB.bin_left + 0.064
+                self.GRB.bin_left, self.GRB.counts = times, final_counts
+                self.GRB.bin_right = self.GRB.bin_left + bin_size
                 widths = self.GRB.bin_right - self.GRB.bin_left
-                self.GRB.counts = self.GRB.rates * widths
+                self.GRB.rates = self.GRB.counts / widths
                 evidences_2_FRED, errors_2_FRED = test.two_FRED(
                                 channels = [0], test = True, save_all = True)
                 evidences_1_lens, errors_1_lens = test.one_FRED_lens(
@@ -166,6 +167,7 @@ class TestRecovery(BilbyObject):
             print(modeBayesFactor)
             print(CI90BayesFactor)
             print(CI99BayesFactor)
+
             modes[k] = modeBayesFactor
             CI90[k]  = CI90BayesFactor
             CI99[k]  = CI99BayesFactor
@@ -179,16 +181,16 @@ class TestRecovery(BilbyObject):
 
 
 if __name__ == '__main__':
-    test = TestPlots(trigger = 973, times = (-2,50), datatype = 'discsc',
-                        sampler = 'Nestle',
-                        priors_pulse_start = -5, priors_pulse_end = 50,)
-
-    test.generate_figure_pulses()
-    test.inject_4_channel_lens( bg = 3000,  st = 2, sc = 3e4,
-                                ta = 6, xi = 0.6)
-    # test = TestRecovery(trigger = 000, times = (-2, 50), test = True,
-    #             datatype = 'discsc', nSamples = 100, sampler = 'Nestle',
-    #             priors_pulse_start = -5, priors_pulse_end = 50,
-    #             priors_td_lo = 0,  priors_td_hi = 30)
+    # test = TestPlots(trigger = 973, times = (-2,50), datatype = 'discsc',
+    #                     sampler = 'Nestle',
+    #                     priors_pulse_start = -5, priors_pulse_end = 50,)
     #
-    # test.get_recovery_plot(10)
+    # test.generate_figure_pulses()
+    # test.inject_4_channel_lens( bg = 3000,  st = 2, sc = 3e4,
+    #                             ta = 6, xi = 0.6)
+    test = TestRecovery(trigger = 000, times = (-2, 50), test = True,
+                datatype = 'discsc', nSamples = 100, sampler = 'Nestle',
+                priors_pulse_start = -5, priors_pulse_end = 50,
+                priors_td_lo = 0,  priors_td_hi = 30)
+
+    test.get_recovery_plot(10)
