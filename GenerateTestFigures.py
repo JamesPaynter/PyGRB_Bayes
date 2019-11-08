@@ -23,22 +23,22 @@ class TestPlots(BilbyObject):
         height = 3.321 / 1.6
         fig, ax = plt.subplots(figsize = (width, height), constrained_layout=True)
 
-        sc = [1e4, 3.32e4, 2.18e12]
+        # sc = [1e4, 3.32e4, 2.18e12]
         xi = [0.4, 1, 10]
         ta = [2, 2, 2, 2]
         xk = ['k:', 'k--', 'k', 'k:']
-        label = [   '$\\xi = 0.4$,  $A=10^{4}$',
-                    '$\\xi = 1.0$,  $A=3.32\\times 10^{4}$ ',
-                    '$\\xi = 10$,   $A=2.18\\times 10^{12}$ ']
+        label = [   '$\\xi = 0.4$',
+                    '$\\xi = 1.0$',
+                    '$\\xi = 10$']
         for i in range(3):
             times, rates = self.inject_FRED_signal( bg = 50,  st = 2,
-                                                    sc = sc[i], ta = ta[i],
+                                                    sc = 1e3, ta = ta[i],
                                                     xi = xi[i])
             ax.plot(times, rates, xk[i], linewidth = 0.5, label = label[i])
 
         ax.set_xlim(times[0], times[-1])
         ax.set_xlabel('time (s)')
-        ax.set_ylabel('counts')
+        ax.set_ylabel('counts / sec')
         plt.locator_params(axis='y', nbins=4)
         plt.legend(frameon=False, loc = 1)
         plt.rcParams.update({'font.size': 8})
@@ -181,16 +181,16 @@ class TestRecovery(BilbyObject):
 
 
 if __name__ == '__main__':
-    # test = TestPlots(trigger = 973, times = (-2,50), datatype = 'discsc',
-    #                     sampler = 'Nestle',
-    #                     priors_pulse_start = -5, priors_pulse_end = 50,)
-    #
-    # test.generate_figure_pulses()
+    test = TestPlots(trigger = 973, times = (-2,50), datatype = 'discsc',
+                        sampler = 'Nestle',
+                        priors_pulse_start = -5, priors_pulse_end = 50,)
+
+    test.generate_figure_pulses()
     # test.inject_4_channel_lens( bg = 3000,  st = 2, sc = 3e4,
     #                             ta = 6, xi = 0.6)
-    test = TestRecovery(trigger = 000, times = (-2, 50), test = True,
-                datatype = 'discsc', nSamples = 100, sampler = 'Nestle',
-                priors_pulse_start = -5, priors_pulse_end = 50,
-                priors_td_lo = 0,  priors_td_hi = 30)
-
-    test.get_recovery_plot(10)
+    # test = TestRecovery(trigger = 000, times = (-2, 50), test = True,
+    #             datatype = 'discsc', nSamples = 100, sampler = 'Nestle',
+    #             priors_pulse_start = -5, priors_pulse_end = 50,
+    #             priors_td_lo = 0,  priors_td_hi = 30)
+    #
+    # test.get_recovery_plot(10)

@@ -17,7 +17,7 @@ class RateFunctionWrapper(object):
         times_1 = (times - start_1) * np.heaviside(times - start_1, 0) + 1e-12
 
         rates = background + scale_1 * np.exp(- xi_1 *
-                                ( (tau_1 / times_1) + (times_1 / tau_1) ) )
+                                ( (tau_1 / times_1) + (times_1 / tau_1) - 2))
         return rates
         # return np.multiply(rates, widths)
 
@@ -50,10 +50,10 @@ class RateFunctionWrapper(object):
         times_0 = ((times - start_1 - time_delay) * np.heaviside(
                                 times - start_1 - time_delay, 0) + 1e-12 )
         rates  = scale_1 * np.exp(- xi_1 * ((tau_1 / times_1)
-                                        + (times_1 / tau_1)))
+                                        + (times_1 / tau_1) - 2))
 
         rates += magnification_ratio * scale_1 * np.exp(- xi_1 * (
-                                    (tau_1 / times_0) + (times_0 / tau_1)) )
+                                    (tau_1 / times_0) + (times_0 / tau_1) - 2) )
         rates += background
         return rates
         # return np.multiply(rates, widths)
@@ -78,12 +78,65 @@ class RateFunctionWrapper(object):
         times_2 = (times - start_2) * np.heaviside(times - start_2, 0) + 1e-12
 
         rates =( background + scale_1 * np.exp(- xi_1 * ((tau_1 / times_1)
-                                                     + (times_1 / tau_1)) )
+                                                     + (times_1 / tau_1) - 2) )
                             + scale_2 * np.exp(- xi_2 * ((tau_2 / times_2)
-                                                     + (times_2 / tau_2)) ) )
+                                                     + (times_2 / tau_2) - 2)) )
         return rates
-        # return np.multiply(rates, widths)
 
+    @staticmethod
+    def two_FRED_lens_rate(     delta_t, t_0, background,
+                                time_delay, magnification_ratio,
+                                start_1, scale_1, tau_1, xi_1,
+                                start_2, scale_2, tau_2, xi_2):
+        times = np.cumsum(delta_t)
+        times = np.insert(times, 0, 0.0)
+        times+= t_0
+
+        times_1 = ( times - start_1) * np.heaviside(times - start_1, 0) + 1e-12
+        times_2 = ( times - start_2) * np.heaviside(times - start_2, 0) + 1e-12
+
+        times_0a= ((times - start_1 - time_delay) * np.heaviside(
+                                times - start_1 - time_delay, 0) + 1e-12 )
+        times_0b= ((times - start_2 - time_delay) * np.heaviside(
+                                times - start_2 - time_delay, 0) + 1e-12 )
+
+        rates   =               (
+        scale_1 * np.exp(- xi_1 * ((tau_1 / times_1) + (times_1 / tau_1) - 2))
+      + scale_2 * np.exp(- xi_2 * ((tau_2 / times_2) + (times_2 / tau_2) - 2))
+                                )
+
+        rates += magnification_ratio *  (
+        scale_1 * np.exp(- xi_1 * ((tau_1 / times_0a) + (times_0a / tau_1) - 2))
+      + scale_2 * np.exp(- xi_2 * ((tau_2 / times_0b) + (times_0b / tau_2) - 2))
+                                        )
+
+        rates += background
+        return rates
+
+    @staticmethod
+    def four_FRED_rate(     delta_t, t_0, background,
+                            start_1, scale_1, tau_1, xi_1,
+                            start_2, scale_2, tau_2, xi_2,
+                            start_3, scale_3, tau_3, xi_3,
+                            start_4, scale_4, tau_4, xi_4):
+
+        times   = np.cumsum(delta_t)
+        times   = np.insert(times, 0, 0.0)
+        times  += t_0
+
+        times_1 = (times - start_1) * np.heaviside(times - start_1, 0) + 1e-12
+        times_2 = (times - start_2) * np.heaviside(times - start_2, 0) + 1e-12
+        times_3 = (times - start_3) * np.heaviside(times - start_3, 0) + 1e-12
+        times_4 = (times - start_4) * np.heaviside(times - start_4, 0) + 1e-12
+
+        rates   =               (
+        scale_1 * np.exp(- xi_1 * ((tau_1 / times_1) + (times_1 / tau_1) - 2))
+      + scale_2 * np.exp(- xi_2 * ((tau_2 / times_2) + (times_2 / tau_2) - 2))
+      + scale_3 * np.exp(- xi_3 * ((tau_3 / times_3) + (times_3 / tau_3) - 2))
+      + scale_4 * np.exp(- xi_4 * ((tau_4 / times_4) + (times_4 / tau_4) - 2))
+                                )
+        rates  += background
+        return rates
 
     @staticmethod
     def one_FREDx_one_Gauss_rate(     delta_t, t_0, background,

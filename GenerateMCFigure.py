@@ -27,6 +27,8 @@ def MC_test(index_array, **kwargs):
     nScales = 20
     scale_array = np.geomspace(1e4, 1e7, nScales)
     for q in index_array:
+        GRB.outdir += '_' + str(q)
+        mkdir(GRB.outdir)
         print(scale_array[q])
         mkdir(str(int(scale_array[q])))
         file_name_Ylens_ev = (str(int(scale_array[q])) + '/MC_Ylens_ev_'
@@ -49,12 +51,16 @@ def MC_test(index_array, **kwargs):
                                                 save_all = True)
             with open(file_name_Ylens_ev, 'a+') as f:
                 f.write(str(evidences_1_lens[0]))
+                f.write('\n')
             with open(file_name_Ylens_er, 'a+') as f:
                 f.write(str(errors_1_lens[0]))
+                f.write('\n')
             with open(file_name_Nlens_ev, 'a+') as f:
                 f.write(str(evidences_2_FRED[0]))
+                f.write('\n')
             with open(file_name_Nlens_er, 'a+') as f:
                 f.write(str(errors_2_FRED[0]))
+                f.write('\n')
 
 
 if __name__ == '__main__':

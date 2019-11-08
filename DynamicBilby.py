@@ -24,7 +24,7 @@ from rate_functions import RateFunctionWrapper
 
 from matplotlib import rc
 
-rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern']})
+rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
 rc('text', usetex=True)
 
 
@@ -59,14 +59,14 @@ class BilbyObject(RateFunctionWrapper):
                         priors_mr_hi        = 1,    #
                         priors_tau_lo       = 1e-2,
                         priors_tau_hi       = 1e2,
-                        priors_xi_lo        = 1e-2,
+                        priors_xi_lo        = 1e-4,
                         priors_xi_hi        = 1e1,
                         priors_gamma_min    = 1e-1,
                         priors_gamma_max    = 1e1,
                         priors_nu_min       = 1e-1,
                         priors_nu_max       = 1e1,
                         priors_scale_min    = 1e2,
-                        priors_scale_max    = 1e9):
+                        priors_scale_max    = 1e5):
 
         super(BilbyObject, self).__init__()
 
@@ -336,8 +336,8 @@ class BilbyObject(RateFunctionWrapper):
             nbins = int( (self.GRB.bin_left[-1] - self.GRB.bin_left[0]) / 0.005 )
             bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
 
-            offsets = [0, 4000, 8000, -3000]
-            # offsets = [0, 0, 0, -0]
+            # offsets = [0, 4000, 8000, -3000]
+            offsets = [0, 0, 0, -0]
             for i in channels:
                 result_label = self.fstring + '_result_' + self.clabels[i]
                 if save_all:
@@ -361,7 +361,8 @@ class BilbyObject(RateFunctionWrapper):
                 # integrated, binss = np.histogram(self.GRB.channels[i], bins=bins)
                 # difference = integrated - rates_fit
                 difference = self.GRB.rates[:,i] - rates_fit
-                # f2_ax1.plot(bins[0:-1], integrated, c = self.colours[i], linewidth=0.5, drawstyle ='steps')
+                # f2_ax1.plot(bins[0:-1], integrated, c = self.colours[i],
+                # linewidth=0.5, drawstyle ='steps')
                 f2_ax1.plot(self.GRB.bin_left, self.GRB.rates[:,i] + offsets[i],
                 c = self.colours[i], drawstyle='steps-mid', linewidth = 0.4)
                 f2_ax1.plot(self.GRB.bin_left, rates_fit + offsets[i],
@@ -379,20 +380,24 @@ class BilbyObject(RateFunctionWrapper):
             yticks = f2_ax2.get_yticks()
             print(yticks)
             # f2_ax2.set_yticks([1:])
-            f2_ax2.set_yticks(f2_ax2.get_yticks()[2:4])
+            # f2_ax2.set_yticks(f2_ax2.get_yticks()[2:4])
+            f2_ax2.set_yticks([0, 1000])
             f2_ax2.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
             f2_ax3.set_xticks(())
-            f2_ax3.set_yticks(f2_ax3.get_yticks()[1:3])
+            # f2_ax3.set_yticks(f2_ax3.get_yticks()[1:3])
+            f2_ax3.set_yticks([0, 1000])
             # f2_ax3.yaxis.set_major_locator(MaxNLocator(nbins=2,prune='lower'))
             f2_ax3.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
             f2_ax4.set_xticks(())
-            f2_ax4.set_yticks(f2_ax4.get_yticks()[1:3])
+            # f2_ax4.set_yticks(f2_ax4.get_yticks()[1:3])
+            f2_ax4.set_yticks([0, 1000])
             # f2_ax4.yaxis.set_major_locator(MaxNLocator(nbins=2,prune='lower'))
             f2_ax4.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
-            f2_ax5.set_yticks(f2_ax5.get_yticks()[1:3])
+            # f2_ax5.set_yticks(f2_ax5.get_yticks()[1:3])
+            f2_ax5.set_yticks([0, 1000])
             f2_ax5.set_xlim(left  = self.GRB.bin_left[0],
                             right = self.GRB.bin_left[-1])
 
@@ -402,7 +407,6 @@ class BilbyObject(RateFunctionWrapper):
             # hide tick and tick label of the big axis
             ax.tick_params(labelcolor='none', top=False,
                             bottom=False, left=False, right=False)
-            # plt.xlabel("common X")
             ax.set_ylabel('counts / sec')
 
             plt.rcParams.update({'font.size': 8})
