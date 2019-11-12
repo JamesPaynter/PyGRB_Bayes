@@ -143,6 +143,8 @@ class BilbyObject(RateFunctionWrapper):
         directory += '_' + str(self.num_pulses)
         if 'FREDx' in self.model:
             directory += '_FREDx'
+        if self.MC_counter:
+            directory += '_' + str(self.MC_counter)
         return directory
 
     def get_file_string(self):
@@ -240,7 +242,7 @@ class BilbyObject(RateFunctionWrapper):
                 self.priors[key] = bilbyLogUniform(
                 minimum = self.priors_bg_lo,
                 maximum = self.priors_bg_hi,
-                latex_label='Bg',
+                latex_label='B',
                 unit = 'counts / sec')
 
             elif key == 'time_delay':
@@ -337,7 +339,7 @@ class BilbyObject(RateFunctionWrapper):
             bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
 
             # offsets = [0, 4000, 8000, -3000]
-            offsets = [0, 0, 0, -0]
+            offsets = [0, 0, 0, 0]
             for i in channels:
                 result_label = self.fstring + '_result_' + self.clabels[i]
                 if save_all:
@@ -357,7 +359,7 @@ class BilbyObject(RateFunctionWrapper):
                     MAP[parameter] = summary.median
                 MAP['t_0'] = float(self.GRB.bin_left[0])
                 widths = self.GRB.bin_right - self.GRB.bin_left
-                rates_fit  = rate_function(np.diff(self.GRB.bin_left), **MAP) #/ widths
+                rates_fit  = rate_function(np.diff(self.GRB.bin_left), **MAP) / widths
                 # integrated, binss = np.histogram(self.GRB.channels[i], bins=bins)
                 # difference = integrated - rates_fit
                 difference = self.GRB.rates[:,i] - rates_fit
