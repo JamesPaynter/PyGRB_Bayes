@@ -1,15 +1,10 @@
 from DynamicBilby import BilbyObject
 
-
-def two_pulse_constraints(parameters):
-    parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
-    return parameters
-
 def load_3770(sampler = 'dynesty', nSamples = 100):
     test = BilbyObject(3770, times = (-.1, 1),
                 datatype = 'tte', nSamples = nSamples, sampler = sampler,
-                priors_pulse_start = -.1, priors_pulse_end = 1.0,
-                priors_td_lo = 0,  priors_td_hi = 1.0)
+                priors_pulse_start = -.1, priors_pulse_end = 0.6,
+                priors_td_lo = 0,  priors_td_hi = 0.5)
     return test
 
 def load_973(sampler = 'dynesty', nSamples = 100):
@@ -73,6 +68,22 @@ def load_8099(sampler = 'dynesty', nSamples = 100):
                 datatype = 'discsc', nSamples = nSamples, sampler = sampler,
                 priors_pulse_start = 0, priors_pulse_end = 15)
     return object
+
+def load_test(sampler = 'dynesty', nSamples = 100):
+    # object = BilbyObject(1, times = (-0.1, 1.0), test = True,
+    #             datatype = 'tte', nSamples = nSamples, sampler = sampler,
+    #             priors_pulse_start = -0.1, priors_pulse_end = 0.6)
+    # object.inject_signal()
+    # print(object.GRB.bin_left)
+    # return object
+    test = BilbyObject(trigger = 1, times = (-2, 50), test = True,
+                datatype = 'discsc', nSamples = nSamples, sampler = sampler,
+                priors_pulse_start = -5, priors_pulse_end = 50,
+                priors_td_lo = 0,  priors_td_hi = 30)
+    test.inject_signal()
+    print(test.GRB.bin_left)
+    return test
+
 
 
 def compare_FRED_FREDx(function, channels = [0,1,2,3], sampler = 'Nestle', **kwargs):
@@ -139,12 +150,13 @@ def compare_lens_no_lens_two_pulse(function, channels = [0,1,2,3],
                 print('The winner is FRED')
             else:
                 print('The winner is lensing')
-            print('Bayes Factor: ', BF)
+            print('Log Bayes Factor: ', BF)
 
 
 if __name__ == '__main__':
     # compare_lens_no_lens_one_pulse(load_test, channels = [0], nSamples = 200)
 
     # compare_FRED_FREDx(load_8099, nSamples = 500)
-    # compare_lens_no_lens_one_pulse(load_3770, nSamples = 5000)
-    compare_lens_no_lens_one_pulse(load_2571, nSamples = 500)
+    # compare_lens_no_lens_one_pulse(load_test, channels = [0], nSamples = 250)
+    compare_lens_no_lens_one_pulse(load_3770, nSamples = 250)
+    # compare_lens_no_lens_one_pulse(load_2571, nSamples = 500)

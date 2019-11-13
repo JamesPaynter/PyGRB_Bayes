@@ -106,16 +106,46 @@ class ResidualAnalysis(BilbyObject):
                 np.cos(sg_omega * time + sg_phi) )
 
 
-if __name__ == '__main__':
-    Trigger = ResidualAnalysis(trigger = 999, times = (3, 7),
-                datatype = 'discsc', nSamples = 500, sampler = 'Nestle',
-                priors_pulse_start = 3, priors_pulse_end = 7)
+# if __name__ == '__main__':
+#     Trigger = ResidualAnalysis(trigger = 999, times = (3, 7),
+#                 datatype = 'discsc', nSamples = 500, sampler = 'Nestle',
+#                 priors_pulse_start = 3, priors_pulse_end = 7)
+#
+#     Trigger.one_FRED(channels = [0,1,2,3], test = False, plot = False)
+#     # Trigger.num_pulses = 2
+#     # Trigger.tlabel     = Trigger.get_trigger_label()
+#     # Trigger.fstring    = Trigger.get_file_string()
+#     # Trigger.outdir     = Trigger.get_directory_name()
+#     Trigger.get_residuals(  priors = Trigger.priors.copy(),
+#                             rate_function = Trigger.one_FRED_rate,
+#                             channels = [0,1,2,3])
 
-    Trigger.one_FRED(channels = [0,1,2,3], test = False, plot = False)
-    # Trigger.num_pulses = 2
-    # Trigger.tlabel     = Trigger.get_trigger_label()
-    # Trigger.fstring    = Trigger.get_file_string()
-    # Trigger.outdir     = Trigger.get_directory_name()
-    Trigger.get_residuals(  priors = Trigger.priors.copy(),
-                            rate_function = Trigger.one_FRED_rate,
-                            channels = [0,1,2,3])
+
+def residuals(A, Omega, s, t_t, Delta):
+    if t < t_t - Delta / 2:
+        return
+    elif t < t_t + Delta / 2:
+        return
+    else:
+        return 
+
+
+
+if __name__ == '__main__':
+    injection_parameters = bilbyPriorDict()
+    # injection_parameters['background'] = 100 * 0.064
+    # injection_parameters['start_1']    = 2
+    # injection_parameters['scale_1']    = 3e3 * 0.064
+    # injection_parameters['tau_1']      = 2
+    # injection_parameters['xi_1']       = 3
+
+    injection_parameters['A']    = 2
+    injection_parameters['Omega']= 2
+    injection_parameters['s']    = 2
+    injection_parameters['t_t']  = 2
+    injection_parameters['Delta']= 2
+
+
+
+
+    print(injection_parameters)

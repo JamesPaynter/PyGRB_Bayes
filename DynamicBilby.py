@@ -57,24 +57,31 @@ class BilbyObject(RateFunctionWrapper):
                         sampler             = 'dynesty',
                         verbose             = True,
                         nSamples            = 200,
-                        priors_bg_lo        = 1e-1, #
-                        priors_bg_hi        = 1e4,  #
-                        priors_mr_lo        = 0.2, #
-                        priors_mr_hi        = 1,    #
-                        priors_tau_lo       = 1e-2,
-                        priors_tau_hi       = 1e2,
-                        priors_xi_lo        = 1e-4,
-                        priors_xi_hi        = 1e1,
+                        priors_bg_lo        = 1e-1,  ## SCALING IS COUNTS / BIN
+                        priors_bg_hi        = 1e3,   ## SCALING IS COUNTS / BIN
+                        priors_mr_lo        = 0.2,   ## which means that it is
+                        priors_mr_hi        = 1,     # 1 / 0.064 times smaller
+                        priors_tau_lo       = 1e-2,  # than you think it is
+                        priors_tau_hi       = 1e1,   # going to be !!!!!!!!!!!!
+                        priors_xi_lo        = 1e-2,
+                        priors_xi_hi        = 1e2,
                         priors_gamma_min    = 1e-1,
                         priors_gamma_max    = 1e1,
                         priors_nu_min       = 1e-1,
                         priors_nu_max       = 1e1,
-                        priors_scale_min    = 1e2,
-                        priors_scale_max    = 1e5):
+                        priors_scale_min    = 1e1,   ## SCALING IS COUNTS / BIN
+                        priors_scale_max    = 1e4):  ## SCALING IS COUNTS / BIN
 
         super(BilbyObject, self).__init__()
 
+        print('\n\n\n\n')
         print('DO THE PRIORS MAKE SENSE !! ??')
+        print('Prior scaling is in counts / bin !!! ')
+        print('THIS IS NOT COUNTS / SECOND !!!')
+        print('This should only affect the A and B scale and background params')
+        print('\n\n\n\n')
+
+
         (self.start, self.end)   = times
         self.colours             = ['red', 'orange', 'green', 'blue']
         self.clabels             = ['1', '2', '3', '4']
@@ -507,15 +514,15 @@ class BilbyObject(RateFunctionWrapper):
 
         bin_size = 0.064
         sample = self.priors.sample()
-        sample['background'] = 100 * bin_size
+        sample['background'] = 3500 * bin_size
         sample['start_1']    = 2
-        sample['scale_1']    = 3e4 * bin_size
+        sample['scale_1']    = 2e4 * bin_size
         if scale_override:
             sample['scale_1']= scale_override * bin_size
-        sample['tau_1']      = 2
+        sample['tau_1']      = 8 #0.08
         sample['xi_1']       = 3 ## (do I need to / 0.064 ???)
-        sample['time_delay'] = 17
-        sample['magnification_ratio'] = 0.4
+        sample['time_delay'] = 20#0.4
+        sample['magnification_ratio'] = 0.5
 
         t_0     = -2
         times   = np.arange(800) * bin_size - t_0 ## = 51.2
@@ -557,11 +564,9 @@ class BilbyObject(RateFunctionWrapper):
             self.priors['t_0'] = bilbyDeltaFunction(
                 peak = float(self.GRB.bin_left[0]), name = None,
                 latex_label = None, unit = None )
-            # if not test:
-            counts = np.rint(self.GRB.counts[:,i]).astype('uint')
-            # else:
-                # counts   = np.rint(self.GRB.counts).astype('uint')
-            likelihood = bilbyPoissonLikelihood(deltat, counts, rate_function)
+
+            counts       = np.rint(self.GRB.counts[:,i]).astype('uint')
+            likelihood   = bilbyPoissonLikelihood(deltat, counts, rate_function)
             result_label = self.fstring + '_result_' + self.clabels[i]
 
             if save_all:
