@@ -24,10 +24,14 @@ from rate_functions import RateFunctionWrapper
 
 from matplotlib import rc
 
-rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
-rc('text', usetex=True)
 
+HPC = False
 
+if not HPC:
+    rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
+    rc('text', usetex=True)
+
+    SAMPLER = 'dynesty'
 
 
 
@@ -103,6 +107,8 @@ class BilbyObject(RateFunctionWrapper):
         self.verbose = verbose
         self.keys    = []
         self.priors  = bilbyPriorDict()
+
+        self.MC_counter = None
 
         if not test:
             self.GRB = BATSEpreprocess.BATSESignal(
@@ -643,9 +649,40 @@ class BilbyObject(RateFunctionWrapper):
         evidences, errors = self.main(self.one_FRED_lens_rate, **kwargs)
         return evidences, errors
 
+    def four_FRED(self, **kwargs):
+        self.model  = 'four FRED pulse'
+        self.num_pulses = 4
+        self.make_priors(   FRED = [1, 2, 3, 4], FREDx = None,
+                            gaussian = None, lens = False,
+                            constraint = four_pulse_constraints)
+        for key in self.priors:
+            print(key)
+        evidences, errors = self.main(self.four_FRED_rate, **kwargs)
+        return evidences, errors
+
+    def two_FRED_lens(self, **kwargs):
+        self.model  = 'two FRED lens'
+        self.num_pulses = 2
+        self.make_priors(   FRED = [1, 2], FREDx = None,
+                            gaussian = None, lens = True,
+                            constraint = two_pulse_constraints)
+        for key in self.priors:
+            print(key)
+        evidences, errors = self.main(self.two_FRED_lens_rate, **kwargs)
+        return evidences, errors
+
+
 def two_pulse_constraints(parameters):
     parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
     return parameters
+
+def four_pulse_constraints(parameters):
+    parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
+    parameters['constraint_3'] = parameters['start_3'] - parameters['start_2']
+    parameters['constraint_4'] = parameters['start_4'] - parameters['start_3']
+    return parameters
+
+
 ## end class
 if __name__ == '__main__':
     print('Call functions from Call Centre or similar ')

@@ -117,6 +117,30 @@ def compare_lens_no_lens_one_pulse(function, channels = [0,1,2,3],
                 print('The winner is lensing')
             print('Bayes Factor: ', BF)
 
+def compare_lens_no_lens_two_pulse(function, channels = [0,1,2,3],
+                                    sampler = 'Nestle', **kwargs):
+
+        GRB = function(sampler, **kwargs)
+        evidences_1_lens, errors_1_lens = GRB.two_FRED_lens(
+                                            channels = channels,
+                                            test = False, plot = True)
+        evidences_2_FRED, errors_2_FRED = GRB.four_FRED(
+                                            channels = channels,
+                                            test = False, plot = True)
+        for i in channels:
+            print('---------------')
+            print('For channel {}'.format(i+1))
+            print('The FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
+                    evidences_2_FRED[i], errors_2_FRED[i]))
+            print('The lensing evidence is : {0:.3f} +/- {1:.3f}'.format(
+                    evidences_1_lens[i], errors_1_lens[i]))
+            BF = evidences_1_lens[i] - evidences_2_FRED[i]
+            if evidences_2_FRED[i] > evidences_1_lens[i]:
+                print('The winner is FRED')
+            else:
+                print('The winner is lensing')
+            print('Bayes Factor: ', BF)
+
 
 if __name__ == '__main__':
     # compare_lens_no_lens_one_pulse(load_test, channels = [0], nSamples = 200)

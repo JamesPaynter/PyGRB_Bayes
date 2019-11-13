@@ -24,11 +24,13 @@ def MC_test(index_array, **kwargs):
     channels = [0]
     GRB = load_test(**kwargs)
     GRB.counter = 0
+    GRB.MC_counter = 0
     bin_size = 0.064
     nTrials = 100
     nScales = 20
     scale_array = np.geomspace(1e4, 1e7, nScales)
     for q in index_array:
+        GRB.MC_counter = q
         GRB.outdir += '_' + str(q)
         mkdir(GRB.outdir)
         print(scale_array[q])
