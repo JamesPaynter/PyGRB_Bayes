@@ -514,9 +514,9 @@ class BilbyObject(RateFunctionWrapper):
 
         bin_size = 0.064
         sample = self.priors.sample()
-        sample['background'] = 3500 * bin_size
+        sample['background'] = 100 * bin_size
         sample['start_1']    = 2
-        sample['scale_1']    = 2e4 * bin_size
+        sample['scale_1']    = 100 * bin_size
         if scale_override:
             sample['scale_1']= scale_override * bin_size
         sample['tau_1']      = 8 #0.08

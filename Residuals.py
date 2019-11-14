@@ -2,6 +2,7 @@ from DynamicBilby import BilbyObject
 import numpy as np
 import bilby
 import scipy.stats as stats
+import scipy.special as special
 
 import matplotlib.pyplot    as plt
 
@@ -121,15 +122,15 @@ class ResidualAnalysis(BilbyObject):
 #                             channels = [0,1,2,3])
 
 
-def residuals(A, Omega, s, t_t, Delta):
-    if t < t_t - Delta / 2:
-        return
-    elif t < t_t + Delta / 2:
-        return
-    else:
-        return 
+def residuals_bessel(times, A, Omega, s, t_t, Delta):
+    return (np.where(times > t_t + Delta / 2,
+            A * special.j0(s * Omega * (- t_t + times - Delta / 2) ),
+           (np.where(times < t_t - Delta / 2,
+            A * special.j0(    Omega * (  t_t - times - Delta / 2) ), A))) )
 
-
+def sine_gaussian( times, sg_A, sg_t_0, sg_tau, sg_omega, sg_phi):
+    return (sg_A * np.exp(- np.square((times - sg_t_0) / sg_tau)) *
+            np.cos(sg_omega * times + sg_phi) )
 
 if __name__ == '__main__':
     injection_parameters = bilbyPriorDict()
@@ -139,11 +140,29 @@ if __name__ == '__main__':
     # injection_parameters['tau_1']      = 2
     # injection_parameters['xi_1']       = 3
 
-    injection_parameters['A']    = 2
-    injection_parameters['Omega']= 2
-    injection_parameters['s']    = 2
-    injection_parameters['t_t']  = 2
-    injection_parameters['Delta']= 2
+    # injection_parameters['A']    = 2
+    # injection_parameters['Omega']= 2
+    # injection_parameters['s']    = 2
+    # injection_parameters['t_t']  = 2
+    # injection_parameters['Delta']= 2
+
+    injection_parameters['sg_A']    = 2
+    injection_parameters['sg_t_0']  = 2
+    injection_parameters['sg_tau']  = 2
+    injection_parameters['sg_omega']= 2
+    injection_parameters['sg_phi']  = 2
+
+    times = np.linspace(-2, 10, 1000)
+
+    # res = residuals_bessel(times, **injection_parameters)
+    res = sine_gaussian(times, **injection_parameters)
+
+    fig, ax = plt.subplots(figsize = (6, 4), constrained_layout=True)
+    ax.plot(times, res, linewidth = 0.5)
+    ax.set_xlim(times[0], times[-1])
+    ax.set_xlabel('time (s)')
+    ax.set_ylabel('counts / sec')
+    plt.savefig('testtesttest.pdf')
 
 
 

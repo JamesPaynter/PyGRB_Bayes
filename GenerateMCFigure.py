@@ -28,7 +28,7 @@ def MC_test(index_array, **kwargs):
     bin_size = 0.064
     nTrials = 100
     nScales = 20
-    scale_array = np.geomspace(1e4, 1e7, nScales)
+    scale_array = np.geomspace(1e2, 1e5, nScales)
     for q in index_array:
         GRB.MC_counter = q
         GRB.outdir += '_' + str(q)
@@ -115,11 +115,11 @@ def run_analysis():
                 count += 1
 
     Z = array_Ylens_ev - array_Nlens_ev
-    for i in range(nScales):
+    # for i in range(nScales):
         # print(np.sort(Z[i,:].astype('float')))
         # break
         # np.quantile(Z[i,:], 0.5)
-        plt.scatter(scale_array[i]*np.ones(100), Z[i,:])
+        # plt.scatter(scale_array[i]*np.ones(100), Z[i,:])
         # break
         # CI50BayesFactor = pymc3.stats.hpd(Z[i,:], alpha = 0.499)
         # CI90BayesFactor = pymc3.stats.hpd(Z[i,:], alpha = 0.30)
@@ -131,12 +131,14 @@ def run_analysis():
         # plt.scatter(scale_array[i], CI99BayesFactor[0], c = 'r')
         # plt.scatter(scale_array[i], CI99BayesFactor[1], c = 'r')
 
-    # bins, edges = np.histogram(Z[i,:], bins = [-300, -200, -100, -50, 0, 50, 100, 200, 300])
-    # plt.hist(Z[i,:], bins =  np.arange(40) - 10 )
+    # bins, edges = np.histogram(Z[0,:], bins = [-300, -200, -100, -50, 0, 50, 100, 200, 300])
+    # plt.hist(Z[0,:], bins =  np.arange(40) - 10 )
     # plt.plot(edges[0:-1], bins, drawstyle = 'steps-mid')
     # print(bins, edges)
-    # plt.hist(np.mean(Z[5,:]), bins = 10, log = True)
-    # plt.xscale('log')
+    # # plt.hist(np.mean(Z[5,:]), bins = 10, log = True)
+    plt.xscale('log')
+    for i in range(14):
+        plt.scatter(scale_array[i]*np.ones(100),Z[i,:])
     plt.savefig('plotplot.pdf')
 
 if __name__ == '__main__':
