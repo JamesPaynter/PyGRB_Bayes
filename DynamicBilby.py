@@ -25,7 +25,7 @@ from rate_functions import RateFunctionWrapper
 from matplotlib import rc
 
 
-HPC = False
+HPC = True
 
 if not HPC:
     rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
@@ -676,6 +676,8 @@ class BilbyObject(RateFunctionWrapper):
         evidences, errors = self.main(self.two_FRED_lens_rate, **kwargs)
         return evidences, errors
 
+## end class
+
 
 def two_pulse_constraints(parameters):
     parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
@@ -688,6 +690,5 @@ def four_pulse_constraints(parameters):
     return parameters
 
 
-## end class
 if __name__ == '__main__':
     print('Call functions from Call Centre or similar ')

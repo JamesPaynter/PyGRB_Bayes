@@ -109,7 +109,6 @@ class RateFunctionWrapper(object):
         scale_1 * np.exp(- xi_1 * ((tau_1 / times_0a) + (times_0a / tau_1) - 2))
       + scale_2 * np.exp(- xi_2 * ((tau_2 / times_0b) + (times_0b / tau_2) - 2))
                                         )
-
         rates += background
         return rates
 
@@ -137,6 +136,20 @@ class RateFunctionWrapper(object):
                                 )
         rates  += background
         return rates
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @staticmethod
     def one_FREDx_one_Gauss_rate(     delta_t, t_0, background,

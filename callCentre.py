@@ -157,6 +157,4 @@ if __name__ == '__main__':
     # compare_lens_no_lens_one_pulse(load_test, channels = [0], nSamples = 200)
 
     # compare_FRED_FREDx(load_8099, nSamples = 500)
-    # compare_lens_no_lens_one_pulse(load_test, channels = [0], nSamples = 250)
-    compare_lens_no_lens_one_pulse(load_3770, nSamples = 250)
-    # compare_lens_no_lens_one_pulse(load_2571, nSamples = 500)
+    compare_lens_no_lens_two_pulse(load_3770, nSamples = 500, sampler = 'dynesty')
