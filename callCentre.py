@@ -7,6 +7,13 @@ def load_3770(sampler = 'dynesty', nSamples = 100):
                 priors_td_lo = 0,  priors_td_hi = 0.5)
     return test
 
+def load_3770_custom(times, sampler = 'dynesty', nSamples = 100):
+    test = BilbyObject(3770, times = times,
+                datatype = 'tte', nSamples = nSamples, sampler = sampler,
+                priors_pulse_start = -.1, priors_pulse_end = 0.6,
+                priors_td_lo = 0,  priors_td_hi = 0.5)
+    return test
+
 def load_973(sampler = 'dynesty', nSamples = 100):
     test = BilbyObject(973, times = (-2, 50),
                 datatype = 'discsc', nSamples = nSamples, sampler = sampler,
@@ -86,7 +93,8 @@ def load_test(sampler = 'dynesty', nSamples = 100):
 
 
 
-def compare_FRED_FREDx(function, channels = [0,1,2,3], sampler = 'Nestle', **kwargs):
+def compare_FRED_FREDx( function, channels = [0,1,2,3],
+                        sampler = 'Nestle', **kwargs):
     GRB = function(sampler, **kwargs)
     evidences_1_FRED,  errors_1_FRED  = GRB.one_FRED( channels = channels, test = False)
     evidences_1_FREDx, errors_1_FREDx = GRB.one_FREDx(channels = channels, test = False)
@@ -103,6 +111,29 @@ def compare_FRED_FREDx(function, channels = [0,1,2,3], sampler = 'Nestle', **kwa
         else:
             print('The winner is FRED-X')
         print('Bayes Factor: ', BF)
+
+def compare_num_FRED_pulses(function, channels = [0,1,2,3],
+                            sampler = 'Nestle', **kwargs):
+    GRB = function(sampler, **kwargs)
+    evidences, errors = np.zeros(4), np.zeros(4)
+    evidences[0], errors[0] = GRB.one_FRED(  channels = channels, test = False)
+    evidences[1], errors[1] = GRB.two_FRED(  channels = channels, test = False)
+    evidences[2], errors[2] = GRB.three_FRED(channels = channels, test = False)
+    evidences[3], errors[3] = GRB.four_FRED( channels = channels, test = False)
+    for i in range(4):
+        print('---------------')
+        print('For channel {}'.format(i+1))
+        print('The one FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
+                evidences[0], errors[0]))
+        print('The one FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
+                evidences[1], errors[1]))
+        print('The one FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
+                evidences[2], errors[2]))
+        print('The four FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
+                evidences[3], errors[3]))
+        num_pulse = np.argmax(evidences) + 1
+        print('The preferred number of pulses is %i' % num_pulse)
+
 
 def compare_lens_no_lens_one_pulse(function, channels = [0,1,2,3],
                                     sampler = 'Nestle', **kwargs):
@@ -169,8 +200,11 @@ if __name__ == '__main__':
     else:
         SAMPLER = 'dynesty'
 
+    compare_num_FRED_pulses(load_3770_custom, times = (-0.1, 0.35))
+
     compare_lens_no_lens_one_pulse(load_test, channels = [0], nSamples = 200,
                                     sampler = SAMPLER)
 
+    compare_FRED_FREDx(load_8099, nSamples = 500)
     # compare_FRED_FREDx(load_8099, nSamples = 500)
     # compare_lens_no_lens_two_pulse(load_3770, nSamples = 500, sampler = 'dynesty')

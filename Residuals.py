@@ -21,9 +21,6 @@ from bilby.core.likelihood  import GaussianLikelihood as bilbyGaussianLikelihood
 from skellam_likelihood import SkellamLikelihood
 
 
-rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern']})
-rc('text', usetex=True)
-
 
 class ResidualAnalysis(BilbyObject):
     """docstring for ResidualAnalysis."""
@@ -167,7 +164,7 @@ if __name__ == '__main__':
 
     shitty_function()
     Trigger = ResidualAnalysis(trigger = 999, times = (3.5, 5),
-                datatype = 'discsc', nSamples = 500, sampler = 'Nestle',
+                datatype = 'discsc', nSamples = 500, sampler = SAMPLER,
                 priors_pulse_start = 3, priors_pulse_end = 7)
 
     Trigger.one_FRED(channels = [0,1,2,3], test = False, plot = False)

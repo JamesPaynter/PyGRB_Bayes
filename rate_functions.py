@@ -85,6 +85,28 @@ class RateFunctionWrapper(object):
         return rates
 
     @staticmethod
+    def three_FRED_rate(     delta_t, t_0, background,
+                            start_1, scale_1, tau_1, xi_1,
+                            start_2, scale_2, tau_2, xi_2,
+                            start_3, scale_3, tau_3, xi_3):
+
+        times   = np.cumsum(delta_t)
+        times   = np.insert(times, 0, 0.0)
+        times  += t_0
+
+        times_1 = (times - start_1) * np.heaviside(times - start_1, 0) + 1e-12
+        times_2 = (times - start_2) * np.heaviside(times - start_2, 0) + 1e-12
+        times_3 = (times - start_3) * np.heaviside(times - start_3, 0) + 1e-12
+
+        rates   =               (
+        scale_1 * np.exp(- xi_1 * ((tau_1 / times_1) + (times_1 / tau_1) - 2))
+      + scale_2 * np.exp(- xi_2 * ((tau_2 / times_2) + (times_2 / tau_2) - 2))
+      + scale_3 * np.exp(- xi_3 * ((tau_3 / times_3) + (times_3 / tau_3) - 2))
+                                )
+        rates  += background
+        return rates
+
+    @staticmethod
     def two_FRED_lens_rate(     delta_t, t_0, background,
                                 time_delay, magnification_ratio,
                                 start_1, scale_1, tau_1, xi_1,

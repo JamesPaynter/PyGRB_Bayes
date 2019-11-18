@@ -664,6 +664,17 @@ class BilbyObject(RateFunctionWrapper):
         evidences, errors = self.main(self.one_FRED_lens_rate, **kwargs)
         return evidences, errors
 
+    def three_FRED(self, **kwargs):
+        self.model  = 'three FRED pulse'
+        self.num_pulses = 3
+        self.make_priors(   FRED = [1, 2, 3], FREDx = None,
+                            gaussian = None, lens = False,
+                            constraint = three_pulse_constraints)
+        for key in self.priors:
+            print(key)
+        evidences, errors = self.main(self.three_FRED_rate, **kwargs)
+        return evidences, errors
+
     def four_FRED(self, **kwargs):
         self.model  = 'four FRED pulse'
         self.num_pulses = 4
@@ -691,6 +702,11 @@ class BilbyObject(RateFunctionWrapper):
 
 def two_pulse_constraints(parameters):
     parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
+    return parameters
+
+def three_pulse_constraints(parameters):
+    parameters['constraint_2'] = parameters['start_2'] - parameters['start_1']
+    parameters['constraint_3'] = parameters['start_3'] - parameters['start_2']
     return parameters
 
 def four_pulse_constraints(parameters):
