@@ -18,7 +18,7 @@ from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
 from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 from bilby.core.likelihood  import GaussianLikelihood as bilbyGaussianLikelihood
 
-from skellam_likelihood import SkellamLikelihood
+#from skellam_likelihood import SkellamLikelihood
 
 
 
@@ -162,7 +162,7 @@ if __name__ == '__main__':
         SAMPLER = 'dynesty'
 
 
-    shitty_function()
+    # shitty_function()
     Trigger = ResidualAnalysis(trigger = 999, times = (3.5, 5),
                 datatype = 'discsc', nSamples = 500, sampler = SAMPLER,
                 priors_pulse_start = 3, priors_pulse_end = 7)
