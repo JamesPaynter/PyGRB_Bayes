@@ -155,10 +155,7 @@ if __name__ == '__main__':
     parser.add_argument('--HPC', action = 'store_true',
                         help = 'Are you running this on SPARTAN ?')
     args = parser.parse_args()
-    try:
-        HPC = args.HPC
-    except:
-        HPC = False
+    HPC = args.HPC
 
     if not HPC:
         rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
