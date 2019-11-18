@@ -1,8 +1,14 @@
 #!/bin/bash
 #
+<<<<<<< HEAD
 #SBATCH --job-name=residual_analysis
 #SBATCH --output=residuals_output.txt
 #SBATCH --error=residuals_errors.txt
+=======
+#SBATCH --job-name=dynamo
+#SBATCH --output=DynamicBilbyOutput.txt
+#SBATCH --error=DynamicBilbyError.txt
+>>>>>>> b1eb74f754934c2aa47316779916a66e5c35dce4
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --time=144:00:00
@@ -18,4 +24,7 @@
 #%Module module load astropy/3.2.1-Python-3.7.3-spartan_gcc-8.1.0
 
 python callCentre.py --HPC
+<<<<<<< HEAD
 python Residuals.py --HPC
+=======
+>>>>>>> b1eb74f754934c2aa47316779916a66e5c35dce4
