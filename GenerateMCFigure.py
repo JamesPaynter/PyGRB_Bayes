@@ -66,7 +66,7 @@ def MC_test(index_array, **kwargs):
                 f.write(str(errors_2_FRED[0]))
                 f.write('\n')
 
-def run_MC():
+def run_MC(**kwargs):
     parser = argparse.ArgumentParser(description='Access geomspace array')
 
     parser.add_argument('indices', metavar='N', type=int, nargs='+',
@@ -74,7 +74,8 @@ def run_MC():
 
     args = parser.parse_args()
     print(args.indices)
-    MC_test(index_array = args.indices, nSamples = 100, sampler = 'Nestle')
+    MC_test(index_array = args.indices, **kwargs)
+    # MC_test(index_array = args.indices, nSamples = 100, sampler = 'Nestle')
 
 def run_analysis():
     nScales = 20
@@ -142,4 +143,18 @@ def run_analysis():
     plt.savefig('plotplot.pdf')
 
 if __name__ == '__main__':
-    run_analysis()
+    import argparse
+    parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')
+    parser.add_argument('--HPC', action = 'store_true',
+                        help = 'Are you running this on SPARTAN ?')
+    args = parser.parse_args()
+    HPC = args.HPC
+
+    if not HPC:
+        rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
+        rc('text', usetex=True)
+        SAMPLER = 'Nestle'
+    else:
+        SAMPLER = 'dynesty'
+
+    run_analysis(sampler = SAMPLER, nSamples = 250)
