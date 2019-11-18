@@ -154,7 +154,26 @@ def compare_lens_no_lens_two_pulse(function, channels = [0,1,2,3],
 
 
 if __name__ == '__main__':
-    compare_lens_no_lens_one_pulse(load_test, channels = [0], nSamples = 200)
+
+    import argparse
+    parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')
+    parser.add_argument('--HPC', action = 'store_true',
+                        help = 'Are you running this on SPARTAN ?')
+    args = parser.parse_args()
+    try:
+        HPC = args.HPC
+    except:
+        HPC = False
+
+    if not HPC:
+        rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
+        rc('text', usetex=True)
+        SAMPLER = 'Nestle'
+    else:
+        SAMPLER = 'dynesty'
+
+    compare_lens_no_lens_one_pulse(load_test, channels = [0], nSamples = 200,
+                                    sampler = SAMPLER)
 
     # compare_FRED_FREDx(load_8099, nSamples = 500)
     # compare_lens_no_lens_two_pulse(load_3770, nSamples = 500, sampler = 'dynesty')

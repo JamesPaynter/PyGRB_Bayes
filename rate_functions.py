@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.special as special
 
 class RateFunctionWrapper(object):
     """docstring for RateFunctionWrapper."""
@@ -139,16 +140,20 @@ class RateFunctionWrapper(object):
 
 
 
+    @staticmethod
+    def residuals_bessel(times, bes_A, bes_Omega, bes_s, bes_t_0, bes_Delta):
+        return np.where(times > bes_t_0 + bes_Delta / 2,
+                bes_A * special.j0(bes_s * bes_Omega *
+               (- bes_t_0 + times - bes_Delta / 2) ),
+               (np.where(times < bes_t_0 - bes_Delta / 2,
+                bes_A * special.j0(bes_Omega *
+               (bes_t_0 - times - bes_Delta / 2) ),
+               bes_A)))
 
-
-
-
-
-
-
-
-
-
+    @staticmethod
+    def sine_gaussian(times, sg_A, sg_t_0, sg_tau, sg_omega, sg_phi):
+        return (sg_A * np.exp(- np.square((times - sg_t_0) / sg_tau)) *
+                np.cos(sg_omega * times + sg_phi) )
 
 
     @staticmethod

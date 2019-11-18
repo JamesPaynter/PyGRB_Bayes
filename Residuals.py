@@ -18,6 +18,9 @@ from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
 from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 from bilby.core.likelihood  import GaussianLikelihood as bilbyGaussianLikelihood
 
+from skellam_likelihood import SkellamLikelihood
+
+
 rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 
@@ -49,33 +52,40 @@ class ResidualAnalysis(BilbyObject):
                 MAP[parameter] = summary.median
 
             MAP['t_0'] = float(self.GRB.bin_left[0])
-            widths = self.GRB.bin_right - self.GRB.bin_left
-            rates_fit = rate_function(np.diff(self.GRB.bin_left), **MAP) / widths
-            residuals = self.GRB.rates[:,i] - rates_fit
-            axes.plot(  self.GRB.bin_left, residuals + i * 2e3,
-                        color = self.colours[i])
+            counts_fit = rate_function(np.diff(self.GRB.bin_left), **MAP).astype('int')
+            residuals = self.GRB.counts[:,i] - counts_fit
+            # axes.plot(  self.GRB.bin_left, residuals + i * 2e3,
+                        # color = self.colours[i])
 
             residual_priors             = bilbyPriorDict()
-            residual_priors['sg_A']     = bilbyLogUniform(1e-2,1e2,latex_label='$A$')
-            residual_priors['sg_t_0']   = bilbyUniform(0,10,latex_label='$t_0$')
-            residual_priors['sg_tau']   = bilbyLogUniform(1e-2,1e2,latex_label='$\\tau$')
-            residual_priors['sg_omega'] = bilbyLogUniform(1e-1,1e2,latex_label='$\\omega$')
+            residual_priors['sg_A']     = bilbyLogUniform(1e-1,1e6,latex_label='$A$')
+            residual_priors['sg_t_0']   = bilbyUniform(2,7,latex_label='$t_0$')
+            residual_priors['sg_tau']   = bilbyLogUniform(1e-3,1e3,latex_label='$\\tau$')
+            residual_priors['sg_omega'] = bilbyLogUniform(1e-3,1e3,latex_label='$\\omega$')
             residual_priors['sg_phi']   = bilbyUniform(-np.pi,np.pi,latex_label='$\\phi$')
             ## if sigma gets too large then it will just fit a straight line
             ## easier to be wrong in sigma than fit 5 params
-            residual_priors['sigma']    = bilbyUniform(0, 1e2, 'sigma')
+            residual_priors['sigma']    = 1
+            # residual_priors['sigma']    = bilbyUniform(0, 1e1, 'sigma')
 
-            # residual_counts = np.rint(residuals * 0.064).astype('uint')
-
-            likelihood   = bilbyGaussianLikelihood( self.GRB.bin_left, residuals,
+            likelihood   = bilbyGaussianLikelihood( self.GRB.bin_left,
+                                                    residuals,
                                                     self.sine_gaussian)
+
+            ## PASS IN THE COUNTS AND FIT DIRECTLY
+            # likelihood = SkellamLikelihood(
+                            # x   = self.GRB.bin_left,
+                            # y_1 = np.rint(self.GRB.counts[:,i]).astype('uint'),
+                            # y_2 = counts_fit,
+                            # func= self.sine_gaussian    )
+                            # func= residuals_bessel)
 
             result_label = self.fstring + '_res_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
             result = bilby.run_sampler( likelihood = likelihood,
                                         priors     = residual_priors,
                                         sampler    = self.sampler,
-                                        nlive      = 200,
+                                        nlive      = 80,
                                         outdir     = self.outdir,
                                         label      = result_label,
                                         save       = True)
@@ -101,38 +111,11 @@ class ResidualAnalysis(BilbyObject):
         figure.savefig(plotname)
 
 
-    @staticmethod
-    def sine_gaussian( time, sg_A, sg_t_0, sg_tau, sg_omega, sg_phi):
-        return (sg_A * np.exp(- np.square((time - sg_t_0) / sg_tau)) *
-                np.cos(sg_omega * time + sg_phi) )
 
-
-# if __name__ == '__main__':
-#     Trigger = ResidualAnalysis(trigger = 999, times = (3, 7),
-#                 datatype = 'discsc', nSamples = 500, sampler = 'Nestle',
-#                 priors_pulse_start = 3, priors_pulse_end = 7)
-#
-#     Trigger.one_FRED(channels = [0,1,2,3], test = False, plot = False)
-#     # Trigger.num_pulses = 2
-#     # Trigger.tlabel     = Trigger.get_trigger_label()
-#     # Trigger.fstring    = Trigger.get_file_string()
-#     # Trigger.outdir     = Trigger.get_directory_name()
-#     Trigger.get_residuals(  priors = Trigger.priors.copy(),
-#                             rate_function = Trigger.one_FRED_rate,
-#                             channels = [0,1,2,3])
-
-
-def residuals_bessel(times, A, Omega, s, t_t, Delta):
-    return (np.where(times > t_t + Delta / 2,
-            A * special.j0(s * Omega * (- t_t + times - Delta / 2) ),
-           (np.where(times < t_t - Delta / 2,
-            A * special.j0(    Omega * (  t_t - times - Delta / 2) ), A))) )
-
-def sine_gaussian( times, sg_A, sg_t_0, sg_tau, sg_omega, sg_phi):
-    return (sg_A * np.exp(- np.square((times - sg_t_0) / sg_tau)) *
-            np.cos(sg_omega * times + sg_phi) )
-
-if __name__ == '__main__':
+def shitty_function():
+    def sine_gaussian(times, sg_A, sg_t_0, sg_tau, sg_omega, sg_phi):
+        return (sg_A * np.exp(- np.square((times - sg_t_0) / sg_tau)) *
+                np.cos(sg_omega * times + sg_phi) )
     injection_parameters = bilbyPriorDict()
     # injection_parameters['background'] = 100 * 0.064
     # injection_parameters['start_1']    = 2
@@ -146,11 +129,11 @@ if __name__ == '__main__':
     # injection_parameters['t_t']  = 2
     # injection_parameters['Delta']= 2
 
-    injection_parameters['sg_A']    = 2
-    injection_parameters['sg_t_0']  = 2
-    injection_parameters['sg_tau']  = 2
+    injection_parameters['sg_A']    = 5e3 * 0.064
+    injection_parameters['sg_t_0']  = 4
+    injection_parameters['sg_tau']  = 1
     injection_parameters['sg_omega']= 2
-    injection_parameters['sg_phi']  = 2
+    injection_parameters['sg_phi']  = -1
 
     times = np.linspace(-2, 10, 1000)
 
@@ -165,6 +148,68 @@ if __name__ == '__main__':
     plt.savefig('testtesttest.pdf')
 
 
+if __name__ == '__main__':
+
+    import argparse
+    parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')
+    parser.add_argument('--HPC', action = 'store_true',
+                        help = 'Are you running this on SPARTAN ?')
+    args = parser.parse_args()
+    try:
+        HPC = args.HPC
+    except:
+        HPC = False
+
+    if not HPC:
+        rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
+        rc('text', usetex=True)
+        SAMPLER = 'Nestle'
+    else:
+        SAMPLER = 'dynesty'
+
+
+    shitty_function()
+    Trigger = ResidualAnalysis(trigger = 999, times = (3.5, 5),
+                datatype = 'discsc', nSamples = 500, sampler = 'Nestle',
+                priors_pulse_start = 3, priors_pulse_end = 7)
+
+    Trigger.one_FRED(channels = [0,1,2,3], test = False, plot = False)
+    # Trigger.num_pulses = 2
+    # Trigger.tlabel     = Trigger.get_trigger_label()
+    # Trigger.fstring    = Trigger.get_file_string()
+    # Trigger.outdir     = Trigger.get_directory_name()
+    Trigger.get_residuals(  priors = Trigger.priors.copy(),
+                            rate_function = Trigger.one_FRED_rate,
+                            channels = [0,1,2,3])
+
+
+def residuals_bessel(times, A, Omega, s, t_t, Delta):
+    return (np.where(times > t_t + Delta / 2,
+            A * special.j0(s * Omega * (- t_t + times - Delta / 2) ),
+           (np.where(times < t_t - Delta / 2,
+            A * special.j0(    Omega * (  t_t - times - Delta / 2) ), A))) )
+
+def sine_gaussian( times, sg_A, sg_t_0, sg_tau, sg_omega, sg_phi):
+    return (sg_A * np.exp(- np.square((times - sg_t_0) / sg_tau)) *
+            np.cos(sg_omega * times + sg_phi) )
+
+
+
+
+
+
+
 
 
     print(injection_parameters)
+
+
+#
+# if __name__ == '__main__':
+#     nSamples = 200
+#     sampler  = 'nestle'
+#     test = BilbyObject(trigger = 1, times = (-2, 50), test = True,
+#                 datatype = 'discsc', nSamples = nSamples, sampler = sampler,
+#                 priors_pulse_start = -5, priors_pulse_end = 50,
+#                 priors_td_lo = 0,  priors_td_hi = 30)
+#     test.inject_signal(residuals = 'Bessel')
