@@ -25,16 +25,6 @@ from rate_functions import RateFunctionWrapper
 from matplotlib import rc
 
 
-HPC = True
-
-if not HPC:
-    rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
-    rc('text', usetex=True)
-
-    SAMPLER = 'dynesty'
-
-
-
 class EmptyGRB(object):
     '''EmptyGRB for Bilby signal injections. '''
 
@@ -505,7 +495,7 @@ class BilbyObject(RateFunctionWrapper):
             fig2.savefig(l)
 
 
-    def inject_signal(self, scale_override = None):
+    def inject_signal(self, scale_override = None, residuals = False):
         self.model      = 'one FRED pulse lens'
         self.num_pulses = 1
         self.make_priors(   FRED = [1], FREDx = None,
@@ -516,19 +506,39 @@ class BilbyObject(RateFunctionWrapper):
         sample = self.priors.sample()
         sample['background'] = 100 * bin_size
         sample['start_1']    = 2
-        sample['scale_1']    = 100 * bin_size
+        sample['scale_1']    = 1e4 * bin_size
         if scale_override:
             sample['scale_1']= scale_override * bin_size
         sample['tau_1']      = 8 #0.08
         sample['xi_1']       = 3 ## (do I need to / 0.064 ???)
         sample['time_delay'] = 20#0.4
-        sample['magnification_ratio'] = 0.5
+        sample['magnification_ratio'] = 0.0
 
         t_0     = -2
         times   = np.arange(800) * bin_size - t_0 ## = 51.2
         dt      = np.diff(times)
         test_counts  = self.one_FRED_lens_rate(dt, t_0, **sample)
         noise_counts = np.random.poisson(test_counts)
+
+        if residuals == 'SineGaussian':
+            res_inj_params = bilbyPriorDict()
+            res_inj_params['sg_A']    = 2
+            res_inj_params['sg_t_0']  = 2
+            res_inj_params['sg_tau']  = 2
+            res_inj_params['sg_omega']= 2
+            res_inj_params['sg_phi']  = 2
+            noise_counts += self.sine_gaussian(times, **res_inj_params)
+
+        elif residuals == 'Bessel':
+            res_inj_params = bilbyPriorDict()
+            res_inj_params['bes_A']    = 1e2
+            res_inj_params['bes_Omega']= 0.5
+            res_inj_params['bes_s']    = 2
+            res_inj_params['bes_t_0']  = 12
+            res_inj_params['bes_Delta']= 2
+            noise_counts[100:300] += self.residuals_bessel(times[100:300], **res_inj_params).astype('int')
+        else:
+            pass
 
         final_counts = np.zeros((len(times),1))
         final_counts[:,0] = noise_counts
