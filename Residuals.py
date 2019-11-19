@@ -36,7 +36,7 @@ class ResidualAnalysis(BilbyObject):
         self.outdir     = self.get_directory_name()
         # figure, axes = plt.subplots()
         deltat     = np.diff(self.GRB.bin_left)
-        residual_fits = np.zeros(4)
+        residual_fits = np.zeros((len(self.GRB.bin_left),4))
         for i in channels:
             result_label = self.fstring + '_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
@@ -83,16 +83,18 @@ class ResidualAnalysis(BilbyObject):
                             # func= residuals_bessel)
 
             res_result_label = self.fstring + '_res_result_' + self.clabels[i]
-            res_open_result  = self.outdir + '/' + result_label +'_result.json'
+            res_open_result  = self.outdir + '/' + res_result_label +'_result.json'
             try:
-                res_result = bilby.result.read_in_result(filename=open_result)
+                res_result = bilby.result.read_in_result(filename=res_open_result)
+                print('Read in previous residual result.')
             except:
+                print('Have to do the residuals this time.')
                 res_result = bilby.run_sampler( likelihood = likelihood,
                                                 priors     = residual_priors,
                                                 sampler    = self.sampler,
-                                                nlive      = 80,
+                                                nlive      = 300,
                                                 outdir     = self.outdir,
-                                                label      = result_label,
+                                                label      = res_result_label,
                                                 save       = True)
 
 
@@ -107,15 +109,16 @@ class ResidualAnalysis(BilbyObject):
                 del MAP2['sigma']
             except:
                 pass
-            res_fit  = (self.sine_gaussian(self.GRB.bin_left, **MAP2))
-            residual_fits[i] = res_fit
+            res_fit  = self.sine_gaussian(self.GRB.bin_left, **MAP2)
+            residual_fits[:,i] = res_fit
             # axes.plot(  self.GRB.bin_left, res_fit + i * 2e3, 'k-')
 
         # axes.set_xlim(  left = self.GRB.bin_left[0],
                         # right = self.GRB.bin_left[-1])
         # plotname = self.outdir + '/' + self.fstring +'_residuals.pdf'
         # figure.savefig(plotname)
-        self.plot_rates(priors, rate_function, channels, residual_fits)
+        self.plot_rates(priors, rate_function, channels,
+                        residual_fits = residual_fits)
 
 
 

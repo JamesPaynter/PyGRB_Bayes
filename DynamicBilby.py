@@ -378,7 +378,8 @@ class BilbyObject(RateFunctionWrapper):
                 residual_axes[i].plot(self.GRB.bin_left, difference,
                 c = self.colours[i], drawstyle='steps-mid', linewidth = 0.4)
                 if residual_fits is not None:
-                    residual_axes[i].plot(self.GRB.bin_left, residual_fits[i],
+                    res = residual_fits[:,i] / widths
+                    residual_axes[i].plot(self.GRB.bin_left, res,
                     'k:', linewidth = 0.4)
 
             f2_ax1.set_xticks(())
@@ -426,6 +427,8 @@ class BilbyObject(RateFunctionWrapper):
             plt.subplots_adjust(bottom=0.13)
             f2_ax1.ticklabel_format(axis = 'y', style = 'sci')
             l = self.outdir + '/' + self.fstring + '_rates.pdf'
+            if residual_fits is not None:
+                l = self.outdir + '/' + self.fstring + '_residuals.pdf'
             if save_all:
                 l = (self.outdir + '/' + self.fstring + '_rates_' + '_' +
                         str(self.counter) + '.pdf' )
