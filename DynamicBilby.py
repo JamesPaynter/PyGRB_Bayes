@@ -316,7 +316,9 @@ class BilbyObject(RateFunctionWrapper):
             else:
                 print('Key not found : {}'.format(key))
 
-    def plot_rates(self, priors, rate_function, channels, save_all = False):
+    def plot_rates(self, priors, rate_function, channels,
+                    save_all        = False,
+                    residual_fits   = None):
         heights = [5, 1, 1, 1, 1]
         # width = 6.891
         width = 3.321
@@ -375,6 +377,9 @@ class BilbyObject(RateFunctionWrapper):
 
                 residual_axes[i].plot(self.GRB.bin_left, difference,
                 c = self.colours[i], drawstyle='steps-mid', linewidth = 0.4)
+                if residual_fits is not None:
+                    residual_axes[i].plot(self.GRB.bin_left, residual_fits[i],
+                    'k:', linewidth = 0.4)
 
             f2_ax1.set_xticks(())
             f2_ax1.set_xlim(left  = self.GRB.bin_left[0],
@@ -489,6 +494,8 @@ class BilbyObject(RateFunctionWrapper):
             plt.subplots_adjust(top=0.98)
             plt.subplots_adjust(bottom=0.22)
             l = self.outdir + '/' + self.fstring + '_rates.pdf'
+            if residual_fits is not None:
+                l = self.outdir + '/' + self.fstring + '_residuals.pdf'
             if save_all:
                 l = (self.outdir + '/' + self.fstring + '_rates' + '_' +
                         str(self.counter) + '.pdf' )

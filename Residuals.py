@@ -29,9 +29,14 @@ class ResidualAnalysis(BilbyObject):
         super(ResidualAnalysis, self).__init__(**kwargs)
 
     def get_residuals(self, priors, rate_function, channels):
-
-        figure, axes = plt.subplots()
+        self.num_pulses = 1
+        self.model  = 'one FRED'
+        self.tlabel     = self.get_trigger_label()
+        self.fstring    = self.get_file_string()
+        self.outdir     = self.get_directory_name()
+        # figure, axes = plt.subplots()
         deltat     = np.diff(self.GRB.bin_left)
+        residual_fits = np.zeros(4)
         for i in channels:
             result_label = self.fstring + '_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
@@ -77,35 +82,40 @@ class ResidualAnalysis(BilbyObject):
                             # func= self.sine_gaussian    )
                             # func= residuals_bessel)
 
-            result_label = self.fstring + '_res_result_' + self.clabels[i]
-            open_result  = self.outdir + '/' + result_label +'_result.json'
-            result = bilby.run_sampler( likelihood = likelihood,
-                                        priors     = residual_priors,
-                                        sampler    = self.sampler,
-                                        nlive      = 80,
-                                        outdir     = self.outdir,
-                                        label      = result_label,
-                                        save       = True)
+            res_result_label = self.fstring + '_res_result_' + self.clabels[i]
+            res_open_result  = self.outdir + '/' + result_label +'_result.json'
+            try:
+                res_result = bilby.result.read_in_result(filename=open_result)
+            except:
+                res_result = bilby.run_sampler( likelihood = likelihood,
+                                                priors     = residual_priors,
+                                                sampler    = self.sampler,
+                                                nlive      = 80,
+                                                outdir     = self.outdir,
+                                                label      = result_label,
+                                                save       = True)
 
-            plotname = self.outdir + '/' + result_label +'_res_corner.pdf'
-            result.plot_corner(filename = plotname)
+
+            plotname = self.outdir + '/' + res_result_label +'_res_corner.pdf'
+            res_result.plot_corner(filename = plotname)
             MAP2 = dict()
             for parameter in residual_priors:
-                summary = result.get_one_dimensional_median_and_error_bar(
+                summary = res_result.get_one_dimensional_median_and_error_bar(
                                 parameter)
                 MAP2[parameter] = summary.median
             try:
                 del MAP2['sigma']
             except:
                 pass
-            res_fit  = (self.sine_gaussian(self.GRB.bin_left,
-                                        **MAP2) / widths)
-            axes.plot(  self.GRB.bin_left, res_fit + i * 2e3, 'k-')
+            res_fit  = (self.sine_gaussian(self.GRB.bin_left, **MAP2))
+            residual_fits[i] = res_fit
+            # axes.plot(  self.GRB.bin_left, res_fit + i * 2e3, 'k-')
 
-        axes.set_xlim(  left = self.GRB.bin_left[0],
-                        right = self.GRB.bin_left[-1])
-        plotname = self.outdir + '/' + self.fstring +'_residuals.pdf'
-        figure.savefig(plotname)
+        # axes.set_xlim(  left = self.GRB.bin_left[0],
+                        # right = self.GRB.bin_left[-1])
+        # plotname = self.outdir + '/' + self.fstring +'_residuals.pdf'
+        # figure.savefig(plotname)
+        self.plot_rates(priors, rate_function, channels, residual_fits)
 
 
 
@@ -163,10 +173,13 @@ if __name__ == '__main__':
 
 
     # shitty_function()
-    Trigger = ResidualAnalysis(trigger = 999, times = (3.5, 5),
-                datatype = 'discsc', nSamples = 500, sampler = SAMPLER,
-                priors_pulse_start = 3, priors_pulse_end = 7)
+    # Trigger = ResidualAnalysis(trigger = 999, times = (3.5, 5),
+    #             datatype = 'discsc', nSamples = 500, sampler = SAMPLER,
+    #             priors_pulse_start = 3, priors_pulse_end = 7)
 
+    Trigger = ResidualAnalysis(trigger = 8099, times = (2, 12),
+                datatype = 'discsc', nSamples = 500, sampler = SAMPLER,
+                priors_pulse_start = 1, priors_pulse_end = 6)
     Trigger.one_FRED(channels = [0,1,2,3], test = False, plot = False)
     # Trigger.num_pulses = 2
     # Trigger.tlabel     = Trigger.get_trigger_label()
