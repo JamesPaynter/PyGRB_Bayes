@@ -21,7 +21,7 @@ def load_973(sampler = 'dynesty', nSamples = 100):
                 priors_td_lo = 0,  priors_td_hi = 30)
     return test
 
-def load_2571(sampler = 'dynesty', nSamples = 100):
+def load_2571(sampler = 'dynesty', nSamples = 2500):
     test = BilbyObject(2571, times = (-2, 40),
                 datatype = 'discsc', nSamples = nSamples, sampler = sampler,
                 priors_pulse_start = -5, priors_pulse_end = 30,
@@ -200,11 +200,10 @@ if __name__ == '__main__':
     else:
         SAMPLER = 'dynesty'
 
-    compare_num_FRED_pulses(load_3770_custom, times = (-0.1, 0.35))
+    # compare_num_FRED_pulses(load_3770_custom, times = (-0.1, 0.35))
 
-    compare_lens_no_lens_one_pulse(load_test, channels = [0], nSamples = 200,
-                                    sampler = SAMPLER)
+    compare_lens_no_lens_one_pulse(load_2571, sampler = SAMPLER)
 
-    compare_FRED_FREDx(load_8099, nSamples = 500, sampler = SAMPLER)
+    # compare_FRED_FREDx(load_8099, nSamples = 500, sampler = SAMPLER)
     # compare_FRED_FREDx(load_8099, nSamples = 500)
     # compare_lens_no_lens_two_pulse(load_3770, nSamples = 500, sampler = 'dynesty')

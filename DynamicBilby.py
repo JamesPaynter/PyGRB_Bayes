@@ -50,16 +50,16 @@ class BilbyObject(RateFunctionWrapper):
                         priors_bg_lo        = 1e-1,  ## SCALING IS COUNTS / BIN
                         priors_bg_hi        = 1e3,   ## SCALING IS COUNTS / BIN
                         priors_mr_lo        = 0.2,   ## which means that it is
-                        priors_mr_hi        = 1,     # 1 / 0.064 times smaller
-                        priors_tau_lo       = 1e-2,  # than you think it is
-                        priors_tau_hi       = 1e1,   # going to be !!!!!!!!!!!!
-                        priors_xi_lo        = 1e-2,
-                        priors_xi_hi        = 1e2,
+                        priors_mr_hi        = 1.4,     # 1 / 0.064 times smaller
+                        priors_tau_lo       = 1e-3,  # than you think it is
+                        priors_tau_hi       = 1e3,   # going to be !!!!!!!!!!!!
+                        priors_xi_lo        = 1e-3,
+                        priors_xi_hi        = 1e3,
                         priors_gamma_min    = 1e-1,
                         priors_gamma_max    = 1e1,
                         priors_nu_min       = 1e-1,
                         priors_nu_max       = 1e1,
-                        priors_scale_min    = 1e1,   ## SCALING IS COUNTS / BIN
+                        priors_scale_min    = 1e0,   ## SCALING IS COUNTS / BIN
                         priors_scale_max    = 1e4):  ## SCALING IS COUNTS / BIN
 
         super(BilbyObject, self).__init__()

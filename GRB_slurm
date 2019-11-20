@@ -17,4 +17,4 @@
 #%Module module load bilby/0.5.6-Python-3.7.3-spartan_gcc-8.1.0
 #%Module module load astropy/3.2.1-Python-3.7.3-spartan_gcc-8.1.0
 
-python Residuals.py --HPC
+python callCentre.py --HPC
