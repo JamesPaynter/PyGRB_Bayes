@@ -519,10 +519,10 @@ class BilbyObject(RateFunctionWrapper):
         sample['scale_1']    = 1e4 * bin_size
         if scale_override:
             sample['scale_1']= scale_override * bin_size
-        sample['tau_1']      = 8 #0.08
+        sample['tau_1']      = 6 #0.08
         sample['xi_1']       = 3 ## (do I need to / 0.064 ???)
         sample['time_delay'] = 20#0.4
-        sample['magnification_ratio'] = 0.0
+        sample['magnification_ratio'] = 0.4
 
         t_0     = -2
         times   = np.arange(800) * bin_size - t_0 ## = 51.2
