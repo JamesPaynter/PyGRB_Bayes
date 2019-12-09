@@ -125,9 +125,9 @@ def compare_num_FRED_pulses(function, channels = [0,1,2,3],
         print('For channel {}'.format(i+1))
         print('The one FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
                 evidences[0], errors[0]))
-        print('The one FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
+        print('The two FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
                 evidences[1], errors[1]))
-        print('The one FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
+        print('The three FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
                 evidences[2], errors[2]))
         print('The four FRED evidence is : {0:.3f} +/- {1:.3f}'.format(
                 evidences[3], errors[3]))
@@ -194,16 +194,15 @@ if __name__ == '__main__':
     HPC = args.HPC
 
     if not HPC:
-        rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
-        rc('text', usetex=True)
         SAMPLER = 'Nestle'
     else:
         SAMPLER = 'dynesty'
 
     # compare_num_FRED_pulses(load_3770_custom, times = (-0.1, 0.35))
 
-    compare_lens_no_lens_one_pulse(load_2571, sampler = SAMPLER)
+    # compare_lens_no_lens_one_pulse(load_2571, sampler = SAMPLER)
+    # compare_lens_no_lens_one_pulse(load_973, nSamples = 150)
 
-    # compare_FRED_FREDx(load_8099, nSamples = 500, sampler = SAMPLER)
+    # compare_FRED_FREDx(load_8099, nSamples = 250, sampler = SAMPLER)
     # compare_FRED_FREDx(load_8099, nSamples = 500)
-    # compare_lens_no_lens_two_pulse(load_3770, nSamples = 500, sampler = 'dynesty')
+    compare_lens_no_lens_two_pulse(load_3770, nSamples = 100, sampler = SAMPLER)

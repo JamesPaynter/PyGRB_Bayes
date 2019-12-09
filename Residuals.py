@@ -64,6 +64,7 @@ class ResidualAnalysis(BilbyObject):
             residual_priors             = bilbyPriorDict()
             residual_priors['sg_A']     = bilbyLogUniform(1e-1,1e6,latex_label='$A$')
             residual_priors['sg_t_0']   = bilbyUniform(2,7,latex_label='$t_0$')
+            # residual_priors['sg_begin']   = bilbyUniform(2,7,latex_label='$t_0$')
             residual_priors['sg_tau']   = bilbyLogUniform(1e-3,1e3,latex_label='$\\tau$')
             residual_priors['sg_omega'] = bilbyLogUniform(1e-3,1e3,latex_label='$\\omega$')
             residual_priors['sg_phi']   = bilbyUniform(-np.pi,np.pi,latex_label='$\\phi$')

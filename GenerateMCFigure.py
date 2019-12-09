@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from DynamicBilby import BilbyObject
 import pymc3
+from matplotlib import rc
 
 def mkdir(directory):
     if not os.path.exists(directory):
@@ -69,7 +70,7 @@ def MC_test(index_array, **kwargs):
 
 def run_analysis():
     nScales = 20
-    scale_array = np.geomspace(1e4, 1e7, nScales)
+    scale_array = np.geomspace(1e2, 1e5, nScales)
     array_Ylens_ev = np.zeros((nScales,100))
     array_Ylens_er = np.zeros((nScales,100))
     array_Nlens_ev = np.zeros((nScales,100))
@@ -105,39 +106,45 @@ def run_analysis():
                 array_Nlens_er[q,count] = float(line)
                 count += 1
 
+    fig, ax = plt.subplots(figsize = (3.321, 2))
     Z = array_Ylens_ev - array_Nlens_ev
-    # for i in range(nScales):
-        # print(np.sort(Z[i,:].astype('float')))
-        # break
-        # np.quantile(Z[i,:], 0.5)
-        # plt.scatter(scale_array[i]*np.ones(100), Z[i,:])
-        # break
-        # CI50BayesFactor = pymc3.stats.hpd(Z[i,:], alpha = 0.499)
-        # CI90BayesFactor = pymc3.stats.hpd(Z[i,:], alpha = 0.30)
-        # CI99BayesFactor = pymc3.stats.hpd(Z[i,:], alpha = 0.20)
-        # plt.scatter(scale_array[i], CI50BayesFactor[0], c = 'k')
-        # plt.scatter(scale_array[i], CI50BayesFactor[1], c = 'k', alpha = 0.5)
-        # plt.scatter(scale_array[i], CI90BayesFactor[0], c = 'b')
-        # plt.scatter(scale_array[i], CI90BayesFactor[1], c = 'b')
-        # plt.scatter(scale_array[i], CI99BayesFactor[0], c = 'r')
-        # plt.scatter(scale_array[i], CI99BayesFactor[1], c = 'r')
+    CI00BayesFactor = np.zeros(20)
+    CI50BayesFactor = np.zeros((2,20))
+    CI90BayesFactor = np.zeros((2,20))
+    CI99BayesFactor = np.zeros((2,20))
+    for i in range(nScales):
+        CI00BayesFactor[i]   = np.mean(Z[i,:])
+        CI50BayesFactor[:,i] = pymc3.stats.hpd(Z[i,:], alpha = 0.50)
+        CI90BayesFactor[:,i] = pymc3.stats.hpd(Z[i,:], alpha = 0.10)
+        CI99BayesFactor[:,i] = pymc3.stats.hpd(Z[i,:], alpha = 0.01)
+        # print(np.sort(Z[i,:]))
+        # ax.scatter(scale_array[i]*np.ones(100), Z[i,:], s = 0.1)
+    ax.plot(scale_array, CI00BayesFactor, 'k:', linewidth = 0.5)
+    ax.fill_between(scale_array, y1 = CI50BayesFactor[0],
+                    y2 = CI50BayesFactor[1], alpha = 0.4,
+                    color = 'cornflowerblue')
+    ax.fill_between(scale_array, y1 = CI90BayesFactor[0],
+                    y2 = CI90BayesFactor[1], alpha = 0.2,
+                    color = 'cornflowerblue')
+    ax.fill_between(scale_array, y1 = CI99BayesFactor[0],
+                    y2 = CI99BayesFactor[1], alpha = 0.1,
+                    color = 'cornflowerblue')
+    ax.set_xscale('log')
+    ax.set_xlabel('Scale Parameter, $A$')
+    ax.set_ylabel('log BF $=$ log $\\mathcal{Z}_{\\mathfrak{L}} - $log $\\mathcal{Z}_{\\O}$')
 
-    # bins, edges = np.histogram(Z[0,:], bins = [-300, -200, -100, -50, 0, 50, 100, 200, 300])
-    # plt.hist(Z[0,:], bins =  np.arange(40) - 10 )
-    # plt.plot(edges[0:-1], bins, drawstyle = 'steps-mid')
-    # print(bins, edges)
-    # # plt.hist(np.mean(Z[5,:]), bins = 10, log = True)
-    plt.xscale('log')
-    for i in range(14):
-        plt.scatter(scale_array[i]*np.ones(100),Z[i,:])
-    plt.savefig('plotplot.pdf')
+    plt.subplots_adjust(left=0.16)
+    plt.subplots_adjust(right=0.98)
+    plt.subplots_adjust(top=0.98)
+    plt.subplots_adjust(bottom=0.20)
+    fig.savefig('MC_Figure.pdf')
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')
     parser.add_argument('--HPC', action = 'store_true',
                         help = 'Are you running this on SPARTAN ?')
-    parser.add_argument('indices', metavar='N', type=int, nargs='+',
+    parser.add_argument('-indices', metavar='--N', type=int, nargs='+',
                         help='an integer for indexing geomspace array')
     args = parser.parse_args()
     HPC = args.HPC
@@ -145,8 +152,9 @@ if __name__ == '__main__':
     if not HPC:
         rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
         rc('text', usetex=True)
+        rc('text.latex', preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'Nestle'
     else:
         SAMPLER = 'dynesty'
-    MC_test(args.indices, sampler = SAMPLER, nSamples = 250)
-    # run_analysis(sampler = SAMPLER, nSamples = 250)
+    # MC_test(args.indices, sampler = SAMPLER, nSamples = 250)
+    run_analysis()

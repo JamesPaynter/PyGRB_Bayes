@@ -1,6 +1,8 @@
 import re
 import sys
+import pymc3
 import numpy as np
+
 
 from scipy.signal           import savgol_filter
 from scipy.special          import gammaln
@@ -200,7 +202,8 @@ class BilbyObject(RateFunctionWrapper):
             self.priors[key] = None
 
     def add_pulse_priors(self, count_FRED, count_FREDx):
-        list = ['start', 'scale', 'tau', 'xi']
+        list = ['start', 'scale', 'tau', 'xi',
+                'sg_begin',  'sg_A', 'sg_tau', 'sg_omega', 'sg_phi']
         if count_FRED is not None:
             for i in count_FRED:
                 keys = ['{}_{}'.format(list[k], i) for k in range(len(list))]
@@ -310,11 +313,75 @@ class BilbyObject(RateFunctionWrapper):
                     maximum = self.priors_xi_hi,
                     latex_label= '$\\sigma_{}'.format(n), unit = ' ')
 
+            elif 'begin' in key:
+                self.priors[key] = bilbyUniform(
+                    minimum = self.priors_pulse_start,
+                    maximum = self.priors_pulse_end,
+                    latex_label = '$\\Delta_{}$'.format(n), unit = 'sec')
+                if int(n) > 1:
+                    c_key = 'constraint_{}_res'.format(n)
+                    self.priors[c_key] = bilbyConstraint(
+                        minimum = 0,
+                        maximum = float(self.GRB.bin_right[-1]) )
+
+            elif 'sg_A' in key:
+                self.priors[key] = bilbyLogUniform(1e-1,1e6,latex_label='res $A$')
+
+            elif 'sg_tau' in key:
+                self.priors[key] = bilbyLogUniform(1e-3,1e3,latex_label='res $\\tau$')
+
+            elif 'sg_omega' in key:
+                self.priors[key] = bilbyLogUniform(1e-3,1e3,latex_label='res $\\omega$')
+
+            elif 'sg_phi' in key:
+                self.priors[key] = bilbyUniform(-np.pi,np.pi,latex_label='res $\\phi$')
+
             elif 't_0' in key:
                 pass
 
             else:
                 print('Key not found : {}'.format(key))
+
+
+
+    def get_fit_errors(self, open_result, keys, rate_function, t_array):
+        result = bilby.result.read_in_result(filename=open_result)
+        # print(result.posterior['background'].values[0:10])
+
+        error_bars = np.zeros((2, len(t_array)))
+        nDraws = 1000
+        for i in range(1, len(t_array)):
+            dt = t_array[i] - t_array[i-1]
+            t_0= t_array[i]
+            error_bars[:,i] = self.get_point_error(dt, t_0, keys,
+                                        rate_function, nDraws, result) / dt
+        return error_bars
+
+
+    def get_point_error(self, dt, t_0, keys, rate_function, nDraws, result):
+        # dict = bilbyPriorDict()
+        # for key in keys:
+        #     dict[key] = np.random.choice(   result.posterior[key].values,
+        #                                     size = nDraws, replace = True)
+
+        # dts, t_0s = dt * np.ones(nDraws), t_0 * np.ones(nDraws)
+        # y_array = rate_function(dts, t_0s, **dict)
+        ## need to fix the rate function definition so this is vectorised
+        ## why can't rate function just take in times instead of dt ???
+
+        y_array = np.zeros(nDraws)
+        for i in range(nDraws):
+            dict = bilbyPriorDict()
+            for key in keys:
+                dict[key] = np.random.choice(   result.posterior[key].values,
+                                                size = 1, replace = True)
+            y_array[i] = rate_function(dt, t_0, **dict)[1]
+        # upper_err, lower_err = np.quantile(y_array, [0.75, 0.25])
+        upper_err, lower_err = pymc3.stats.hpd(y_array, alpha = 0.01)
+        return upper_err, lower_err
+
+
+
 
     def plot_rates(self, priors, rate_function, channels,
                     save_all        = False,
@@ -344,7 +411,8 @@ class BilbyObject(RateFunctionWrapper):
             bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
 
             # offsets = [0, 4000, 8000, -3000]
-            offsets = [0, 0, 0, 0]
+            offsets = [8000, 5000, 0, 0]
+            # offsets = [0, 0, 0, 0]
             for i in channels:
                 result_label = self.fstring + '_result_' + self.clabels[i]
                 if save_all:
@@ -352,6 +420,10 @@ class BilbyObject(RateFunctionWrapper):
                 open_result  = self.outdir + '/' + result_label +'_result.json'
 
                 result = bilby.result.read_in_result(filename=open_result)
+
+                upper_err, lower_err = self.get_fit_errors(open_result,
+                                    self.keys, rate_function, self.GRB.bin_left)
+
                 MAP = dict()
                 for j in range(1, self.num_pulses + 1):
                     try:
@@ -374,7 +446,14 @@ class BilbyObject(RateFunctionWrapper):
                 c = self.colours[i], drawstyle='steps-mid', linewidth = 0.4)
                 f2_ax1.plot(self.GRB.bin_left, rates_fit + offsets[i],
                 'k', linewidth = 0.4) #, label = plot_legend)
-
+                y_err = np.sqrt(self.GRB.rates[:,i] * widths) / widths
+                f2_ax1.fill_between(self.GRB.bin_left,
+                                    y1 = self.GRB.rates[:,i] + offsets[i] + y_err,
+                                    y2 = self.GRB.rates[:,i] + offsets[i] - y_err,
+                                    alpha = 0.2, color = self.colours[i],
+                                    step = 'mid')
+                f2_ax1.plot(self.GRB.bin_left, upper_err+ offsets[i], 'k:', linewidth = 0.4)
+                f2_ax1.plot(self.GRB.bin_left, lower_err+ offsets[i], 'k:', linewidth = 0.4)
                 residual_axes[i].plot(self.GRB.bin_left, difference,
                 c = self.colours[i], drawstyle='steps-mid', linewidth = 0.4)
                 if residual_fits is not None:
@@ -519,10 +598,10 @@ class BilbyObject(RateFunctionWrapper):
         sample['scale_1']    = 1e4 * bin_size
         if scale_override:
             sample['scale_1']= scale_override * bin_size
-        sample['tau_1']      = 8 #0.08
+        sample['tau_1']      = 6 #0.08
         sample['xi_1']       = 3 ## (do I need to / 0.064 ???)
         sample['time_delay'] = 20#0.4
-        sample['magnification_ratio'] = 0.0
+        sample['magnification_ratio'] = 0.4
 
         t_0     = -2
         times   = np.arange(800) * bin_size - t_0 ## = 51.2
