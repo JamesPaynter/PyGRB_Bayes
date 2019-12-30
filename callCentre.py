@@ -205,4 +205,5 @@ if __name__ == '__main__':
 
     # compare_FRED_FREDx(load_8099, nSamples = 250, sampler = SAMPLER)
     # compare_FRED_FREDx(load_8099, nSamples = 500)
-    compare_lens_no_lens_two_pulse(load_3770, nSamples = 100, sampler = SAMPLER)
+    # compare_lens_no_lens_one_pulse(load_3770, nSamples = 5000, sampler = SAMPLER)
+    compare_lens_no_lens_one_pulse(load_3770, nSamples = 200, sampler = SAMPLER)

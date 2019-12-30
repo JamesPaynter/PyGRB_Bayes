@@ -52,7 +52,7 @@ class BilbyObject(RateFunctionWrapper):
                         priors_bg_lo        = 1e-1,  ## SCALING IS COUNTS / BIN
                         priors_bg_hi        = 1e3,   ## SCALING IS COUNTS / BIN
                         priors_mr_lo        = 0.2,   ## which means that it is
-                        priors_mr_hi        = 1.4,     # 1 / 0.064 times smaller
+                        priors_mr_hi        = 1.4,   # 1 / 0.064 times smaller
                         priors_tau_lo       = 1e-3,  # than you think it is
                         priors_tau_hi       = 1e3,   # going to be !!!!!!!!!!!!
                         priors_xi_lo        = 1e-3,
@@ -392,6 +392,7 @@ class BilbyObject(RateFunctionWrapper):
         # height = (6.891 / 1.8) * 2
         height = (3.321 / 1.8) * 2
         if len(channels) > 1:
+            figure, axes = plt.subplots(4, figsize = (width, height * 4))
             fig2  = plt.figure( figsize = (width, height),
                                 constrained_layout=False)
             # ax    = fig2.add_subplot(111, frameon=False)
@@ -410,8 +411,8 @@ class BilbyObject(RateFunctionWrapper):
             nbins = int( (self.GRB.bin_left[-1] - self.GRB.bin_left[0]) / 0.005 )
             bins  = np.linspace(self.GRB.bin_left[0], self.GRB.bin_left[-1], nbins)
 
-            # offsets = [0, 4000, 8000, -3000]
-            offsets = [8000, 5000, 0, 0]
+            offsets = [0, 4000, 8000, -3000]
+            # offsets = [8000, 5000, 0, 0]
             # offsets = [0, 0, 0, 0]
             for i in channels:
                 result_label = self.fstring + '_result_' + self.clabels[i]
@@ -421,19 +422,57 @@ class BilbyObject(RateFunctionWrapper):
 
                 result = bilby.result.read_in_result(filename=open_result)
 
-                upper_err, lower_err = self.get_fit_errors(open_result,
-                                    self.keys, rate_function, self.GRB.bin_left)
+                # upper_err, lower_err = self.get_fit_errors(open_result,
+                #                     self.keys, rate_function, self.GRB.bin_left)
 
                 MAP = dict()
                 for j in range(1, self.num_pulses + 1):
                     try:
                         key = 'constraint_' + str(j)
                         del priors[key]
+                        key = 'constraint_' + str(j) + '_res'
+                        del priors[key]
                     except:
                         pass
                 for parameter in priors:
                     summary = result.get_one_dimensional_median_and_error_bar(parameter)
                     MAP[parameter] = summary.median
+
+
+                print('************')
+                for j in range(1, self.num_pulses + 1):
+                    ### for each pulse number extract the residual keys
+                    pulse   = dict()
+                    ressies = dict()
+                    for key in priors:
+                    ### now have all prior keys
+                        if 'sg' in key and f'_{j}' in key:
+                            try:
+                                key2 = key.replace(f'_{j}', '')
+                                summary = result.get_one_dimensional_median_and_error_bar(key)
+                                ressies[key2] = summary.median
+                            except:
+                                pass
+                        elif f'_{j}' in key:
+                            try:
+                                key2 = key.replace(f'_{j}', '')
+                                summary = result.get_one_dimensional_median_and_error_bar(key)
+                                pulse[key2] = summary.median
+                            except:
+                                pass
+                    print('************')
+                    for key in ressies:
+                        print(key, ressies[key])
+                    axes[i].plot(self.GRB.bin_left,
+                        self.sine_gaussian(self.GRB.bin_left, **ressies),
+                        c = self.colours[i])
+                    t_0 = float(self.GRB.bin_left[0])
+                    axes[i].plot(self.GRB.bin_left,
+                        self.single_FRED(np.diff(self.GRB.bin_left), t_0, **pulse),
+                        c = 'k')
+                    print(f'drew {j}th line')
+
+
                 MAP['t_0'] = float(self.GRB.bin_left[0])
                 widths = self.GRB.bin_right - self.GRB.bin_left
                 rates_fit  = rate_function(np.diff(self.GRB.bin_left), **MAP) / widths
@@ -447,13 +486,13 @@ class BilbyObject(RateFunctionWrapper):
                 f2_ax1.plot(self.GRB.bin_left, rates_fit + offsets[i],
                 'k', linewidth = 0.4) #, label = plot_legend)
                 y_err = np.sqrt(self.GRB.rates[:,i] * widths) / widths
-                f2_ax1.fill_between(self.GRB.bin_left,
-                                    y1 = self.GRB.rates[:,i] + offsets[i] + y_err,
-                                    y2 = self.GRB.rates[:,i] + offsets[i] - y_err,
-                                    alpha = 0.2, color = self.colours[i],
-                                    step = 'mid')
-                f2_ax1.plot(self.GRB.bin_left, upper_err+ offsets[i], 'k:', linewidth = 0.4)
-                f2_ax1.plot(self.GRB.bin_left, lower_err+ offsets[i], 'k:', linewidth = 0.4)
+                # f2_ax1.fill_between(self.GRB.bin_left,
+                #                     y1 = self.GRB.rates[:,i] + offsets[i] + y_err,
+                #                     y2 = self.GRB.rates[:,i] + offsets[i] - y_err,
+                #                     alpha = 0.2, color = self.colours[i],
+                #                     step = 'mid')
+                # f2_ax1.plot(self.GRB.bin_left, upper_err+ offsets[i], 'k:', linewidth = 0.4)
+                # f2_ax1.plot(self.GRB.bin_left, lower_err+ offsets[i], 'k:', linewidth = 0.4)
                 residual_axes[i].plot(self.GRB.bin_left, difference,
                 c = self.colours[i], drawstyle='steps-mid', linewidth = 0.4)
                 if residual_fits is not None:
@@ -506,12 +545,14 @@ class BilbyObject(RateFunctionWrapper):
             plt.subplots_adjust(bottom=0.13)
             f2_ax1.ticklabel_format(axis = 'y', style = 'sci')
             l = self.outdir + '/' + self.fstring + '_rates.pdf'
+            q = self.outdir + '/' + self.fstring + '_lines.pdf'
             if residual_fits is not None:
                 l = self.outdir + '/' + self.fstring + '_residuals.pdf'
             if save_all:
                 l = (self.outdir + '/' + self.fstring + '_rates_' + '_' +
                         str(self.counter) + '.pdf' )
             fig2.savefig(l)
+            figure.savefig(q)
 
         else:
             heights = [5, 1]
@@ -625,7 +666,8 @@ class BilbyObject(RateFunctionWrapper):
             res_inj_params['bes_s']    = 2
             res_inj_params['bes_t_0']  = 12
             res_inj_params['bes_Delta']= 2
-            noise_counts[100:300] += self.residuals_bessel(times[100:300], **res_inj_params).astype('int')
+            noise_counts[100:300] += self.residuals_bessel(times[100:300],
+                                            **res_inj_params).astype('int')
         else:
             pass
 
@@ -684,6 +726,9 @@ class BilbyObject(RateFunctionWrapper):
                                                 outdir     = self.outdir,
                                                 label      = result_label,
                                                 save       = True)
+                    if plot:
+                        plotname = self.outdir + '/' + result_label +'_corner.pdf'
+                        result.plot_corner(filename = plotname)
             else:
                 result = bilby.run_sampler( likelihood = likelihood,
                                             priors     = self.priors,
@@ -692,14 +737,15 @@ class BilbyObject(RateFunctionWrapper):
                                             outdir     = self.outdir,
                                             label      = result_label,
                                             save       = True)
+                if plot:
+                    plotname = self.outdir + '/' + result_label +'_corner.pdf'
+                    result.plot_corner(filename = plotname)
             try:
                 del self.priors['t_0']
             except:
                 pass
 
-            if plot:
-                plotname = self.outdir + '/' + result_label +'_corner.pdf'
-                result.plot_corner(filename = plotname)
+
             evidences.append(result.log_evidence)
             errors.append(result.log_evidence_err)
 

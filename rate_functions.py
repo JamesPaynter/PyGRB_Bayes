@@ -8,6 +8,19 @@ class RateFunctionWrapper(object):
         super(RateFunctionWrapper, self).__init__()
 
     @staticmethod
+    def single_FRED(        delta_t, t_0,
+                            start, scale, tau, xi):
+        times = np.cumsum(delta_t)
+        times = np.insert(times, 0, 0.0)
+        times+= t_0
+
+        times_1 = (times - start) * np.heaviside(times - start, 0) + 1e-12
+
+        rates = scale * np.exp(- xi * ( (tau / times_1) + (times_1 / tau) - 2))
+        return rates
+
+
+    @staticmethod
     def one_FRED_rate(      delta_t, t_0, background,
                             start_1, scale_1, tau_1, xi_1,
                             sg_A_1, sg_begin_1, sg_tau_1, sg_omega_1, sg_phi_1):
