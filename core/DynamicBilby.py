@@ -410,7 +410,8 @@ class BilbyObject(object):
         return tlabel
 
     def get_directory_name(self):
-        directory = self.tlabel + '_model_comparison_' + str(self.nSamples)
+        directory  = '../products/'
+        directory += self.tlabel + '_model_comparison_' + str(self.nSamples)
         self.base_folder = directory
         if 'lens' in self.model:
             directory += '/lens_model'

@@ -134,7 +134,7 @@ class BATSESignal(SignalFramework):
         ### create a string for the path of the relevant data files
         self.directory = ' ' #'''C:/Users/James/Documents/University/Physics/GAMMA RAY BURSTS/My Work/'''
         if  datatype        == 'discsc':
-            self.path = 'data/discsc_bfits_' + str(self.burst) + '.fits'
+            self.path = '../data/discsc_bfits_' + str(self.burst) + '.fits'
 
             self.file_location = self.directory + 'data/'
             self.string        = 'discsc_bfits_' + str(burst) + '.fits'
@@ -142,7 +142,7 @@ class BATSESignal(SignalFramework):
             self.res           = 0.064
             ### 64 ms bins
         elif datatype      == 'tte':
-            self.path = 'data/tte_bfits_' + str(self.burst) + '.fits'
+            self.path = '../data/tte_bfits_' + str(self.burst) + '.fits'
 
             self.file_location = self.directory + 'data/'
             self.string        = 'tte_bfits_' + str(burst) + '.fits'
