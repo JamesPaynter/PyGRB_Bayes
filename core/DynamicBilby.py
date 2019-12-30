@@ -471,8 +471,8 @@ class BilbyObject(object):
         result_label = self.outdir + '/' + self.fstring + '_result_' + self.clabels[i]
         result = bilby.run_sampler( likelihood = test_instance,
                                     priors     = priors,
-                                    sampler    = 'nestle',
-                                    nlive      = 200,
+                                    sampler    = self.sampler,
+                                    nlive      = self.nSamples,
                                     outdir     = outdir,
                                     label      = result_label,
                                     save       = True)
@@ -527,8 +527,8 @@ class BilbyObject(object):
         result_label = self.fstring + '_result_' + self.clabels[i]
         result = bilby.run_sampler( likelihood = likelihood,
                                     priors     = priors,
-                                    sampler    = 'nestle',
-                                    nlive      = 200,
+                                    sampler    = self.sampler,
+                                    nlive      = self.nSamples,
                                     outdir     = self.outdir,
                                     label      = result_label,
                                     save       = True)
@@ -781,10 +781,10 @@ if __name__ == '__main__':
     else:
         SAMPLER = 'dynesty'
 
-    GRB = load_999(sampler = SAMPLER, nSamples = 300)
+    GRB = load_3770(sampler = SAMPLER, nSamples = 1000)
     # GRB.main_4_channel()
-    # GRB.array_job(args.indices)
-    kwargs = dict()
-    kwargs['count_FRED'] = [1]
-    kwargs['count_sg']   = []
-    GRB.get_residuals(**kwargs)
+    GRB.array_job(args.indices)
+    # kwargs = dict()
+    # kwargs['count_FRED'] = [1]
+    # kwargs['count_sg']   = []
+    # GRB.get_residuals(**kwargs)
