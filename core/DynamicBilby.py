@@ -502,6 +502,7 @@ class BilbyObject(object):
     def main_1_channel(self, channel, **kwargs):
         count_FRED  = kwargs['count_FRED']
         count_sg    = kwargs['count_sg']
+        lens        = kwargs['lens']
 
         self.num_pulses = count_FRED[-1]
         self.model      = 'pulse'
@@ -522,7 +523,7 @@ class BilbyObject(object):
 
         x = self.GRB.bin_left
         y = np.rint(self.GRB.counts[:,i]).astype('uint')
-        likelihood = PoissonRate(x, y, count_FRED, count_sg, lens = False)
+        likelihood = PoissonRate(x, y, count_FRED, count_sg, lens = lens)
 
         result_label = self.fstring + '_result_' + self.clabels[i]
         result = bilby.run_sampler( likelihood = likelihood,
