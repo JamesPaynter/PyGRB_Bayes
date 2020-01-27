@@ -465,9 +465,9 @@ class BilbyObject(object):
             self.main_1_channel(**dictionary)
 
     def main_1_channel(self, channel, **kwargs):
-        # count_FRED  = kwargs['count_FRED']
-        # count_sg    = kwargs['count_sg']
-        # lens        = kwargs['lens']
+        count_FRED  = kwargs['count_FRED']
+        count_sg    = kwargs['count_sg']
+        lens        = kwargs['lens']
 
         self.num_pulses = count_FRED[-1]
         if lens:
@@ -482,7 +482,7 @@ class BilbyObject(object):
         i           = channel
         fig, ax     = plt.subplots()
         prior_shell = MakePriors(FRED_pulses = count_FRED, residuals_sg = count_sg,
-                                    lens = False,
+                                    lens = lens,
                                     priors_pulse_start = 0,
                                     priors_pulse_end = 100,
                                     priors_td_lo = 0,
@@ -781,10 +781,10 @@ if __name__ == '__main__':
     else:
         SAMPLER = 'dynesty'
 
-    GRB = load_973(sampler = SAMPLER, nSamples = 250)
+    GRB = load_3770(sampler = SAMPLER, nSamples = 1000)
     # GRB.main_4_channel(count_FRED  = [1, 2], count_sg = [], lens = False)
-    GRB.main_4_channel(count_FRED  = [1], count_sg = [], lens = True)
-    # GRB.array_job(args.indices)
+    # GRB.main_4_channel(count_FRED  = [1], count_sg = [], lens = True)
+    GRB.array_job(args.indices)
     # kwargs = dict()
     # kwargs['count_FRED'] = [1]
     # kwargs['count_sg']   = []
