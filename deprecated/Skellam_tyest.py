@@ -226,7 +226,8 @@ class TestSkelzaaaa(object):
 
 if __name__ == '__main__':
     # unittest.main()
-    aaa = TestSkelzaaaa()
+    ## commented out for deprecation
+    # aaa = TestSkelzaaaa()
 
 
     # self.x = np.ones(8)

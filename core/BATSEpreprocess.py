@@ -3,7 +3,13 @@ A preprocessing module to unpack the BATSE tte and discsc bfits FITS files.
 Written by James Paynter, 2019.
 '''
 
-import sys
+# import os, sys
+# path = os.path.dirname(__file__)
+# path = os.path.join(path, 'bin')
+# if path not in sys.path:
+#     sys.path.append(path)
+
+
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,6 +18,9 @@ from abc        import ABCMeta
 from scipy      import signal
 from astropy.io import fits
 from math       import isclose
+
+from pathlib import Path
+
 
 #### ** UPDATE THIS TO BE A BASE CLASS FOR SWIFT BAT AND BATSE TO INHERIT FROM
 ###  ** DELETED THE INFO, BACKGROUND AND TESTVARIABLE METHODS **
@@ -133,19 +142,18 @@ class BATSESignal(SignalFramework):
         self.datatype   = datatype
         ### create a string for the path of the relevant data files
         self.directory = ' ' #'''C:/Users/James/Documents/University/Physics/GAMMA RAY BURSTS/My Work/'''
-        if  datatype        == 'discsc':
-            self.path = '../data/discsc_bfits_' + str(self.burst) + '.fits'
+        if  datatype == 'discsc':
+            relative_path = '../data/discsc_bfits_' + str(self.burst) + '.fits'
+            self.path = Path(__file__).parent / relative_path
 
-            self.file_location = self.directory + 'data/'
-            self.string        = 'discsc_bfits_' + str(burst) + '.fits'
             self.resolution    = '64 ms'
             self.res           = 0.064
             ### 64 ms bins
-        elif datatype      == 'tte':
-            self.path = '../data/tte_bfits_' + str(self.burst) + '.fits'
 
-            self.file_location = self.directory + 'data/'
-            self.string        = 'tte_bfits_' + str(burst) + '.fits'
+        elif datatype == 'tte':
+            relative_path = '../data/tte_bfits_' + str(self.burst) + '.fits'
+            self.path = Path(__file__).parent / relative_path
+
             self.resolution    = '5 ms'
             self.res           = 0.005
             ### combination data
@@ -155,8 +163,6 @@ class BATSESignal(SignalFramework):
             raise ValueError(
             "Please select from the 'tte' or 'discsc' datatypes and try again")
         ### uses the open method to read data from FITS files
-        # self.hdus = fits.open(self.string)
-        # self.path = self.file_location + self.string
 
         with fits.open(self.path) as hdu_list:
             self.data = hdu_list[-1].data
@@ -197,7 +203,6 @@ class BATSESignal(SignalFramework):
                     ### read T90's from BATSE 4B catalogue
                 print('reading a T90')
                 __str             = self.directory + 't90_table.txt'
-                # __str             = self.directory + '4br_grossc.duration.txt'
                 length_table      = np.genfromtxt(__str)
                 self.burst_no     = length_table[:,0]
                 self.t90_list     = length_table[:,4]

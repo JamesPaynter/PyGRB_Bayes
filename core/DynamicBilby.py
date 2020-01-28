@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot    as plt
 import matplotlib.gridspec  as gridspec
@@ -12,8 +14,10 @@ from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
 from bilby.core.likelihood  import Analytical1DLikelihood
 from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 
-import BATSEpreprocess
-
+try:
+    from PyGRB_Bayes.core import BATSEpreprocess
+except:
+    import BATSEpreprocess
 
 
 class MakeKeys(object):
@@ -424,6 +428,7 @@ class BilbyObject(object):
             directory += '_FREDx'
         if self.MC_counter:
             directory += '_' + str(self.MC_counter)
+        # dir  = Path(__file__).parent / directory
         return directory
 
     def get_file_string(self):
@@ -781,10 +786,15 @@ if __name__ == '__main__':
     else:
         SAMPLER = 'dynesty'
 
-    GRB = load_3770(sampler = SAMPLER, nSamples = 1000)
+    GRB = load_999(sampler = SAMPLER, nSamples = 200)
+    # GRB = load_3770(sampler = SAMPLER, nSamples = 1000)
     # GRB.main_4_channel(count_FRED  = [1, 2], count_sg = [], lens = False)
-    # GRB.main_4_channel(count_FRED  = [1], count_sg = [], lens = True)
-    GRB.array_job(args.indices)
+    GRB.main_4_channel(count_FRED  = [1], count_sg = [], lens = False)
+    # GRB.array_job(args.indices)
+
+
+
+
     # kwargs = dict()
     # kwargs['count_FRED'] = [1]
     # kwargs['count_sg']   = []
