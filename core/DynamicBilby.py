@@ -1,4 +1,9 @@
 from pathlib import Path
+import os, sys
+
+## os.chdir(os.path.dirname(sys.argv[0]))
+## makes the scripts location the current working directory rather than the
+## directory the script was launched from
 
 import numpy as np
 import matplotlib.pyplot    as plt
@@ -416,6 +421,7 @@ class BilbyObject(object):
         return tlabel
 
     def get_directory_name(self):
+        os.chdir(os.path.dirname(sys.argv[0]))
         directory  = '../products/'
         directory += self.tlabel + '_model_comparison_' + str(self.nSamples)
         self.base_folder = directory
