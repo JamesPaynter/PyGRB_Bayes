@@ -1,6 +1,5 @@
 from DynamicBilby import BilbyObject
 import numpy as np
-import bilby
 import scipy.stats as stats
 import scipy.special as special
 
@@ -11,6 +10,7 @@ import matplotlib.gridspec  as gridspec
 
 import corner
 
+import bilby
 from bilby.core.prior       import PriorDict        as bilbyPriorDict
 from bilby.core.prior       import Uniform          as bilbyUniform
 from bilby.core.prior       import Constraint       as bilbyConstraint
