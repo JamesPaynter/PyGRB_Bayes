@@ -8,6 +8,8 @@ os.chdir(os.path.dirname(sys.argv[0]))
 import numpy as np
 import matplotlib.pyplot    as plt
 import matplotlib.gridspec  as gridspec
+from matplotlib.lines import Line2D
+
 from scipy.special import gammaln
 
 import bilby
@@ -90,20 +92,64 @@ class BilbyObject(object):
             tlabel = ''.join('0' for i in range(4-len(tlabel))) + tlabel
         return tlabel
 
-    def get_directory_name(self):
+    def get_max_pulse(self):
+        mylist = self.model['count_FRED'] + self.model['count_FREDx']
+        ## set gets the unique values of the list
+        myset  = set(mylist)
+        try:
+            self.num_pulses = max(myset) ## WILL NEED EXPANDING
+        except:
+            self.num_pulses = 0
+
+    def get_base_directory(self):
         directory  = '../products/'
         directory += self.tlabel + '_model_comparison_' + str(self.nSamples)
         self.base_folder = directory
-        if 'lens' in self.model:
+
+    def get_pulse_list(self):
+        string = ''
+        for i in range(1, self.num_pulses + 1):
+            if i in self.model['count_FRED']:
+                string += 'F'
+            elif i in self.model['count_FREDx']:
+                string += 'X'
+            if i in self.model['count_sg']:
+                string += 's'
+            elif i in self.model['count_bes']:
+                string += 'b'
+        return string
+
+    def get_directory_name(self):
+        ''' Code changes the root directory to the directory above this file.
+            Then product files (light-curves, posterior chains) are created in:
+                " directory  = '../products/' "
+
+            self.tlabel : 4 character burst trigger number
+
+            adds '_model_comparison_' (could be removed really)
+
+            add number of live points (~ accuracy proxy)
+
+            add lens model or null model (if self.lens)
+
+            add number of pulses
+
+            add pulse keys (eg FFbXsF : Fred F <- bessel_res FREDx <- sg_res F)
+            residual is attached to the proceeding pulse.
+
+            MC counter is for testing the code over many trials --> save data
+        '''
+        self.get_base_directory()
+        directory = self.base_folder
+        if self.model['lens']:
             directory += '/lens_model'
         else:
             directory += '/null_model'
         directory += '_' + str(self.num_pulses)
-        if 'FREDx' in self.model:
-            directory += '_FREDx'
+
+        directory += '_' + self.get_pulse_list()
         if self.MC_counter:
             directory += '_' + str(self.MC_counter)
-        # dir  = Path(__file__).parent / directory
         return directory
 
     def get_file_string(self):
@@ -117,7 +163,7 @@ class BilbyObject(object):
             file_string += '__t'
         elif self.datatype == 'TTElist':
             file_string += '_tl'
-        if 'lens' in self.model:
+        if self.model['lens']:
             file_string += '_YL'
         else:
             file_string +='_NL'
@@ -144,34 +190,52 @@ class BilbyObject(object):
 
             self.main_1_channel(**dictionary)
 
-    def main_1_channel(self, channel, **kwargs):
-        count_FRED  = kwargs['count_FRED']
-        count_sg    = kwargs['count_sg']
-        lens        = kwargs['lens']
+    def main_4_channel(self, model):
+        self.model   = model
+        self.get_max_pulse()
+        self.tlabel  = self.get_trigger_label()
+        self.fstring = self.get_file_string()
+        self.outdir  = self.get_directory_name()
+        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
 
-        self.num_pulses = count_FRED[-1]
-        if lens:
-            self.model  = 'lens'
-        else:
-            self.model  = 'pulse'
-        self.tlabel     = self.get_trigger_label()
-        self.fstring    = self.get_file_string()
-        self.outdir     = self.get_directory_name()
+        channels = [0, 1, 2, 3]
+
+        if not self.test:
+            for i in channels:
+                plt.plot(self.GRB.bin_left, self.GRB.rates[:,i],
+                            c = self.colours[i], drawstyle='steps-mid')
+            plot_name = self.base_folder + '/injected_signal'
+            plt.savefig(plot_name)
+
+        figure, axes = plt.subplots()
+        for i in channels:
+            line, fit = self.main_1_channel(i, model)
+            axes.add_line(line)
+            axes.add_line(fit)
+        axes.autoscale()
+        figname = self.outdir + '/' + self.fstring +'_rates.pdf'
+        figure.savefig(figname)
+
+    def main_1_channel(self, channel, model):
+        self.model   = model
+        self.get_max_pulse()
+        self.tlabel  = self.get_trigger_label()
+        self.fstring = self.get_file_string()
+        self.outdir  = self.get_directory_name()
         bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
 
         i           = channel
-        fig, ax     = plt.subplots()
-        prior_shell = MakePriors(FRED_pulses = count_FRED, residuals_sg = count_sg,
-                                    lens = lens,
-                                    priors_pulse_start = 0,
-                                    priors_pulse_end = 100,
-                                    priors_td_lo = 0,
-                                    priors_td_hi = 60)
+        prior_shell = MakePriors(
+                            priors_pulse_start = self.priors_pulse_start,
+                            priors_pulse_end = self.priors_pulse_end,
+                            priors_td_lo = self.priors_td_lo,
+                            priors_td_hi = self.priors_td_hi,
+                            **self.model)
         priors = prior_shell.return_prior_dict()
 
         x = self.GRB.bin_left
         y = np.rint(self.GRB.counts[:,i]).astype('uint')
-        likelihood = PoissonRate(x, y, count_FRED, count_sg, lens = lens)
+        likelihood = PoissonRate(x, y, **self.model)
 
         result_label = self.fstring + '_result_' + self.clabels[i]
         result = bilby.run_sampler( likelihood = likelihood,
@@ -197,23 +261,31 @@ class BilbyObject(object):
             summary = result.get_one_dimensional_median_and_error_bar(parameter)
             MAP[parameter] = summary.median
 
+        fig, ax     = plt.subplots()
         ax.plot(x, y, c = self.colours[i])
-        ax.plot(x, likelihood.calculate_rate(x, MAP, likelihood.insert_name),
-                'k:')
+        line = Line2D(x, y, c = self.colours[i])
+        if self.model['lens']:
+            ax.plot(x,  likelihood.calculate_rate(x, MAP,
+                        likelihood.insert_name_lens), 'k:')
+            fit = Line2D(x,  likelihood.calculate_rate(x, MAP,
+                        likelihood.insert_name_lens), ls = ':', c = 'k')
+
+        else:
+            ax.plot(x,  likelihood.calculate_rate(x, MAP,
+                        likelihood.insert_name), 'k:')
+            fit = Line2D(x,  likelihood.calculate_rate(x, MAP,
+                        likelihood.insert_name), ls = ':', c = 'k')
 
         figname = self.outdir + '/' + result_label +'_rates.pdf'
         fig.savefig(figname)
+        return line, fit
 
-    def main_4_channel(self, count_FRED, count_sg, lens):
-
-        self.num_pulses = count_FRED[-1]
-        if lens:
-            self.model  = 'lens'
-        else:
-            self.model  = 'pulse'
-        self.tlabel     = self.get_trigger_label()
-        self.fstring    = self.get_file_string()
-        self.outdir     = self.get_directory_name()
+    def main_4_channell(self, model):
+        self.model   = model
+        self.get_max_pulse()
+        self.tlabel  = self.get_trigger_label()
+        self.fstring = self.get_file_string()
+        self.outdir  = self.get_directory_name()
         bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
 
         if not self.test:
@@ -227,18 +299,16 @@ class BilbyObject(object):
         channels = [0, 1, 2, 3]
         for i in channels:
             prior_shell = MakePriors(
-                                FRED_pulses = count_FRED,
-                                residuals_sg = count_sg,
-                                lens        = lens,
                                 priors_pulse_start = self.priors_pulse_start,
                                 priors_pulse_end = self.priors_pulse_end,
                                 priors_td_lo = self.priors_td_lo,
-                                priors_td_hi = self.priors_td_hi)
+                                priors_td_hi = self.priors_td_hi,
+                                **self.model)
             priors = prior_shell.return_prior_dict()
 
             x = self.GRB.bin_left
             y = np.rint(self.GRB.counts[:,i]).astype('uint')
-            likelihood = PoissonRate(x, y, count_FRED, count_sg, lens = lens)
+            likelihood = PoissonRate(x, y, **self.model)
 
             result_label = self.fstring + '_result_' + self.clabels[i]
             result = bilby.run_sampler( likelihood = likelihood,
@@ -325,9 +395,11 @@ class BilbyObject(object):
                 MAP[parameter] = summary.median
 
             if lens:
-                counts_fit = likelihood.calculate_rate(x, MAP, likelihood.insert_name_lens)
+                counts_fit = likelihood.calculate_rate(x, MAP,
+                                                likelihood.insert_name_lens)
             else:
-                counts_fit = likelihood.calculate_rate(x, MAP, likelihood.insert_name)
+                counts_fit = likelihood.calculate_rate(x, MAP,
+                                                likelihood.insert_name)
 
             count_fits[:,i] = counts_fit
             residuals[:,i] = self.GRB.counts[:,i] - counts_fit
@@ -341,9 +413,7 @@ class BilbyObject(object):
                                 y_fit = rates_fit,
                                 channels = channels, y_res_fit = None)
 
-
-    def plot_4_channel( self, x, y, y_fit, channels,
-                        y_res_fit = None, residuals = False, offsets = None):
+    def plot_4_channel(self, x, y, y_fit, channels, y_res_fit = None, residuals = False, offsets = None):
 
         n_axes  = len(channels) + 1
         # n_axes  = min(np.shape(y)) + 1
@@ -404,8 +474,6 @@ class BilbyObject(object):
 
 
 
-
-
 def load_3770(sampler = 'dynesty', nSamples = 100):
     bilby_inst = BilbyObject(3770, times = (-.1, 1),
                 datatype = 'tte', nSamples = nSamples, sampler = sampler,
@@ -438,6 +506,14 @@ def load_973(sampler = 'dynesty', nSamples = 100):
 
 
 
+def create_model_dict(lens, count_FRED, count_FREDx, count_sg, count_bes):
+    model = {}
+    model['lens']        = lens
+    model['count_FRED']  = count_FRED
+    model['count_FREDx'] = count_FREDx
+    model['count_sg']    = count_sg
+    model['count_bes']   = count_bes
+    return model
 
 if __name__ == '__main__':
     import argparse
@@ -454,23 +530,21 @@ if __name__ == '__main__':
 
     if not HPC:
         from matplotlib import rc
-        rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
+        rc('font', **{'family': 'DejaVu Sans',
+                    'serif': ['Computer Modern'],'size': 8})
         rc('text', usetex=True)
-        rc('text.latex', preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
+        rc('text.latex',
+        preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'Nestle'
     else:
         SAMPLER = 'dynesty'
 
-    GRB = load_999(sampler = SAMPLER, nSamples = 200)
+    GRB = load_999(sampler = SAMPLER, nSamples = 100)
     # GRB = load_3770(sampler = SAMPLER, nSamples = 1000)
-    # GRB.main_4_channel(count_FRED  = [1, 2], count_sg = [], lens = False)
-    GRB.main_4_channel(count_FRED  = [1], count_sg = [], lens = False)
+    model = create_model_dict(lens = False, count_FRED  = [1],
+                                            count_FREDx = [],
+                                            count_sg    = [],
+                                            count_bes   = [])
+    GRB.main_4_channel(model)
+    # GRB.main_1_channel(2, model)
     # GRB.array_job(args.indices)
-
-
-
-
-    # kwargs = dict()
-    # kwargs['count_FRED'] = [1]
-    # kwargs['count_sg']   = []
-    # GRB.get_residuals(**kwargs)

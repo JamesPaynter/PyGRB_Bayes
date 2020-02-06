@@ -19,14 +19,14 @@ class MakeKeys(object):
         Doc string goes here.
     '''
 
-    def __init__(self,  FRED_pulses = [], FREDx_pulses = [],
-                        residuals_sg = [], residuals_bes = [],
+    def __init__(self,  count_FRED = [], count_FREDx = [],
+                        count_sg = [], count_bes = [],
                         lens = False):
         super(MakeKeys, self).__init__()
-        self.FRED_pulses   = FRED_pulses
-        self.FREDx_pulses  = FREDx_pulses
-        self.residuals_sg  = residuals_sg
-        self.residuals_bes = residuals_bes
+        self.count_FRED   = count_FRED
+        self.count_FREDx  = count_FREDx
+        self.count_sg     = count_sg
+        self.count_bes    = count_bes
 
         self.FRED_list    = ['start', 'scale', 'tau', 'xi']
         self.FREDx_list   = self.FRED_list.copy() + ['gamma', 'nu']
@@ -50,13 +50,13 @@ class MakeKeys(object):
         if self.lens:
             self.keys += self.lens_list
         self.keys += ['background']
-        self.keys += self.fill_list(self.FRED_list,  self.FRED_pulses)
-        self.keys += self.fill_list(self.FREDx_list, self.FREDx_pulses)
-        self.keys += self.fill_list(self.res_sg_list,  self.residuals_sg)
-        self.keys += self.fill_list(self.res_bes_list, self.residuals_bes)
+        self.keys += self.fill_list(self.FRED_list,  self.count_FRED)
+        self.keys += self.fill_list(self.FREDx_list, self.count_FREDx)
+        self.keys += self.fill_list(self.res_sg_list,  self.count_sg)
+        self.keys += self.fill_list(self.res_bes_list, self.count_bes)
 
     def get_max_pulse(self):
-        mylist = self.FRED_pulses + self.FREDx_pulses
+        mylist = self.count_FRED + self.count_FREDx
         ## set gets the unique values of the list
         myset  = set(mylist)
         try:
@@ -65,7 +65,7 @@ class MakeKeys(object):
             self.max_pulse = 0
 
     def get_residual_list(self):
-        mylist = self.residuals_sg + self.residuals_bes
+        mylist = self.count_sg + self.count_bes
         myarr  = np.array(mylist)
         myarr  = np.unique(myarr)
         mysort = np.sort(myarr)
@@ -102,7 +102,7 @@ class MakePriors(MakeKeys):
     def __init__(self,
                         ## just a separating line
                         priors_pulse_start, priors_pulse_end,
-                        # FRED_pulses, residuals_sg, lens, ## now in **kwargs
+                        # count_FRED, count_sg, lens, ## now in **kwargs
                         priors_td_lo = None,
                         priors_td_hi = None,
                         priors_bg_lo        = 1e-1,  ## SCALING IS COUNTS / BIN
@@ -120,7 +120,7 @@ class MakePriors(MakeKeys):
                         priors_scale_min    = 1e0,  ## SCALING IS COUNTS / BIN
                         priors_scale_max    = 1e5,
                         **kwargs):  ## SCALING IS COUNTS / BIN):
-        # super(MakePriors, self).__init__(FRED_pulses, residuals_sg, lens)
+        # super(MakePriors, self).__init__(count_FRED, count_sg, lens)
         super(MakePriors, self).__init__(**kwargs)
 
         self.priors = bilbyPriorDict(conversion_function = self.make_constraints())
@@ -297,17 +297,17 @@ class MakePriors(MakeKeys):
 
 
 class PoissonRate(MakeKeys, bilby.Likelihood):
-    def __init__(self, x, y,    FRED_pulses, FREDx_pulses,
-                                residuals_sg, residuals_bes,
+    def __init__(self, x, y,    count_FRED, count_FREDx,
+                                count_sg, count_bes,
                                 lens):
 
         '''
             Doc string goes here.
         '''
-        super(PoissonRate, self).__init__(  FRED_pulses   = FRED_pulses,
-                                            FREDx_pulses  = FREDx_pulses,
-                                            residuals_sg  = residuals_sg,
-                                            residuals_bes = residuals_bes,
+        super(PoissonRate, self).__init__(  count_FRED   = count_FRED,
+                                            count_FREDx  = count_FREDx,
+                                            count_sg  = count_sg,
+                                            count_bes = count_bes,
                                             lens = lens)
         self.x = x
         self.y = y
@@ -330,7 +330,7 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
                 np.cos(sg_omega * times + sg_phi) )
 
     @staticmethod
-    def residuals_bessel(times, bes_A, bes_Omega, bes_s, res_begin, bes_Delta):
+    def count_bessel(times, bes_A, bes_Omega, bes_s, res_begin, bes_Delta):
         return np.where(times > res_begin + bes_Delta / 2,
                 bes_A * special.j0(bes_s * bes_Omega *
                (- res_begin + times - bes_Delta / 2) ),
@@ -390,14 +390,14 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
 
     def calculate_rate(self, x, parameters, insert_name_func):
         rates = np.zeros(len(x))
-        rates+= insert_name_func(   x, parameters,     self.FRED_pulses,
+        rates+= insert_name_func(   x, parameters,     self.count_FRED,
                                     self.FRED_list,    self.FRED_pulse)
-        rates+= insert_name_func(   x, parameters,     self.FREDx_pulses,
+        rates+= insert_name_func(   x, parameters,     self.count_FREDx,
                                     self.FREDx_list,   self.FREDx_pulse)
-        rates+= insert_name_func(   x, parameters,     self.residuals_sg,
+        rates+= insert_name_func(   x, parameters,     self.count_sg,
                                     self.res_sg_list,  self.sine_gaussian)
-        rates+= insert_name_func(   x, parameters,     self.residuals_bes,
-                                    self.res_bes_list, self.residuals_bessel)
+        rates+= insert_name_func(   x, parameters,     self.count_bes,
+                                    self.res_bes_list, self.count_bessel)
         try:
             rates += parameters['background']
         except:
