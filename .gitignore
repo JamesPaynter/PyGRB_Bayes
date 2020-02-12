@@ -9,5 +9,4 @@ docs/_*
 *.dat
 *.version
 products/*
-*/__pycache__/
-__pycache__/*
+__pycache__
