@@ -10,3 +10,4 @@ docs/_*
 *.version
 products/*
 __pycache__
+.pytest_cache/
