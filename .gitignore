@@ -1,0 +1,13 @@
+.coverage
+build/
+dist/
+docs/_*
+*.pyc
+*.png
+*.txt
+*.log
+*.dat
+*.version
+products/*
+*/__pycache__/
+__pycache__/*
