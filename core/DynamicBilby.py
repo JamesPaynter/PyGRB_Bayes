@@ -8,9 +8,10 @@ os.chdir(os.path.dirname(sys.argv[0]))
 import numpy as np
 import matplotlib.pyplot    as plt
 import matplotlib.gridspec  as gridspec
-from matplotlib.lines import Line2D
 
 from scipy.special import gammaln
+# from tabulate import tabulate
+from prettytable import PrettyTable
 
 import bilby
 from bilby.core.prior       import PriorDict        as bilbyPriorDict
@@ -83,7 +84,38 @@ class BilbyObject(object):
             self.GRB.end     = self.end
             self.GRB.datatype= self.datatype
 
-        ## move to make priors
+    def make_singular_models(self):
+        ''' Create the full array of 1-pulse models. '''
+        self.model_F  = create_model_dict(  lens = False, count_FRED  = [1],
+                                            count_FREDx = [],
+                                            count_sg    = [],
+                                            count_bes   = [],
+                                            name = 'FRED')
+        self.model_Fs = create_model_dict(  lens = False, count_FRED  = [1],
+                                            count_FREDx = [],
+                                            count_sg    = [1],
+                                            count_bes   = [],
+                                            name = 'FRED sg residual')
+        self.model_Fb = create_model_dict(  lens = False, count_FRED  = [1],
+                                            count_FREDx = [],
+                                            count_sg    = [],
+                                            count_bes   = [1],
+                                            name = 'FRED bes residual')
+        self.model_X  = create_model_dict(  lens = False, count_FRED  = [],
+                                            count_FREDx = [1],
+                                            count_sg    = [],
+                                            count_bes   = [],
+                                            name = 'FREDx')
+        self.model_Xs = create_model_dict(  lens = False, count_FRED  = [],
+                                            count_FREDx = [1],
+                                            count_sg    = [1],
+                                            count_bes   = [],
+                                            name = 'FREDx sg residual')
+        self.model_Xb = create_model_dict(  lens = False, count_FRED  = [],
+                                            count_FREDx = [1],
+                                            count_sg    = [],
+                                            count_bes   = [1],
+                                            name = 'FREDx bes residual')
 
 
     def get_trigger_label(self):
@@ -172,33 +204,79 @@ class BilbyObject(object):
 
 
     def array_job(self, indices):
+        ''' takes one of 24 indices from HPC to parallelise this job. '''
         FRED_lists  = [[k for k in range(1, i)] for i in range(2, 6)]
         FRED_lists += [[k for k in range(1, i)] for i in range(2, 4)]
         lens_lists  = ['False' for i in range(4)]
         lens_lists += ['True'  for i in range(2)]
 
-        dictionary = dict()
+        model = dict()
         for idx in indices:
             n_channels = 4
             p_index    = idx // n_channels
             channel    = idx %  n_channels
 
-            dictionary['channel']    = channel
-            dictionary['count_FRED'] = FRED_lists[p_index]
-            dictionary['count_sg']   = []
-            dictionary['lens']       = lens_lists[p_index]
+            model['count_FRED'] = FRED_lists[p_index]
+            model['count_FREDx']= []
+            model['count_sg']   = []
+            model['count_bes']  = []
+            model['lens']       = lens_lists[p_index]
+            self.main_1_channel(channel, model)
 
-            self.main_1_channel(**dictionary)
+    def test_pulse_type(self, indices):
+        self.make_singular_models()
+        models = [  self.model_F, self.model_Fs, self.model_Fb,
+                    self.model_X, self.model_Xs, self.model_Xb]
 
-    def main_4_channel(self, model):
+        for idx in indices:
+            n_channels = 4
+            m_index    = idx // n_channels
+            channel    = idx %  n_channels
+            self.main_1_channel(channel, models[m_index])
+
+    def get_evidence_singular(self):
+        self.make_singular_models()
+        models = [  self.model_F, self.model_Fs, self.model_Fb,
+                    self.model_X, self.model_Xs, self.model_Xb]
+
+        self.tlabel = self.get_trigger_label()
+        self.get_base_directory()
+        directory = self.base_folder
+        Z_file = directory + '/evidence_table.txt'
+        open(Z_file, 'w').close()
+        for i in range(4):
+            x = PrettyTable(['Model', 'log Z', 'error'])
+            x.align['Model'] = "l" # Left align models
+            x.padding_width = 1 # One space between column edges and contents (default)
+            for k in range(6):
+
+                self.model   = models[k]
+                self.get_max_pulse()
+                self.tlabel  = self.get_trigger_label()
+                self.fstring = self.get_file_string()
+                self.outdir  = self.get_directory_name()
+                bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
+                result_label = f'{self.fstring}_result_{self.clabels[i]}'
+                open_result  = f'{self.outdir}/{result_label}_result.json'
+                try:
+                    result = bilby.result.read_in_result(filename=open_result)
+                    x.add_row([ models[k]['name'],
+                                f'{result.log_evidence:.2f}',
+                                f'{result.log_evidence_err:.2f}'])
+                except:
+                    print(f'Could not find {open_result}')
+        with open(Z_file, 'a') as w:
+            w.write(f'Channel {i+1}')
+            w.write(str(x))
+            w.write('')
+
+    def main_multi_channel(self, channels, model):
         self.model   = model
         self.get_max_pulse()
         self.tlabel  = self.get_trigger_label()
         self.fstring = self.get_file_string()
         self.outdir  = self.get_directory_name()
         bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
-
-        channels = [0, 1, 2, 3]
 
         if not self.test:
             for i in channels:
@@ -207,14 +285,9 @@ class BilbyObject(object):
             plot_name = self.base_folder + '/injected_signal'
             plt.savefig(plot_name)
 
-        figure, axes = plt.subplots()
         for i in channels:
-            line, fit = self.main_1_channel(i, model)
-            axes.add_line(line)
-            axes.add_line(fit)
-        axes.autoscale()
-        figname = self.outdir + '/' + self.fstring +'_rates.pdf'
-        figure.savefig(figname)
+            self.main_1_channel(i, model)
+        self.get_residuals(channels = channels, model = model)
 
     def main_1_channel(self, channel, model):
         self.model   = model
@@ -261,26 +334,9 @@ class BilbyObject(object):
             summary = result.get_one_dimensional_median_and_error_bar(parameter)
             MAP[parameter] = summary.median
 
-        fig, ax     = plt.subplots()
-        ax.plot(x, y, c = self.colours[i])
-        line = Line2D(x, y, c = self.colours[i])
-        if self.model['lens']:
-            ax.plot(x,  likelihood.calculate_rate(x, MAP,
-                        likelihood.insert_name_lens), 'k:')
-            fit = Line2D(x,  likelihood.calculate_rate(x, MAP,
-                        likelihood.insert_name_lens), ls = ':', c = 'k')
+        self.get_residuals(channels = [channel], model = model)
 
-        else:
-            ax.plot(x,  likelihood.calculate_rate(x, MAP,
-                        likelihood.insert_name), 'k:')
-            fit = Line2D(x,  likelihood.calculate_rate(x, MAP,
-                        likelihood.insert_name), ls = ':', c = 'k')
-
-        figname = self.outdir + '/' + result_label +'_rates.pdf'
-        fig.savefig(figname)
-        return line, fit
-
-    def main_4_channell(self, model):
+    def get_residuals(self, channels, model):
         self.model   = model
         self.get_max_pulse()
         self.tlabel  = self.get_trigger_label()
@@ -288,15 +344,8 @@ class BilbyObject(object):
         self.outdir  = self.get_directory_name()
         bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
 
-        if not self.test:
-            for i in range(4):
-                plt.plot(self.GRB.bin_left, self.GRB.rates[:,i],
-                            c = self.colours[i], drawstyle='steps-mid')
-            plot_name = self.base_folder + '/injected_signal'
-            plt.savefig(plot_name)
-
-        fig, ax = plt.subplots()
-        channels = [0, 1, 2, 3]
+        count_fits      = np.zeros((len(self.GRB.bin_left),4))
+        residuals       = np.zeros((len(self.GRB.bin_left),4))
         for i in channels:
             prior_shell = MakePriors(
                                 priors_pulse_start = self.priors_pulse_start,
@@ -309,75 +358,6 @@ class BilbyObject(object):
             x = self.GRB.bin_left
             y = np.rint(self.GRB.counts[:,i]).astype('uint')
             likelihood = PoissonRate(x, y, **self.model)
-
-            result_label = self.fstring + '_result_' + self.clabels[i]
-            result = bilby.run_sampler( likelihood = likelihood,
-                                        priors     = priors,
-                                        sampler    = self.sampler,
-                                        nlive      = self.nSamples,
-                                        outdir     = self.outdir,
-                                        label      = result_label,
-                                        save       = True)
-            plotname = self.outdir + '/' + result_label +'_corner.pdf'
-            result.plot_corner(filename = plotname)
-
-            MAP = dict()
-            for j in range(1, self.num_pulses + 1):
-                try:
-                    key = 'constraint_' + str(j)
-                    del priors[key]
-                    key = 'constraint_' + str(j) + '_res'
-                    del priors[key]
-                except:
-                    pass
-            for parameter in priors:
-                summary = result.get_one_dimensional_median_and_error_bar(parameter)
-                MAP[parameter] = summary.median
-
-            ax.plot(x, y, c = self.colours[i])
-            if lens:
-                ax.plot(x,  likelihood.calculate_rate(x, MAP,
-                            likelihood.insert_name_lens), 'k:')
-            else:
-                ax.plot(x,  likelihood.calculate_rate(x, MAP,
-                            likelihood.insert_name), 'k:')
-
-        figname = self.outdir + '/' + self.fstring +'_rates.pdf'
-        fig.savefig(figname)
-
-    def get_residuals(self, **kwargs):
-        count_FRED  = kwargs['count_FRED']
-        count_sg    = kwargs['count_sg']
-        lens        = kwargs['lens']
-
-        self.num_pulses = count_FRED[-1]
-        if lens:
-            self.model  = 'lens'
-        else:
-            self.model  = 'pulse'
-        self.tlabel     = self.get_trigger_label()
-        self.fstring    = self.get_file_string()
-        self.outdir     = self.get_directory_name()
-        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
-
-        channels        = [0, 1, 2, 3]
-        count_fits      = np.zeros((len(self.GRB.bin_left),4))
-        residuals       = np.zeros((len(self.GRB.bin_left),4))
-        for i in channels:
-            prior_shell = MakePriors(
-                                FRED_pulses = count_FRED,
-                                residuals_sg = count_sg,
-                                lens = lens,
-                                priors_pulse_start = self.priors_pulse_start,
-                                priors_pulse_end = self.priors_pulse_end,
-                                priors_td_lo = self.priors_td_lo,
-                                priors_td_hi = self.priors_td_hi)
-            priors = prior_shell.return_prior_dict()
-
-            x = self.GRB.bin_left
-            y = np.rint(self.GRB.counts[:,i]).astype('uint')
-            likelihood = PoissonRate(x, y, count_FRED, count_sg, lens = lens)
-
 
             result_label = self.fstring + '_result_' + self.clabels[i]
             open_result  = self.outdir + '/' + result_label +'_result.json'
@@ -394,7 +374,7 @@ class BilbyObject(object):
                                 parameter)
                 MAP[parameter] = summary.median
 
-            if lens:
+            if model['lens']:
                 counts_fit = likelihood.calculate_rate(x, MAP,
                                                 likelihood.insert_name_lens)
             else:
@@ -409,44 +389,44 @@ class BilbyObject(object):
         rates_fit       = count_fits    / widths[:,None]
         residual_rates  = residuals     / widths[:,None]
 
-        self.plot_4_channel(    x = self.GRB.bin_left, y = rates,
+        self.plot_routine(    x = self.GRB.bin_left, y = rates,
                                 y_fit = rates_fit,
                                 channels = channels, y_res_fit = None)
 
-    def plot_4_channel(self, x, y, y_fit, channels, y_res_fit = None, residuals = False, offsets = None):
+    def plot_routine(self, x, y, y_fit, channels, y_res_fit = None, residuals = False, offsets = None):
 
         n_axes  = len(channels) + 1
-        # n_axes  = min(np.shape(y)) + 1
         width   = 3.321
         height  = (width / 1.8) * 2
         heights = [5] + ([1 for i in range(n_axes - 1)])
         fig     = plt.figure(figsize = (width, height), constrained_layout=False)
         spec    = gridspec.GridSpec(ncols=2, nrows=n_axes, figure=fig,
-                                height_ratios=heights,
-                                width_ratios=[0.05, 0.95],
-                                hspace=0.0, wspace=0.0)
+                                    height_ratios=heights,
+                                    width_ratios=[0.05, 0.95],
+                                    hspace=0.0, wspace=0.0)
         ax      = fig.add_subplot(spec[:, 0], frameon = False)
-        fig_ax1 = fig.add_subplot(spec[0, 1])
+        fig_ax1 = fig.add_subplot(spec[0, 1]) ## axes label on the LHS of plot
         axes_list = []
-        for i in channels:
+        for i, k in enumerate(channels):
             if offsets:
-                line_label = f'offset {offsets[i]:+,}'
-                fig_ax1.plot(   x, y[:,i] + offsets[i], c = self.colours[i],
+                line_label = f'offset {offsets[k]:+,}'
+                fig_ax1.plot(   x, y[:,k] + offsets[k], c = self.colours[k],
                                 drawstyle='steps-mid', linewidth = 0.4,
                                 label = line_label)
-                fig_ax1.plot(x, y_fit[:,i] + offsets[i], 'k', linewidth = 0.4)
+                fig_ax1.plot(x, y_fit[:,k] + offsets[k], 'k', linewidth = 0.4)
             else:
-                fig_ax1.plot(   x, y[:,i], c = self.colours[i],
+                fig_ax1.plot(   x, y[:,k], c = self.colours[k],
                                 drawstyle='steps-mid', linewidth = 0.4)
-                fig_ax1.plot(x, y_fit[:,i], 'k', linewidth = 0.4)
+                fig_ax1.plot(x, y_fit[:,k], 'k', linewidth = 0.4)
                 #, label = plot_legend)
 
             axes_list.append(fig.add_subplot(spec[i+1, 1]))
-            difference = y[:,i] - y_fit[:,i]
-            axes_list[i].plot(  x, difference, c = self.colours[i],
+            difference = y[:,k] - y_fit[:,k]
+            axes_list[i].plot(  x, difference, c = self.colours[k],
                                 drawstyle='steps-mid',  linewidth = 0.4)
             if y_res_fit is not None:
-                axes_list[i].plot(  x, y_res_fit[:,i], 'k:', linewidth = 0.4)
+                axes_list[i].plot(  x, y_res_fit[:,k], 'k:', linewidth = 0.4)
+            axes_list[i].set_xlim(x[0], x[-1])
             axes_list[i].set_xticks(())
             tick = int(np.max(difference) * 0.67 / 100) * 100
             axes_list[i].set_yticks(([int(0), tick]))
@@ -458,20 +438,21 @@ class BilbyObject(object):
         plt.subplots_adjust(left=0.16)
         plt.subplots_adjust(right=0.98)
         plt.subplots_adjust(top=0.98)
-        plt.subplots_adjust(bottom=0.13)
+        plt.subplots_adjust(bottom=0.05)
 
         fig_ax1.ticklabel_format(axis = 'y', style = 'sci')
         if offsets:
             fig_ax1.legend()
 
-        plot_name = self.outdir + '/' + self.fstring + '_rates.pdf'
-        if residuals is True:
-            plot_name = self.outdir + '/' + self.fstring + '_residuals.pdf'
+        fig_ax1.set_xlim(x[0], x[-1])
+        if len(channels) == 1:
+            result_label = self.fstring + '_result_' + self.clabels[channels[0]]
+            plot_name    = self.outdir + '/' + result_label +'_rates.pdf'
+        else:
+            plot_name = self.outdir + '/' + self.fstring + '_rates.pdf'
+        # if residuals is True:
+        #     plot_name = self.outdir + '/' + self.fstring + '_residuals.pdf'
         fig.savefig(plot_name)
-
-
-
-
 
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
@@ -481,14 +462,11 @@ def load_3770(sampler = 'dynesty', nSamples = 100):
                 priors_td_lo = 0,  priors_td_hi = 0.5)
     return bilby_inst
 
-
-
 def load_999(sampler = 'dynesty', nSamples = 100):
     object = BilbyObject(999, times = (3, 8),
                 datatype = 'discsc', nSamples = nSamples, sampler = sampler,
                 priors_pulse_start = 0, priors_pulse_end = 15)
     return object
-
 
 def load_2571(sampler = 'dynesty', nSamples = 250):
     test = BilbyObject(2571, times = (-2, 40),
@@ -504,15 +482,37 @@ def load_973(sampler = 'dynesty', nSamples = 100):
                 priors_td_lo = 0,  priors_td_hi = 30)
     return test
 
+def load_8099(sampler = 'dynesty', nSamples = 200):
+    object = BilbyObject(8099, times = (2, 15),
+                datatype = 'discsc', nSamples = nSamples, sampler = sampler,
+                priors_pulse_start = 0, priors_pulse_end = 15)
+    return object
 
+def load_3770_a(times, sampler = 'dynesty', nSamples = 100):
+    test = BilbyObject(3770, times = (-0.1, 0.2),
+                datatype = 'tte', nSamples = nSamples, sampler = sampler,
+                priors_pulse_start = -.1, priors_pulse_end = 0.2,
+                priors_td_lo = 0,  priors_td_hi = 0.5)
+    return test
 
-def create_model_dict(lens, count_FRED, count_FREDx, count_sg, count_bes):
+def load_3770_b(times, sampler = 'dynesty', nSamples = 100):
+    test = BilbyObject(3770, times = (0.2, 0.7),
+                datatype = 'tte', nSamples = nSamples, sampler = sampler,
+                priors_pulse_start = .2, priors_pulse_end = 0.7,
+                priors_td_lo = 0,  priors_td_hi = 0.5)
+    return test
+
+def create_model_dict(  lens, count_FRED, count_FREDx, count_sg, count_bes,
+                        **kwargs):
     model = {}
     model['lens']        = lens
     model['count_FRED']  = count_FRED
     model['count_FREDx'] = count_FREDx
     model['count_sg']    = count_sg
     model['count_bes']   = count_bes
+    if kwargs:
+        for kwarg in kwargs:
+            model[kwarg] = kwargs[kwarg]
     return model
 
 if __name__ == '__main__':
@@ -539,12 +539,15 @@ if __name__ == '__main__':
     else:
         SAMPLER = 'dynesty'
 
-    GRB = load_999(sampler = SAMPLER, nSamples = 100)
+    GRB = load_8099(sampler = SAMPLER, nSamples = 51)
     # GRB = load_3770(sampler = SAMPLER, nSamples = 1000)
-    model = create_model_dict(lens = False, count_FRED  = [1],
-                                            count_FREDx = [],
-                                            count_sg    = [],
-                                            count_bes   = [])
-    GRB.main_4_channel(model)
+    # model = create_model_dict(lens = False, count_FRED  = [],
+    #                                         count_FREDx = [1, 2],
+    #                                         count_sg    = [],
+    #                                         count_bes   = [])
+    # GRB.main_multi_channel(channels = [0, 1, 2, 3], model = model)
+    # GRB = load_3770_a(sampler = SAMPLER, nSamples = 2000)
+    GRB.test_pulse_type(args.indices)
+    GRB.get_evidence_singular()
     # GRB.main_1_channel(2, model)
     # GRB.array_job(args.indices)

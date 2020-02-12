@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot    as plt
 import matplotlib.gridspec  as gridspec
@@ -13,6 +14,7 @@ from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
 from bilby.core.likelihood  import Analytical1DLikelihood
 from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 
+MIN_FLOAT = sys.float_info[3]
 
 class MakeKeys(object):
     '''
@@ -21,7 +23,7 @@ class MakeKeys(object):
 
     def __init__(self,  count_FRED = [], count_FREDx = [],
                         count_sg = [], count_bes = [],
-                        lens = False):
+                        lens = False, **kwargs):
         super(MakeKeys, self).__init__()
         self.count_FRED   = count_FRED
         self.count_FREDx  = count_FREDx
@@ -196,6 +198,7 @@ class MakePriors(MakeKeys):
                 maximum = self.priors_td_hi,
                 latex_label='$\\Delta t$',
                 unit = ' seconds ')
+                ## throw error if self.lens is False
 
             elif key == 'magnification_ratio':
                 self.priors[key] = bilbyUniform(
@@ -203,6 +206,7 @@ class MakePriors(MakeKeys):
                 maximum = self.priors_mr_hi,
                 latex_label='$\\Delta \\mu$',
                 unit = ' ')
+                ## throw error if self.lens is False
 
             elif 'start' in key:
                 self.priors[key] = bilbyUniform(
@@ -257,7 +261,7 @@ class MakePriors(MakeKeys):
                 self.priors[key] = bilbyUniform(
                     minimum = self.priors_pulse_start,
                     maximum = self.priors_pulse_end,
-                    latex_label = '$\\Delta_{}$'.format(n), unit = 'sec')
+                    latex_label = '$\\delta_{}$'.format(n), unit = 'sec')
                 if int(n) > 1:
                     c_key = 'constraint_{}_res'.format(n)
                     self.priors[c_key] = bilbyConstraint(
@@ -266,13 +270,13 @@ class MakePriors(MakeKeys):
                                         self.priors_pulse_start) )
 
             elif 'sg_A' in key:
-                self.priors[key] = bilbyLogUniform(1e-1,1e6,latex_label='res $A$')
+                self.priors[key] = bilbyLogUniform(1e1,1e3,latex_label='res $A$')
 
             elif 'sg_lambda' in key:
-                self.priors[key] = bilbyLogUniform(1e-3,1e3,latex_label='res $\\lambda$')
+                self.priors[key] = bilbyLogUniform(1e-2,1e2,latex_label='res $\\lambda$')
 
             elif 'sg_omega' in key:
-                self.priors[key] = bilbyLogUniform(1e-3,1e3,latex_label='res $\\omega$')
+                self.priors[key] = bilbyLogUniform(1e-2,1e2,latex_label='res $\\omega$')
 
             elif 'sg_phi' in key:
                 self.priors[key] = bilbyUniform(-np.pi,np.pi,latex_label='res $\\phi$')
@@ -299,10 +303,11 @@ class MakePriors(MakeKeys):
 class PoissonRate(MakeKeys, bilby.Likelihood):
     def __init__(self, x, y,    count_FRED, count_FREDx,
                                 count_sg, count_bes,
-                                lens):
+                                lens, **kwargs):
 
         '''
-            Doc string goes here.
+            Doc string goes here. kwargs is there because sometime model dict
+            comes with a name.
         '''
         super(PoissonRate, self).__init__(  count_FRED   = count_FRED,
                                             count_FREDx  = count_FREDx,
@@ -315,12 +320,12 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
 
     @staticmethod
     def FRED_pulse(times, start, scale, tau, xi):
-        return np.where(times - start <= 0, 1e-12, scale * np.exp(
+        return np.where(times - start <= 0, MIN_FLOAT, scale * np.exp(
         - xi * ( (tau / (times - start)) + ((times - start) / tau) - 2)))
 
     @staticmethod
     def FREDx_pulse(times, start, scale, tau, xi, gamma, nu):
-        return np.where(times - start <= 0, 1e-12, scale * np.exp(
+        return np.where(times - start <= 0, MIN_FLOAT, scale * np.exp(
         - np.power(xi * (tau / (times - start)), gamma)
         - np.power(xi * ((times - start) / tau), nu) - 2) )
 
