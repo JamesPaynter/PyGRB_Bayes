@@ -1,0 +1,38 @@
+dist: xenial
+language: python 
+
+notifications:
+  email:
+    recipients:
+      # Please don't email me.  Put your email here.
+      - XxSephirothxX999@edgy.com
+    on_success: change
+    on_failure: always
+
+matrix:
+
+  include:
+    - os: linux
+      python: # Should be a string version, e.g., "3.6".
+
+    - os: osx 
+      python: # Should be a string version, e.g., "3.6".
+      osx_image: xcode10.2  # Python 3.7.2 running on macOS 10.14.3
+      language: generic # 'language: python' is an error on Travis CI macOS
+
+before_install:
+  # Before installing any packages, check that pip is up to date.
+  - python3 -m pip install --upgrade pip
+
+install:
+  # Remember how we said it was a good idea to keep everything in a requirements file?
+  - python3 -m pip install -r requirements.txt
+
+script:
+  # If you were testing on your own machine, what command do you execute to run your code? Hint: Starts with `py`...
+  - pytest --cov
+
+# If all the tests passed, update `codecov`. Ensures your coverage is ALWAYS relevant.
+# Comment out these lines once Travis is working and you have Codecov linked to GitHub.
+after_success:
+  - codecov 
