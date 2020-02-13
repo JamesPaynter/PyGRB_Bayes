@@ -306,7 +306,8 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
                                 lens, **kwargs):
 
         '''
-            Doc string goes here. kwargs is there because sometime model dict
+            Doc string goes here.
+            kwargs is there because sometime model dict
             comes with a name.
         '''
         super(PoissonRate, self).__init__(  count_FRED   = count_FRED,

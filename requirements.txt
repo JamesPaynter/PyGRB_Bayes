@@ -101,6 +101,3 @@ pymc3 == 3.7
 # deprecated\skellam_likelihood2.py: 4,5
 # tests\test_poissonrate.py: 4
 scipy == 1.1.0
-
-# setup.py: 1
-setuptools == 40.2.0
