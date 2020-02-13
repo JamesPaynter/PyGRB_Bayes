@@ -174,16 +174,18 @@ class MakePriors(MakeKeys):
         '''
         for key in self.keys:
             ## only works up to 9 pulses....
-            for i in range(1, self.max_pulse + 1):
-                if str(i) in key:
-                    n = str(i)
-                else:
-                    pass
-            for i in self.residual_list:
-                if str(i) in key:
-                    n = str(i)
-                else:
-                    pass
+            n = ''.join([c for c in key if c.isdigit()])
+            # for i in range(1, self.max_pulse + 1):
+            #     if str(i) in key:
+            #         n = str(i)
+            #     else:
+            #         pass
+            # for i in self.residual_list:
+            #     if str(i) in key:
+            #         n = str(i)
+            #     else:
+            #         pass
+            # self.set_prior_from_key(key, n)
             ## find integer in key and put in label
             if key == 'background':
                 self.priors[key] = bilbyLogUniform(
