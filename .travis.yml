@@ -13,8 +13,14 @@ matrix:
 
   include:
     - os: linux
-      python: # Should be a string version, e.g., "3.6".
-
+      - python: 3.7
+      - python: 3.7-dev
+      - python: 3.8
+      - python: 3.8-dev
+      - python: 3.9-dev
+    allow_failures:
+      - python: 3.9-dev
+    
     - os: osx 
       python: # Should be a string version, e.g., "3.6".
       osx_image: xcode10.2  # Python 3.7.2 running on macOS 10.14.3
