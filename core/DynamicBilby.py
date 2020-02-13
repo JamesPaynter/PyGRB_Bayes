@@ -38,7 +38,6 @@ class BilbyObject(object):
                         priors_td_lo = None, priors_td_hi = None,
                         test                = False,
                         satellite           = 'BATSE',
-                        model               = 'lens_model',
                         ## are your bins the right size in rate function ????
                         sampler             = 'dynesty',
                         verbose             = True,
