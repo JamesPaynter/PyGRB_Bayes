@@ -38,4 +38,5 @@ script:
 # If all the tests passed, update `codecov`. Ensures your coverage is ALWAYS relevant.
 # Comment out these lines once Travis is working and you have Codecov linked to GitHub.
 after_success:
-  - codecov 
+  #- codecov 
+  - curl -s https://codecov.io/bash | bash
