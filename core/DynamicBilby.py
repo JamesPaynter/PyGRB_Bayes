@@ -64,7 +64,6 @@ class BilbyObject(object):
         self.satellite           = satellite
         self.sampler             = sampler
         self.nSamples            = nSamples
-        self.model               = model
         self.trigger             = trigger
 
 

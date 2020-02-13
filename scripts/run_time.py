@@ -5,7 +5,7 @@ import sys, os
 #     sys.path.append(path)
 
 import argparse
-from .. import core
+from core.DynamicBilby import BilbyObject
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
     bilby_inst = BilbyObject(3770, times = (-.1, 1),
@@ -90,6 +90,9 @@ if not HPC:
     SAMPLER = 'Nestle'
 else:
     SAMPLER = 'dynesty'
+    GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=2000)
+    GRB.test_pulse_type(args.indices)
+    GRB.get_evidence_singular()
 
 # GRB = load_8099(sampler = SAMPLER, nSamples = 51)
 # GRB.make_singular_models()
@@ -101,9 +104,7 @@ else:
 #                                         count_bes   = [])
 # GRB.main_multi_channel(channels = [0, 1, 2, 3], model = model)
 
-GRB = load_3770_a(times = (-0.1, 0.2), sampler = SAMPLER, nSamples = 2000)
-GRB.test_pulse_type(args.indices)
-GRB.get_evidence_singular()
+
 
 # GRB.main_1_channel(2, model)
 # GRB.array_job(args.indices)
