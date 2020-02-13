@@ -28,16 +28,17 @@ matrix:
 
 before_install:
   # Before installing any packages, check that pip is up to date.
-  - python3 -m pip install --upgrade pip setuptools wheel
+  - python -m pip install --upgrade pip setuptools wheel
   - pip install -r requirements.txt
 
 install:
   # Remember how we said it was a good idea to keep everything in a requirements file?
-  - python3 -m pip install -r requirements.txt
+  - python setup.py sdist bdist_wheel
+  #- python3 -m pip install -r requirements.txt
 
 script:
   # If you were testing on your own machine, what command do you execute to run your code? Hint: Starts with `py`...
-  - pytest
+  - pytest --cov-report term --cov=app/test/
 
 # If all the tests passed, update `codecov`. Ensures your coverage is ALWAYS relevant.
 # Comment out these lines once Travis is working and you have Codecov linked to GitHub.
