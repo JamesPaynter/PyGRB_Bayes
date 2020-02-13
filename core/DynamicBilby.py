@@ -1,7 +1,7 @@
 from pathlib import Path
 import os, sys
 
-os.chdir(os.path.dirname(sys.argv[0]))
+# os.chdir(os.path.dirname(sys.argv[0]))
 ## makes the scripts location the current working directory rather than the
 ## directory the script was launched from
 
@@ -489,7 +489,7 @@ def load_8099(sampler = 'dynesty', nSamples = 200):
     return object
 
 def load_3770_a(times, sampler = 'dynesty', nSamples = 100):
-    test = BilbyObject(3770, times = (-0.1, 0.2),
+    test = BilbyObject(3770, times,
                 datatype = 'tte', nSamples = nSamples, sampler = sampler,
                 priors_pulse_start = -.1, priors_pulse_end = 0.2,
                 priors_td_lo = 0,  priors_td_hi = 0.5)
@@ -540,14 +540,18 @@ if __name__ == '__main__':
         SAMPLER = 'dynesty'
 
     # GRB = load_8099(sampler = SAMPLER, nSamples = 51)
+    # GRB.make_singular_models()
+    # GRB.main_1_channel(channel = 1, model = GRB.model_Xs)
     # GRB = load_3770(sampler = SAMPLER, nSamples = 1000)
     # model = create_model_dict(lens = False, count_FRED  = [],
     #                                         count_FREDx = [1, 2],
     #                                         count_sg    = [],
     #                                         count_bes   = [])
     # GRB.main_multi_channel(channels = [0, 1, 2, 3], model = model)
-    GRB = load_3770_a(sampler = SAMPLER, nSamples = 2000)
+
+    GRB = load_3770_a(times = (-0.1, 0.2), sampler = SAMPLER, nSamples = 2000)
     GRB.test_pulse_type(args.indices)
     GRB.get_evidence_singular()
+
     # GRB.main_1_channel(2, model)
     # GRB.array_job(args.indices)

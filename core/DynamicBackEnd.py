@@ -276,7 +276,7 @@ class MakePriors(MakeKeys):
                 self.priors[key] = bilbyLogUniform(1e-2,1e2,latex_label='res $\\lambda$')
 
             elif 'sg_omega' in key:
-                self.priors[key] = bilbyLogUniform(1e-2,1e2,latex_label='res $\\omega$')
+                self.priors[key] = bilbyLogUniform(1e-3,1e2,latex_label='res $\\omega$')
 
             elif 'sg_phi' in key:
                 self.priors[key] = bilbyUniform(-np.pi,np.pi,latex_label='res $\\phi$')
