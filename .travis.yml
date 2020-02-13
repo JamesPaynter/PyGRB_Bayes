@@ -28,7 +28,8 @@ matrix:
 
 before_install:
   # Before installing any packages, check that pip is up to date.
-  - python3 -m pip install --upgrade pip
+  - python3 -m pip install --upgrade pip setuptools wheel
+  - pip install -r requirements.txt
 
 install:
   # Remember how we said it was a good idea to keep everything in a requirements file?
