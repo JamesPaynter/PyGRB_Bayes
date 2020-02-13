@@ -16,7 +16,7 @@ from scipy.signal import savgol_filter
 import BATSEpreprocess
 
 import sys
-sys.path.append("C:\\Users\\James\\Documents\\University\\Projects\\PyGRB_lens\\PyGRB_lens\\core")
+sys.path.append("C:\\Users\\James\\Documents\\University\\Projects\\PyGRB_lens\\PyGRB_lens\\PyGRB_Bayes")
 
 SAMPLES = 100
 outdir = 'model_comparison_' + str(SAMPLES) + '/lens_model'

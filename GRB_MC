@@ -21,4 +21,4 @@
 
 index=(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23)
 
-python /data/projects/punim1050/PyGRB_Bayes/PyGRB_Bayes/core/DynamicBilby.py -i ${index[${SLURM_ARRAY_TASK_ID}-1]} --HPC
+python /data/projects/punim1050/PyGRB_Bayes/PyGRB_Bayes/PyGRB_Bayes/DynamicBilby.py -i ${index[${SLURM_ARRAY_TASK_ID}-1]} --HPC

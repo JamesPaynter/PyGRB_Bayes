@@ -10,9 +10,6 @@ from bilby.core.prior       import PriorDict        as bilbyPriorDict
 from bilby.core.prior       import Uniform          as bilbyUniform
 from bilby.core.prior       import Constraint       as bilbyConstraint
 from bilby.core.prior       import LogUniform       as bilbyLogUniform
-from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
-from bilby.core.likelihood  import Analytical1DLikelihood
-from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 
 MIN_FLOAT = sys.float_info[3]
 

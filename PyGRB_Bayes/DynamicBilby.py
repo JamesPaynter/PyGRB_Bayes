@@ -22,14 +22,14 @@ from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
 from bilby.core.likelihood  import Analytical1DLikelihood
 from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 
-from core.DynamicBackEnd import *
-import core.BATSEpreprocess as BATSEpreprocess
+# from PyGRB_Bayes.DynamicBackEnd import *
+# import PyGRB_Bayes.BATSEpreprocess as BATSEpreprocess
 
 
 
 # try:
-#     from PyGRB_Bayes.core import BATSEpreprocess
-#     from PyGRB_Bayes.core import DynamicBackEnd ## how to import * from this?
+from PyGRB_Bayes.PyGRB_Bayes import BATSEpreprocess
+from PyGRB_Bayes.PyGRB_Bayes import DynamicBackEnd ## how to import * from this?
 # except:
 #     import BATSEpreprocess
 #     from DynamicBackEnd import *

@@ -6,7 +6,7 @@ from bilby.core.prior       import Constraint       as bilbyConstraint
 from bilby.core.prior       import LogUniform       as bilbyLogUniform
 from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
 
-from PyGRB_Bayes.core import DynamicBackEnd
+from PyGRB_Bayes.PyGRB_Bayes import DynamicBackEnd
 
 
 
