@@ -1,5 +1,5 @@
 .. PyGRB_Bayes documentation master file, created by
-   sphinx-quickstart on Thu Feb 13 19:11:54 2020.
+   sphinx-quickstart on Thu Feb 13 19:51:07 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 

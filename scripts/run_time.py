@@ -88,15 +88,16 @@ if not HPC:
     rc('text.latex',
     preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
     SAMPLER = 'Nestle'
+    GRB = load_8099(sampler = SAMPLER, nSamples = 51)
+    GRB.make_singular_models()
+    GRB.main_1_channel(channel = 1, model = GRB.model_Xs)
 else:
     SAMPLER = 'dynesty'
     GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=2000)
     GRB.test_pulse_type(args.indices)
     GRB.get_evidence_singular()
 
-GRB = load_8099(sampler = SAMPLER, nSamples = 51)
-GRB.make_singular_models()
-GRB.main_1_channel(channel = 1, model = GRB.model_Xs)
+
 # GRB = load_3770(sampler = SAMPLER, nSamples = 1000)
 # model = create_model_dict(lens = False, count_FRED  = [],
 #                                         count_FREDx = [1, 2],

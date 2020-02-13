@@ -3,7 +3,7 @@ import unittest
 
 from scipy.special import gammaln
 
-from PyGRB_Bayes.PyGRB_Bayes import DynamicBackEnd
+from PyGRB_Bayes import DynamicBackEnd
 
 
 

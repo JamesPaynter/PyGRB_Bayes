@@ -1,6 +1,6 @@
 import unittest
 
-from PyGRB_Bayes.PyGRB_Bayes import DynamicBackEnd
+from PyGRB_Bayes import DynamicBackEnd
 
 
 
