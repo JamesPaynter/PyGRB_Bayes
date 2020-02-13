@@ -5,7 +5,7 @@ notifications:
   email:
     recipients:
       # Please don't email me.  Put your email here.
-      - XxSephirothxX999@edgy.com
+      - jpaynter@student.unimelb.edu.au
     on_success: change
     on_failure: always
 
@@ -13,24 +13,27 @@ matrix:
 
   include:
     - os: linux
-      python: # Should be a string version, e.g., "3.6".
-
+      python: 3.7
+    
     - os: osx 
-      python: # Should be a string version, e.g., "3.6".
+      python: 3.7 # Should be a string version, e.g., "3.6".
       osx_image: xcode10.2  # Python 3.7.2 running on macOS 10.14.3
       language: generic # 'language: python' is an error on Travis CI macOS
 
 before_install:
   # Before installing any packages, check that pip is up to date.
-  - python3 -m pip install --upgrade pip
+  - python -m pip install --upgrade pip setuptools wheel
+  - pip install -r requirements.txt
+  - pip install codecov
 
 install:
   # Remember how we said it was a good idea to keep everything in a requirements file?
-  - python3 -m pip install -r requirements.txt
+  - python setup.py sdist bdist_wheel
+  #- python3 -m pip install -r requirements.txt
 
 script:
   # If you were testing on your own machine, what command do you execute to run your code? Hint: Starts with `py`...
-  - pytest --cov
+  - pytest
 
 # If all the tests passed, update `codecov`. Ensures your coverage is ALWAYS relevant.
 # Comment out these lines once Travis is working and you have Codecov linked to GitHub.
