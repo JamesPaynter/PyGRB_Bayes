@@ -39,4 +39,6 @@ script:
 # Comment out these lines once Travis is working and you have Codecov linked to GitHub.
 after_success:
   #- codecov 
-  - curl -s https://codecov.io/bash | bash
+  CODECOV_TOKEN="d0dca108-a268-44da-9276-56ebf56e1b46"
+  bash <(curl -s https://codecov.io/bash)
+  #- curl -s https://codecov.io/bash | bash
