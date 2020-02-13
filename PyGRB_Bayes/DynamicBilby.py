@@ -10,7 +10,6 @@ import matplotlib.pyplot    as plt
 import matplotlib.gridspec  as gridspec
 
 from scipy.special import gammaln
-# from tabulate import tabulate
 from prettytable import PrettyTable
 
 import bilby
@@ -22,17 +21,10 @@ from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
 from bilby.core.likelihood  import Analytical1DLikelihood
 from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 
-# from PyGRB_Bayes.DynamicBackEnd import *
-# import PyGRB_Bayes.BATSEpreprocess as BATSEpreprocess
-
-
-
-# try:
 from PyGRB_Bayes.PyGRB_Bayes import BATSEpreprocess
 from PyGRB_Bayes.PyGRB_Bayes import DynamicBackEnd ## how to import * from this?
-# except:
-#     import BATSEpreprocess
-#     from DynamicBackEnd import *
+
+
 
 class BilbyObject(object):
     ''' Wrapper object for Bayesian analysis. '''
