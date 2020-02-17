@@ -1,2 +1,19 @@
 codecov:
-  token: d0dca108-a268-44da-9276-56ebf56e1b46
+    token: d0dca108-a268-44da-9276-56ebf56e1b46
+    notify:
+        require_ci_to_pass: yes
+
+coverage:
+    round: nearest
+    precision: 2
+    status:
+        project:
+            default:
+                target: 99%
+        patch:
+            default:
+                target: 95%
+        changes: yes
+
+comment:
+    require_changes: yes
