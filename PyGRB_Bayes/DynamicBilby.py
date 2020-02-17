@@ -113,6 +113,13 @@ class BilbyObject(object):
         self.models = [ self.model_F, self.model_Fs, self.model_Fb,
                         self.model_X, self.model_Xs, self.model_Xb]
 
+    # def make_two_pulse_models(self):
+    #     self.make_singular_models()
+    #     for model in self.models:
+    #         model['lens'] = True
+
+
+
     def get_trigger_label(self):
         tlabel = str(self.trigger)
         if len(tlabel) < 4:
