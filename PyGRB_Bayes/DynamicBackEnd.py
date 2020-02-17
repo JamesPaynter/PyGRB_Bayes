@@ -18,9 +18,8 @@ class MakeKeys(object):
         Doc string goes here.
     '''
 
-    def __init__(self,  count_FRED = [], count_FREDx = [],
-                        count_sg = [], count_bes = [],
-                        lens = False, **kwargs):
+    def __init__(self,  count_FRED, count_FREDx, count_sg, count_bes,
+                        lens, **kwargs):
         super(MakeKeys, self).__init__()
         self.count_FRED   = count_FRED
         self.count_FREDx  = count_FREDx
@@ -99,8 +98,11 @@ class MakePriors(MakeKeys):
     '''
 
     def __init__(self,
-                        ## just a separating line
                         priors_pulse_start, priors_pulse_end,
+                        count_sg, count_bes,
+                        count_FRED, count_FREDx,
+                        lens,
+                        ## just a separating line
                         # count_FRED, count_sg, lens, ## now in **kwargs
                         priors_td_lo = None,
                         priors_td_hi = None,
@@ -117,10 +119,13 @@ class MakePriors(MakeKeys):
                         priors_nu_min       = 1e-1,
                         priors_nu_max       = 1e1,
                         priors_scale_min    = 1e0,  ## SCALING IS COUNTS / BIN
-                        priors_scale_max    = 1e5,
-                        **kwargs):  ## SCALING IS COUNTS / BIN):
-        # super(MakePriors, self).__init__(count_FRED, count_sg, lens)
-        super(MakePriors, self).__init__(**kwargs)
+                        priors_scale_max    = 1e5,  ## SCALING IS COUNTS / BIN
+                        **kwargs):
+        super(MakePriors, self).__init__(  count_FRED   = count_FRED,
+                                            count_FREDx  = count_FREDx,
+                                            count_sg  = count_sg,
+                                            count_bes = count_bes,
+                                            lens = lens)
 
         self.priors = bilbyPriorDict(conversion_function = self.make_constraints())
 
@@ -170,20 +175,9 @@ class MakePriors(MakeKeys):
             add kwargs to list ??
         '''
         for key in self.keys:
-            ## only works up to 9 pulses....
+            # find integer in key and put in label
             n = ''.join([c for c in key if c.isdigit()])
-            # for i in range(1, self.max_pulse + 1):
-            #     if str(i) in key:
-            #         n = str(i)
-            #     else:
-            #         pass
-            # for i in self.residual_list:
-            #     if str(i) in key:
-            #         n = str(i)
-            #     else:
-            #         pass
             # self.set_prior_from_key(key, n)
-            ## find integer in key and put in label
             if key == 'background':
                 self.priors[key] = bilbyLogUniform(
                 minimum = self.priors_bg_lo,

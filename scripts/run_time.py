@@ -1,11 +1,8 @@
 import sys, os
-# path = os.path.dirname(__file__)
-# path = os.path.join(path, 'bin')
-# if path not in sys.path:
-#     sys.path.append(path)
 
 import argparse
 from PyGRB_Bayes.DynamicBilby import BilbyObject
+from PyGRB_Bayes.DynamicBilby import create_model_dict
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
     bilby_inst = BilbyObject(3770, times = (-.1, 1),
@@ -55,21 +52,6 @@ def load_3770_b(times, sampler = 'dynesty', nSamples = 100):
     return test
 
 
-def create_model_dict(  lens, count_FRED, count_FREDx, count_sg, count_bes,
-                        **kwargs):
-    model = {}
-    model['lens']        = lens
-    model['count_FRED']  = count_FRED
-    model['count_FREDx'] = count_FREDx
-    model['count_sg']    = count_sg
-    model['count_bes']   = count_bes
-    if kwargs:
-        for kwarg in kwargs:
-            model[kwarg] = kwargs[kwarg]
-    return model
-
-
-
 parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')
 parser.add_argument('--HPC', action = 'store_true',
                     help = 'Are you running this on SPARTAN ?')
@@ -88,9 +70,12 @@ if not HPC:
     rc('text.latex',
     preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
     SAMPLER = 'Nestle'
-    GRB = load_8099(sampler = SAMPLER, nSamples = 51)
+    # GRB = load_8099(sampler = SAMPLER, nSamples = 51)
+    GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=2000)
     GRB.make_singular_models()
-    GRB.main_1_channel(channel = 1, model = GRB.model_Xs)
+    for model in GRB.models:
+        GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+
 else:
     SAMPLER = 'dynesty'
     GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=2000)

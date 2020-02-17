@@ -110,7 +110,8 @@ class BilbyObject(object):
                                             count_sg    = [],
                                             count_bes   = [1],
                                             name = 'FREDx bes residual')
-
+        self.models = [ self.model_F, self.model_Fs, self.model_Fb,
+                        self.model_X, self.model_Xs, self.model_Xb]
 
     def get_trigger_label(self):
         tlabel = str(self.trigger)

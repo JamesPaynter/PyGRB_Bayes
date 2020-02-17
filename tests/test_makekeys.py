@@ -8,9 +8,11 @@ class TestMakeKeys(unittest.TestCase):
 
     def setUp(self):
     # set up is down before the iteration of each class method
-        self.FRED_pulses  = []
-        self.residuals_sg = []
-        self.lens         = False
+        self.FRED_pulses   = []
+        self.FREDx_pulses  = []
+        self.residuals_sg  = []
+        self.residuals_bes = []
+        self.lens          = False
 
     def tearDown(self):
     # tear down is done at the end of each iteration of a class method
@@ -19,22 +21,28 @@ class TestMakeKeys(unittest.TestCase):
         del self.lens
 
     def test_lens(self):
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED = self.FRED_pulses,
-                                                count_sg = self.residuals_sg,
+        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = self.FRED_pulses,
+                                                count_FREDx = self.FREDx_pulses,
+                                                count_sg  = self.residuals_sg,
+                                                count_bes = self.residuals_bes,
                                                 lens = self.lens)
         self.assertEqual(self.lens, key_object.lens)
 
     def test_background(self):
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED = self.FRED_pulses,
-                                                count_sg = self.residuals_sg,
+        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = self.FRED_pulses,
+                                                count_FREDx = self.FREDx_pulses,
+                                                count_sg  = self.residuals_sg,
+                                                count_bes = self.residuals_bes,
                                                 lens = self.lens)
         keys = key_object.keys
         self.assertEqual(['background'], keys)
 
     def test_FRED(self):
-        self.FRED_pulses  = [1]
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED = self.FRED_pulses,
-                                                count_sg = self.residuals_sg,
+        FRED_pulses  = [1]
+        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = FRED_pulses,
+                                                count_FREDx = self.FREDx_pulses,
+                                                count_sg  = self.residuals_sg,
+                                                count_bes = self.residuals_bes,
                                                 lens = self.lens)
         keys = key_object.keys
         key_list = ['background', 'start_1', 'scale_1', 'tau_1', 'xi_1']
@@ -44,9 +52,11 @@ class TestMakeKeys(unittest.TestCase):
             self.assertIn(key, keys)
 
     def test_sg(self):
-        self.residuals_sg = [1]
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED = self.FRED_pulses,
-                                                count_sg = self.residuals_sg,
+        residuals_sg = [1]
+        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = self.FRED_pulses,
+                                                count_FREDx = self.FREDx_pulses,
+                                                count_sg  = residuals_sg,
+                                                count_bes = self.residuals_bes,
                                                 lens = self.lens)
         keys = key_object.keys
         key_list = ['background', 'sg_A_1',
@@ -57,11 +67,13 @@ class TestMakeKeys(unittest.TestCase):
             self.assertIn(key, keys)
 
     def test_FRED_lens(self):
-        self.FRED_pulses  = [1]
-        self.lens         = True
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED = self.FRED_pulses,
-                                                count_sg = self.residuals_sg,
-                                                lens = self.lens)
+        FRED_pulses  = [1]
+        lens         = True
+        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = FRED_pulses,
+                                                count_FREDx = self.FREDx_pulses,
+                                                count_sg  = self.residuals_sg,
+                                                count_bes = self.residuals_bes,
+                                                lens = lens)
         keys = key_object.keys
         key_list = ['background', 'start_1', 'scale_1', 'tau_1', 'xi_1',
                     'magnification_ratio', 'time_delay']

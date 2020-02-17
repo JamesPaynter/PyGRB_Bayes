@@ -7,51 +7,65 @@ from abc import ABCMeta
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from astropy.io import fits
+
 
 
 class EmptyGRB(object):
     """ EmptyGRB for Bilby signal injections. """
 
     def __init__(self, bin_left, bin_right, rates):
+        """
+        Initialize the :class:`~SignalFramework` abstract class. This class
+        should be inherited by each Satellite's child class and the init ran
+        after the init of the child classes.
+
+        Parameters
+        ----------
+        bin_left : np.array.
+            The parameter specifies the left bins of the GRB.
+
+        bin_left : np.array.
+            The parameter specifies the right bins of the GRB.
+
+        rates : np.array.
+            The parameter specifies rates at each bin of the GRB.
+            If multi-channel, it should be in the form
+        """
         super(EmptyGRB, self).__init__()
-        assert(len(bin_left) == len(bin_right))
-        assert(bin_right[1:] - bin_left[:-1] >= 0).all()
 
-    @property
-    def bin_left(self):
-        """ Property assures that bin_left is np array. """
-        return self._bin_left
-
-    @bin_left.setter
-    def bin_left(self, bin_left):
         if not isinstance(bin_left, np.ndarray):
-            bin_left = np.array([bin_left])
-        self._bin_left = bin_left
+            raise ValueError(
+                'Input variable `bin_left` should be a numpy array. '
+                'Is {} when it should be np.ndarray.'.format(type(bin_left)))
+        self.bin_left = bin_left
 
-    @property
-    def bin_right(self):
-        """ Property assures that bin_right is np array. """
-        return self._bin_right
-
-    @bin_right.setter
-    def bin_right(self, bin_right):
         if not isinstance(bin_right, np.ndarray):
-            bin_right = np.array([bin_right])
-        self._bin_right = bin_right
+            raise ValueError(
+                'Input variable `bin_right` should be a numpy array. '
+                'Is {} when it should be np.ndarray.'.format(type(bin_right)))
+        self.bin_right = bin_right
 
-    @property
-    def rates(self):
-        """ Property assures that rates is np array. """
-        return self._rates
-
-    @rates.setter
-    def rates(self, rates):
         if not isinstance(rates, np.ndarray):
-            rates = np.array([rates])
-        self._rates = rates
+            raise ValueError(
+                'Input variable `rates` should be a numpy array. '
+                'Is {} when it should be np.ndarray.'.format(type(rates)))
+        self.rates = rates
 
-
+        # assert right and left bin arrays are equal length
+        assert(len(bin_left) == len(bin_right))
+        # assert rates array is also the same length
+        assert(len(bin_left)) == max(np.shape(rates))
+        # assert that each left bin begins after the last right bin finishes
+        assert(((bin_left[1:] - bin_right[:-1]) >= -1e-3).all())
+        # assert rates has the right shape
+        try:
+            (a,b) = np.shape(rates)
+            print(a,b)
+        except:
+            a, b = 1, 0
+        assert(a > b)
 
 
 class SignalFramework(metaclass=ABCMeta):
@@ -156,27 +170,21 @@ class SignalFramework(metaclass=ABCMeta):
             self.return_GRB()
 
     def get_background(self):
+        """ Creates background from bins of width greater than nominated
+            resolution. ie for 64ms uses the larger 1024ms+ bins.
         """
-            Creates background from bins of width greater than nominated
-            resolution. ie for 64ms uses the larger 1024ms+ bins
-        """
-        # return np.mean(self.rates[self.bin_widths > self.res], axis=0)
         return np.mean(self.rates[self.bin_widths > 0.065], axis=0)
 
     def return_GRB(self):
-        """ Creates a new cleaner GRB object, dropping the scaffolding. """
+        """ Creates a new GRB object with only bins and rates. """
         return EmptyGRB(self.bin_left, self.bin_right, self.rates)
 
 
 class BATSESignal(SignalFramework):
     """ Inherits from the SignalFramework abstract class. """
 
-    def __init__(self,  burst = None, datatype = None, times = None,
-                        bgs = False, light_GRB = True):
-                 # burst,  ## does not matter to super
-                 # datatype='discsc',  ## does not matter to super
-                 # times='T90',  ## matters to super
-                 # bgs=True):  ## matters to super
+    def __init__(self,  burst: int = None, datatype: str = None, times = None,
+                        bgs: bool = False, light_GRB: bool = True):
         """
         Initialize the :class:`~BATSESignal` class. This class inherits from the
         SignalFramework abstract class. The parent init should run at the end
@@ -204,33 +212,27 @@ class BATSESignal(SignalFramework):
             light-curve fitting with the main :mod:`~DynamicBilby` methods.
         light_GRB: bool.
             If *True* generates a new GRB object without all the scaffolding and
-            extra methods and properties of this class. Used for Bilby analsis.
+            extra methods and properties of this class. Used for Bilby analysis.
         """
 
-        self.times   = times
-        self.colours = ['red', 'orange', 'green', 'blue']
-        self.labels  = ['  20 - 50   keV', '  50 - 100 keV',
-                         '100 - 300  keV', '300 +      keV']
-        # test types
-        if not isinstance(burst, int):
+        self.colours   = ['red', 'orange', 'green', 'blue']
+        self.labels    = ['  20 - 50   keV', '  50 - 100 keV',
+                          ' 100 - 300  keV', '300 +      keV']
+        self.datatypes = {'discsc':'discsc', 'tte':'tte'}
+        try:
+            self.burst = int(burst)
+        except:
             raise ValueError(
                 'Input variable `burst` should be an integer. '
                 'Is {} when it should be int.'.format(type(burst)))
-        else:
-            self.burst = burst
-        if not isinstance(datatype, str):
-            raise ValueError(
-                'Input variable `datatype` should be a string. '
-                'Is {} when it should be str.'.format(type(datatype)))
-        elif datatype not in ['discsc','tte']:
-            print(datatype)
-            print(type(datatype))
+        try:
+            self.datatype = self.datatypes[datatype]
+        except:
             raise AssertionError(
                 'Input variable `datatype` is {} when it '
                 'should be `discsc` or `tte`.'.format(datatype))
-        else:
-            self.datatype = datatype
 
+        self.times     = times
         self.light_GRB = light_GRB
         # uses self.xx so that it has passed the AssertionErrors
         relative_path = f'./data/{self.datatype}_bfits_{self.burst}.fits'
@@ -242,72 +244,50 @@ class BATSESignal(SignalFramework):
             ### initialise data arrays from fits file, over entire data set
             self.bin_left  = np.array(self.data['TIMES'][:, 0])
             self.bin_right = np.array(self.data['TIMES'][:, 1])
-            self.rates = np.array(self.data['RATES'][:, :])
-            # errors in BATSE rates are just calculated by scaling Poissonian
-            # from counts
+            self.rates     = np.array(self.data['RATES'][:, :])
+            # errors in BATSE rates are calculated by scaling the counts
+            # count errors are calculated with as Poisson errors = sqrt(counts)
             self.errors = np.array(self.data['ERRORS'][:, :])
             self.counts = np.array([np.multiply(self.rates[:, i],
                     self.bin_right - self.bin_left) for i in range(4)]).T
 
             self.count_err = np.sqrt(self.counts)
-            self.rates_max = self.data['RATES'][:, :].max()
-            if self.times == 'T90':
-                # try:
-                ### read T90's from BATSE 4B catalogue
-                print('reading a T90')
-                self.directory = ' '
-                # this file is ??
-                __str = self.directory + 't90_table.txt'
-                length_table = np.genfromtxt(__str)
-                self.burst_no = length_table[:, 0]
-                self.t90_list = length_table[:, 4]
-                self.t90_err_list = length_table[:, 5]
-                self.t90_st_list = length_table[:, 6]
-                ### BATSE specific ^^
-                ### generic / common
-                self.t90 = float(self.t90_list[self.burst_no == self.burst])
-                self.t90_err = float(self.t90_err_list[self.burst_no == self.burst])
-                self.t90_st = float(self.t90_st_list[self.burst_no == self.burst])
-                self.end = self.t90_st + self.t90
-                print(self.t90_st, self.end)
-                self.cut_times = True
-                # except:
-                #     print('The 4B catalogue does not contain the T90 for this burst...')
-                #     print('Please specify the start and end times as a tuple.')
-
+            # could delete this line
+            # self.rates_max = self.data['RATES'][:, :].max()
+            self.t90_st, self.end = self.bin_left[0], self.bin_right[-1]
+            try:
+                (self.t90_st, self.end) = times
+            except:
+                if times == 'T90':
+                    self.read_T90_table()
             super().__init__(times, bgs)
 
+    def open_T90_excel(self):
+        xls_file = f'./data/BATSE_4B_catalogue.xls'
+        path = Path(__file__).parent / xls_file
+        cols = ['trigger_num', 't90', 't90_error', 't90_start']
+        dtypes = {  'trigger_num': np.int32, 't90' : np.float64,
+                    't90_error' : np.float64, 't90_start' : np.float64}
+        try:
+            table = pd.read_excel(path, sheet_name = 'batsegrb', header = 0,
+                                    usecols = cols, dtype = dtypes)
+            return table
+        except FileNotFoundError as fnf_error:
+                    print(fnf_error)
 
+    def read_T90_table(self):
 
-### create a string for the path of the relevant data files
-# if datatype == 'discsc':
-#     relative_path = './data/discsc_bfits_' + str(self.burst) + '.fits'
-#     self.path = Path(__file__).parent / relative_path
-#
-#     self.resolution = '64 ms'
-#     self.res = 0.064
-#     ### 64 ms bins
-#
-# elif datatype == 'tte':
-#     relative_path = './data/tte_bfits_' + str(self.burst) + '.fits'
-#     self.path = Path(__file__).parent / relative_path
-#
-#     self.resolution = '5 ms'
-#     self.res = 0.005
-#     ### combination data
-#     ### tte has some resolution down to 2 ms
-#     ### don't think the above statement is true 18/2/19
-# else:
-#     raise ValueError(
-#     "Please select from the 'tte' or 'discsc' datatypes and try again")
-# ### uses the open method to read data from FITS files
-            ## print comments from fits header
-            # print(
-            # '''The following notes and comments are from the FITS header.\n''')
-            # h_list = []
-            # for i in hdu_list[-1].header:
-            #     h_list.append(i)
-            # for i in range(len(hdu_list[-1].header)):
-            #     if h_list[i] == 'COMMENT' or h_list[i] == 'NOTE':
-            #         print(h_list[i], hdu_list[-1].header[i])
-            # print('\n\n')
+        table = self.open_T90_excel()
+        self.burst_list       = table['trigger_num']
+        self.t90_list       = table['t90']
+        self.t90_err_list   = table['t90_error']
+        self.t90_st_list    = table['t90_start']
+        try:
+            self.t90 = float(self.t90_list[self.burst_list == self.burst])
+            self.t90_err = float(self.t90_err_list[self.burst_list == self.burst])
+            self.t90_st = float(self.t90_st_list[self.burst_list == self.burst])
+            self.end = self.t90_st + self.t90
+        except:
+             raise Exception('There is no T90 for this trigger in the BATSE 4B'
+                             'catalogue. Try `full` or enter custom times as a'
+                             'tuple, i.e. (start, end).')

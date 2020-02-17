@@ -16,9 +16,11 @@ class TestMakePriors(unittest.TestCase):
     ## set up is down before the iteration of each class method
         self.priors_pulse_start = 0.0
         self.priors_pulse_end   = 1.0
-        self.FRED_pulses  = []
-        self.residuals_sg = []
-        self.lens         = False
+        self.FRED_pulses   = []
+        self.FREDx_pulses  = []
+        self.residuals_sg  = []
+        self.residuals_bes = []
+        self.lens          = False
 
     def tearDown(self):
     ## tear down is done at the end of each iteration of the class methods
@@ -31,19 +33,23 @@ class TestMakePriors(unittest.TestCase):
     def test_prior_dict(self):
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_FRED = self.FRED_pulses,
-                                            count_sg = self.residuals_sg,
+                                            count_FRED  = self.FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = self.residuals_bes,
                                             lens = self.lens)
         priors = prior_object.priors
         self.assertIsInstance(priors, bilbyPriorDict)
 
 
     def test_3_FRED_priors(self):
-        self.FRED_pulses  = [1, 2, 3]
+        FRED_pulses  = [1, 2, 3]
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_FRED = self.FRED_pulses,
-                                            count_sg = self.residuals_sg,
+                                            count_FRED  = FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = self.residuals_bes,
                                             lens = self.lens)
         priors  = prior_object.priors
         keys    = prior_object.keys
@@ -58,10 +64,13 @@ class TestMakePriors(unittest.TestCase):
         ## not sure how to test the constraint function works properly
         ## but looking at it, it seems to be correct lol
         ## this tests that it works at least
-        self.FRED_pulses = [1, 2, 3]
+        FRED_pulses = [1, 2, 3]
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_FRED = self.FRED_pulses,
+                                            count_FRED  = FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = self.residuals_bes,
                                             lens = self.lens)
         priors  = prior_object.priors
         sample  = priors.sample(100)
@@ -70,10 +79,13 @@ class TestMakePriors(unittest.TestCase):
             self.assertTrue(0 <= sample['start_2'][i] <= sample['start_3'][i])
 
     def test_3_sg_priors(self):
-        self.residuals_sg  = [1, 2, 3]
+        residuals_sg  = [1, 2, 3]
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_sg = self.residuals_sg,
+                                            count_FRED  = self.FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = residuals_sg,
+                                            count_bes = self.residuals_bes,
                                             lens = self.lens)
         priors  = prior_object.priors
         keys    = prior_object.keys
@@ -88,10 +100,13 @@ class TestMakePriors(unittest.TestCase):
         ## not sure how to test the constraint function works properly
         ## but looking at it, it seems to be correct lol
         ## this tests that it works at least
-        self.residuals_sg = [1, 2, 3]
+        residuals_sg = [1, 2, 3]
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_sg = self.residuals_sg,
+                                            count_FRED  = self.FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = residuals_sg,
+                                            count_bes = self.residuals_bes,
                                             lens = self.lens)
         priors  = prior_object.priors
         sample  = priors.sample(100)
@@ -102,27 +117,33 @@ class TestMakePriors(unittest.TestCase):
     def test_lens(self):
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_FRED = self.FRED_pulses,
-                                            count_sg = self.residuals_sg,
+                                            count_FRED  = self.FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = self.residuals_bes,
                                             lens = self.lens)
         self.assertEqual(self.lens, prior_object.lens)
 
     def test_background(self):
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_FRED = self.FRED_pulses,
-                                            count_sg = self.residuals_sg,
+                                            count_FRED  = self.FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = self.residuals_bes,
                                             lens = self.lens)
         keys = prior_object.keys
         self.assertEqual(['background'], keys)
 
     def test_FRED_sg(self):
-        self.FRED_pulses  = [1]
-        self.residuals_sg = [1]
+        FRED_pulses  = [1]
+        residuals_sg = [1]
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_FRED = self.FRED_pulses,
-                                            count_sg = self.residuals_sg,
+                                            count_FRED  = FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = residuals_sg,
+                                            count_bes = self.residuals_bes,
                                             lens = self.lens)
         keys = prior_object.keys
         key_list = ['background', 'start_1', 'scale_1', 'tau_1', 'sg_A_1',
@@ -136,7 +157,11 @@ class TestMakePriors(unittest.TestCase):
         FREDx_pulses = [1]
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_FREDx = FREDx_pulses)
+                                            count_FRED  = self.FRED_pulses,
+                                            count_FREDx = FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = self.residuals_bes,
+                                            lens = self.lens)
         keys = prior_object.keys
         key_list = ['background', 'start_1', 'scale_1', 'tau_1', 'xi_1',
                     'gamma_1', 'nu_1']
@@ -149,7 +174,11 @@ class TestMakePriors(unittest.TestCase):
         residuals_bes = [1]
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_bes = residuals_bes)
+                                            count_FRED  = self.FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = residuals_bes,
+                                            lens = self.lens)
         keys = prior_object.keys
         key_list = ['background', 'bes_A_1',
                     'bes_Omega_1', 'bes_s_1', 'res_begin_1', 'bes_Delta_1']
@@ -159,12 +188,15 @@ class TestMakePriors(unittest.TestCase):
             self.assertIn(key, keys)
 
     def test_FRED_lens(self):
-        self.FRED_pulses  = [1]
-        self.lens         = True
+        FRED_pulses  = [1]
+        lens         = True
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_FRED = self.FRED_pulses,
-                                            lens = self.lens)
+                                            count_FRED  = FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = self.residuals_bes,
+                                            lens = lens)
         keys = prior_object.keys
         key_list = ['background', 'start_1', 'scale_1', 'tau_1', 'xi_1',
                     'magnification_ratio', 'time_delay']
@@ -176,9 +208,13 @@ class TestMakePriors(unittest.TestCase):
     def test_bad_key(self):
         key = 'banana'
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
-                                                 self.priors_pulse_end)
+                                            self.priors_pulse_end,
+                                            count_FRED  = self.FRED_pulses,
+                                            count_FREDx = self.FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = self.residuals_bes,
+                                            lens = self.lens)
         prior_object.keys += key
-
         def test(self):
             with self.assertRaises(Exception) as context:
                 prior_object.populate_priors()

@@ -68,7 +68,10 @@ class TestPoissonRate(unittest.TestCase):
         self.FRED_pulses  = [1, 2, 3]
         prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
                                             self.priors_pulse_end,
-                                            count_FRED = self.FRED_pulses,
+                                            count_FRED   = self.FRED_pulses,
+                                            count_FREDx  = self.FREDx_pulses,
+                                            count_sg  = self.residuals_sg,
+                                            count_bes = self.residuals_bes,
                                             lens = self.lens)
 
         rates_object = DynamicBackEnd.PoissonRate( x = self.x, y = self.y,
