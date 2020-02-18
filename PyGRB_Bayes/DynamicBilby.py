@@ -1,7 +1,7 @@
 from pathlib import Path
 import os, sys
 
-# os.chdir(os.path.dirname(sys.argv[0]))
+os.chdir(os.path.dirname(sys.argv[0]))
 ## makes the scripts location the current working directory rather than the
 ## directory the script was launched from
 
@@ -18,7 +18,6 @@ from bilby.core.prior       import Uniform          as bilbyUniform
 from bilby.core.prior       import Constraint       as bilbyConstraint
 from bilby.core.prior       import LogUniform       as bilbyLogUniform
 from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
-from bilby.core.likelihood  import Analytical1DLikelihood
 from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 
 from PyGRB_Bayes import BATSEpreprocess
@@ -67,6 +66,9 @@ class BilbyObject(object):
         self.MC_counter          = None
         self.test                = test
 
+        # intialise model dict
+        self.models = {}
+
         if not test:
             self.GRB = BATSEpreprocess.BATSESignal(
                 self.trigger, times = (self.start, self.end),
@@ -80,38 +82,37 @@ class BilbyObject(object):
 
     def make_singular_models(self):
         ''' Create the full array of 1-pulse models. '''
-        self.model_F  = create_model_dict(  lens = False, count_FRED  = [1],
-                                            count_FREDx = [],
-                                            count_sg    = [],
-                                            count_bes   = [],
-                                            name = 'FRED')
-        self.model_Fs = create_model_dict(  lens = False, count_FRED  = [1],
-                                            count_FREDx = [],
-                                            count_sg    = [1],
-                                            count_bes   = [],
-                                            name = 'FRED sg residual')
-        self.model_Fb = create_model_dict(  lens = False, count_FRED  = [1],
-                                            count_FREDx = [],
-                                            count_sg    = [],
-                                            count_bes   = [1],
-                                            name = 'FRED bes residual')
-        self.model_X  = create_model_dict(  lens = False, count_FRED  = [],
-                                            count_FREDx = [1],
-                                            count_sg    = [],
-                                            count_bes   = [],
-                                            name = 'FREDx')
-        self.model_Xs = create_model_dict(  lens = False, count_FRED  = [],
-                                            count_FREDx = [1],
-                                            count_sg    = [1],
-                                            count_bes   = [],
-                                            name = 'FREDx sg residual')
-        self.model_Xb = create_model_dict(  lens = False, count_FRED  = [],
-                                            count_FREDx = [1],
-                                            count_sg    = [],
-                                            count_bes   = [1],
-                                            name = 'FREDx bes residual')
-        self.models = [ self.model_F, self.model_Fs, self.model_Fb,
-                        self.model_X, self.model_Xs, self.model_Xb]
+        # TODO create gaussian
+        self.models['F']  = create_model_dict(  lens = False, count_FRED  = [1],
+                                                count_FREDx = [],
+                                                count_sg    = [],
+                                                count_bes   = [],
+                                                name = 'FRED')
+        self.models['Fs'] = create_model_dict(  lens = False, count_FRED  = [1],
+                                                count_FREDx = [],
+                                                count_sg    = [1],
+                                                count_bes   = [],
+                                                name = 'FRED sg residual')
+        self.models['Fb'] = create_model_dict(  lens = False, count_FRED  = [1],
+                                                count_FREDx = [],
+                                                count_sg    = [],
+                                                count_bes   = [1],
+                                                name = 'FRED bes residual')
+        self.models['X']  = create_model_dict(  lens = False, count_FRED  = [],
+                                                count_FREDx = [1],
+                                                count_sg    = [],
+                                                count_bes   = [],
+                                                name = 'FREDx')
+        self.models['Xs'] = create_model_dict(  lens = False, count_FRED  = [],
+                                                count_FREDx = [1],
+                                                count_sg    = [1],
+                                                count_bes   = [],
+                                                name = 'FREDx sg residual')
+        self.models['Xb'] = create_model_dict(  lens = False, count_FRED  = [],
+                                                count_FREDx = [1],
+                                                count_sg    = [],
+                                                count_bes   = [1],
+                                                name = 'FREDx bes residual')
 
     # def make_two_pulse_models(self):
     #     self.make_singular_models()
@@ -226,20 +227,21 @@ class BilbyObject(object):
             self.main_1_channel(channel, model)
 
     def test_pulse_type(self, indices):
+        # clear model dict if not clear already
+        self.models = {}
         self.make_singular_models()
-        models = [  self.model_F, self.model_Fs, self.model_Fb,
-                    self.model_X, self.model_Xs, self.model_Xb]
-
+        models = self.models
         for idx in indices:
             n_channels = 4
             m_index    = idx // n_channels
             channel    = idx %  n_channels
-            self.main_1_channel(channel, models[m_index])
+            self.main_1_channel(channel, models.items()[m_index])
 
     def get_evidence_singular(self):
+        # clear model dict if not clear already
+        self.models = {}
         self.make_singular_models()
-        models = [  self.model_F, self.model_Fs, self.model_Fb,
-                    self.model_X, self.model_Xs, self.model_Xb]
+        models = [model for key, model in self.models.items()]
 
         self.tlabel = self.get_trigger_label()
         self.get_base_directory()
@@ -249,9 +251,10 @@ class BilbyObject(object):
         for i in range(4):
             x = PrettyTable(['Model', 'log Z', 'error'])
             x.align['Model'] = "l" # Left align models
-            x.padding_width = 1 # One space between column edges and contents (default)
+            # One space between column edges and contents (default)
+            x.padding_width = 1
             for k in range(6):
-
+                # dictionaries are ordered in python 3.6+
                 self.model   = models[k]
                 self.get_max_pulse()
                 self.tlabel  = self.get_trigger_label()
@@ -267,10 +270,11 @@ class BilbyObject(object):
                                 f'{result.log_evidence_err:.2f}'])
                 except:
                     print(f'Could not find {open_result}')
-        with open(Z_file, 'a') as w:
-            w.write(f'Channel {i+1}')
-            w.write(str(x))
-            w.write('')
+            # indentation should be same as k loop
+            with open(Z_file, 'a') as w:
+                w.write(f'Channel {i+1}')
+                w.write(str(x))
+                w.write('')
 
     def main_multi_channel(self, channels, model):
         self.model   = model
@@ -391,12 +395,12 @@ class BilbyObject(object):
         rates_fit       = count_fits    / widths[:,None]
         residual_rates  = residuals     / widths[:,None]
 
-        self.plot_routine(    x = self.GRB.bin_left, y = rates,
-                                y_fit = rates_fit,
-                                channels = channels, y_res_fit = None)
+        self.plot_routine(  x = self.GRB.bin_left, y = rates,
+                            y_fit = rates_fit,
+                            channels = channels, y_res_fit = None)
 
-    def plot_routine(self, x, y, y_fit, channels, y_res_fit = None, residuals = False, offsets = None):
-
+    def plot_routine(self, x, y, y_fit, channels, y_res_fit = None, residuals = False):
+        offsets = self.offsets
         n_axes  = len(channels) + 1
         width   = 3.321
         height  = (width / 1.8) * 2

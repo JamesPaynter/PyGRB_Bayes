@@ -62,7 +62,6 @@ class EmptyGRB(object):
         # assert rates has the right shape
         try:
             (a,b) = np.shape(rates)
-            print(a,b)
         except:
             a, b = 1, 0
         assert(a > b)

@@ -32,10 +32,10 @@ def load_973(sampler = 'dynesty', nSamples = 100):
     return test
 
 def load_8099(sampler = 'dynesty', nSamples = 200):
-    object = BilbyObject(8099, times = (2, 15),
+    test = BilbyObject(8099, times = (2, 15),
                 datatype = 'discsc', nSamples = nSamples, sampler = sampler,
                 priors_pulse_start = 0, priors_pulse_end = 15)
-    return object
+    return test
 
 def load_3770_a(times, sampler = 'dynesty', nSamples = 100):
     test = BilbyObject(3770, times,
@@ -60,8 +60,6 @@ parser.add_argument('-i', '--indices', type=int, nargs='+',
 args = parser.parse_args()
 HPC = args.HPC
 
-print(args)
-
 if not HPC:
     from matplotlib import rc
     rc('font', **{'family': 'DejaVu Sans',
@@ -71,10 +69,12 @@ if not HPC:
     preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
     SAMPLER = 'Nestle'
     # GRB = load_8099(sampler = SAMPLER, nSamples = 51)
-    GRB = load_3770_a(times=(0.2, 0.7), sampler=SAMPLER, nSamples=2000)
+    GRB = load_3770_a(times=(-0.2, 0.2), sampler=SAMPLER, nSamples=2000)
+    GRB.offsets = [0, 4000, 8000, -3000]
     GRB.make_singular_models()
-    for model in GRB.models:
+    for key, model in GRB.models.items():
         GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+    # GRB.get_evidence_singular()
 
 else:
     SAMPLER = 'dynesty'

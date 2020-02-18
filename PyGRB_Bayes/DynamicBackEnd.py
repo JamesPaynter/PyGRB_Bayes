@@ -40,9 +40,9 @@ class MakeKeys(object):
         self.get_residual_list()
         self.fill_keys_list()
 
-    def fill_list(self, list, array):
-        return ['{}_{}'.format(list[k], i) for k in range(len(list))
-                                           for i in array]
+    def fill_list(self, key_list, array):
+        return ['{}_{}'.format(key_list[k], i)  for k in range(len(key_list))
+                                                for i in array]
 
     def fill_keys_list(self):
         if self.lens:
@@ -177,117 +177,119 @@ class MakePriors(MakeKeys):
         for key in self.keys:
             # find integer in key and put in label
             n = ''.join([c for c in key if c.isdigit()])
-            # self.set_prior_from_key(key, n)
-            if key == 'background':
-                self.priors[key] = bilbyLogUniform(
-                minimum = self.priors_bg_lo,
-                maximum = self.priors_bg_hi,
+            self._make_prior(key, n)
+
+    def _make_prior(self, key: str, n: int):
+        if key == 'background':
+            self.priors[key] = bilbyLogUniform(
+                minimum=self.priors_bg_lo,
+                maximum=self.priors_bg_hi,
                 latex_label='B',
-                unit = 'counts / sec')
+                unit='counts / sec')
 
-            elif key == 'time_delay':
-                self.priors[key] = bilbyUniform(
-                minimum = self.priors_td_lo,
-                maximum = self.priors_td_hi,
+        elif key == 'time_delay':
+            self.priors[key] = bilbyUniform(
+                minimum=self.priors_td_lo,
+                maximum=self.priors_td_hi,
                 latex_label='$\\Delta t$',
-                unit = ' seconds ')
-                ## throw error if self.lens is False
+                unit=' seconds ')
+            ## throw error if self.lens is False
 
-            elif key == 'magnification_ratio':
-                self.priors[key] = bilbyUniform(
-                minimum = self.priors_mr_lo,
-                maximum = self.priors_mr_hi,
+        elif key == 'magnification_ratio':
+            self.priors[key] = bilbyUniform(
+                minimum=self.priors_mr_lo,
+                maximum=self.priors_mr_hi,
                 latex_label='$\\Delta \\mu$',
-                unit = ' ')
-                ## throw error if self.lens is False
+                unit=' ')
+            ## throw error if self.lens is False
 
-            elif 'start' in key:
-                self.priors[key] = bilbyUniform(
-                    minimum = self.priors_pulse_start,
-                    maximum = self.priors_pulse_end,
-                    latex_label = '$\\Delta_{}$'.format(n), unit = 'sec')
-                if int(n) > 1:
-                    c_key = 'constraint_{}'.format(n)
-                    self.priors[c_key] = bilbyConstraint(
-                        minimum = 0,
-                        maximum = float(self.priors_pulse_end -
-                                        self.priors_pulse_start))
+        elif 'start' in key:
+            self.priors[key] = bilbyUniform(
+                minimum=self.priors_pulse_start,
+                maximum=self.priors_pulse_end,
+                latex_label='$\\Delta_{}$'.format(n), unit='sec')
+            if int(n) > 1:
+                c_key = 'constraint_{}'.format(n)
+                self.priors[c_key] = bilbyConstraint(
+                    minimum=0,
+                    maximum=float(self.priors_pulse_end -
+                                  self.priors_pulse_start))
 
-            elif 'scale' in key:
-                self.priors[key] = bilbyLogUniform(
-                    minimum = self.priors_scale_min,
-                    maximum = self.priors_scale_max,
-                    latex_label='$A_{}$'.format(n), unit = 'counts / sec')
+        elif 'scale' in key:
+            self.priors[key] = bilbyLogUniform(
+                minimum=self.priors_scale_min,
+                maximum=self.priors_scale_max,
+                latex_label='$A_{}$'.format(n), unit='counts / sec')
 
-            elif 'tau' in key:
-                self.priors[key] = bilbyLogUniform(
-                    minimum = self.priors_tau_lo,
-                    maximum = self.priors_tau_hi,
-                    latex_label='$\\tau_{}$'.format(n), unit = ' ')
+        elif 'tau' in key:
+            self.priors[key] = bilbyLogUniform(
+                minimum=self.priors_tau_lo,
+                maximum=self.priors_tau_hi,
+                latex_label='$\\tau_{}$'.format(n), unit=' ')
 
-            elif 'xi' in key:
-                self.priors[key] = bilbyLogUniform(
-                    minimum = self.priors_xi_lo,
-                    maximum = self.priors_xi_hi,
-                    latex_label='$\\xi_{}$'.format(n), unit = ' ')
+        elif 'xi' in key:
+            self.priors[key] = bilbyLogUniform(
+                minimum=self.priors_xi_lo,
+                maximum=self.priors_xi_hi,
+                latex_label='$\\xi_{}$'.format(n), unit=' ')
 
-            elif 'gamma' in key:
-                self.priors[key] = bilbyLogUniform(
-                    minimum = self.priors_gamma_min,
-                    maximum = self.priors_gamma_max,
-                    latex_label='$\\gamma_{}$'.format(n), unit = ' ')
+        elif 'gamma' in key:
+            self.priors[key] = bilbyLogUniform(
+                minimum=self.priors_gamma_min,
+                maximum=self.priors_gamma_max,
+                latex_label='$\\gamma_{}$'.format(n), unit=' ')
 
-            elif 'nu' in key:
-                self.priors[key] = bilbyLogUniform(
-                    minimum = self.priors_nu_min,
-                    maximum = self.priors_nu_max,
-                    latex_label='$\\nu_{}$'.format(n), unit = ' ')
+        elif 'nu' in key:
+            self.priors[key] = bilbyLogUniform(
+                minimum=self.priors_nu_min,
+                maximum=self.priors_nu_max,
+                latex_label='$\\nu_{}$'.format(n), unit=' ')
 
-            # elif 'sigma' in key:
-                # print('Sigma priors not set')
-                # self.priors[key] = bilbyLogUniform(
-                #     minimum = self.priors_xi_lo,
-                #     maximum = self.priors_xi_hi,
-                #     latex_label= '$\\sigma_{}'.format(n), unit = ' ')
+        # elif 'sigma' in key:
+        # print('Sigma priors not set')
+        # self.priors[key] = bilbyLogUniform(
+        #     minimum = self.priors_xi_lo,
+        #     maximum = self.priors_xi_hi,
+        #     latex_label= '$\\sigma_{}'.format(n), unit = ' ')
 
-            elif 'begin' in key:
-                self.priors[key] = bilbyUniform(
-                    minimum = self.priors_pulse_start,
-                    maximum = self.priors_pulse_end,
-                    latex_label = '$\\delta_{}$'.format(n), unit = 'sec')
-                if int(n) > 1:
-                    c_key = 'constraint_{}_res'.format(n)
-                    self.priors[c_key] = bilbyConstraint(
-                        minimum = 0,
-                        maximum = float(self.priors_pulse_end -
-                                        self.priors_pulse_start) )
+        elif 'begin' in key:
+            self.priors[key] = bilbyUniform(
+                minimum=self.priors_pulse_start,
+                maximum=self.priors_pulse_end,
+                latex_label='$\\delta_{}$'.format(n), unit='sec')
+            if int(n) > 1:
+                c_key = 'constraint_{}_res'.format(n)
+                self.priors[c_key] = bilbyConstraint(
+                    minimum=0,
+                    maximum=float(self.priors_pulse_end -
+                                  self.priors_pulse_start))
 
-            elif 'sg_A' in key:
-                self.priors[key] = bilbyLogUniform(1e1,1e3,latex_label='res $A$')
+        elif 'sg_A' in key:
+            self.priors[key] = bilbyLogUniform(1e1, 1e3, latex_label='res $A$')
 
-            elif 'sg_lambda' in key:
-                self.priors[key] = bilbyLogUniform(1e-2,1e2,latex_label='res $\\lambda$')
+        elif 'sg_lambda' in key:
+            self.priors[key] = bilbyLogUniform(1e-2, 1e2, latex_label='res $\\lambda$')
 
-            elif 'sg_omega' in key:
-                self.priors[key] = bilbyLogUniform(1e-3,1e2,latex_label='res $\\omega$')
+        elif 'sg_omega' in key:
+            self.priors[key] = bilbyLogUniform(1e-3, 1e2, latex_label='res $\\omega$')
 
-            elif 'sg_phi' in key:
-                self.priors[key] = bilbyUniform(-np.pi,np.pi,latex_label='res $\\phi$')
+        elif 'sg_phi' in key:
+            self.priors[key] = bilbyUniform(-np.pi, np.pi, latex_label='res $\\phi$')
 
-            elif 'bes_A' in key:
-                self.priors[key] = bilbyLogUniform(1e-1,1e6,latex_label='res $A$')
+        elif 'bes_A' in key:
+            self.priors[key] = bilbyLogUniform(1e-1, 1e6, latex_label='res $A$')
 
-            elif 'bes_Omega' in key:
-                self.priors[key] = bilbyLogUniform(1e-3,1e3,latex_label='res $\\Omega$')
+        elif 'bes_Omega' in key:
+            self.priors[key] = bilbyLogUniform(1e-3, 1e3, latex_label='res $\\Omega$')
 
-            elif 'bes_s' in key:
-                self.priors[key] = bilbyLogUniform(1e-3,1e3,latex_label='res $s$')
+        elif 'bes_s' in key:
+            self.priors[key] = bilbyLogUniform(1e-3, 1e3, latex_label='res $s$')
 
-            elif 'bes_Delta' in key:
-                self.priors[key] = bilbyUniform(-np.pi,np.pi,latex_label='res $\\Delta$')
+        elif 'bes_Delta' in key:
+            self.priors[key] = bilbyUniform(-np.pi, np.pi, latex_label='res $\\Delta$')
 
-            else:
-                raise Exception('Key not found : {}'.format(key))
+        else:
+            raise Exception('Key not found : {}'.format(key))
 
     def return_prior_dict(self):
         return self.priors
