@@ -71,14 +71,19 @@ if not HPC:
     preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
     SAMPLER = 'Nestle'
     # GRB = load_8099(sampler = SAMPLER, nSamples = 51)
-    GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=2000)
+    GRB = load_3770_a(times=(0.2, 0.7), sampler=SAMPLER, nSamples=2000)
     GRB.make_singular_models()
     for model in GRB.models:
         GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
 
 else:
     SAMPLER = 'dynesty'
+
     GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=2000)
+    GRB.test_pulse_type(args.indices)
+    GRB.get_evidence_singular()
+
+    GRB = load_3770_b(times=(0.2, 0.7), sampler=SAMPLER, nSamples=2001)
     GRB.test_pulse_type(args.indices)
     GRB.get_evidence_singular()
 
