@@ -265,13 +265,13 @@ class MakePriors(MakeKeys):
                                   self.priors_pulse_start))
 
         elif 'sg_A' in key:
-            self.priors[key] = bilbyLogUniform(1e1, 1e3, latex_label='res $A$')
+            self.priors[key] = bilbyLogUniform(1e0, 1e3, latex_label='res $A$')
 
         elif 'sg_lambda' in key:
-            self.priors[key] = bilbyLogUniform(1e-2, 1e2, latex_label='res $\\lambda$')
+            self.priors[key] = bilbyLogUniform(1e-3, 1e3, latex_label='res $\\lambda$')
 
         elif 'sg_omega' in key:
-            self.priors[key] = bilbyLogUniform(1e-3, 1e2, latex_label='res $\\omega$')
+            self.priors[key] = bilbyLogUniform(1e-3, 1e4, latex_label='res $\\omega$')
 
         elif 'sg_phi' in key:
             self.priors[key] = bilbyUniform(-np.pi, np.pi, latex_label='res $\\phi$')

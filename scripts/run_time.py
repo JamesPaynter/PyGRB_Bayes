@@ -79,13 +79,11 @@ if not HPC:
 else:
     SAMPLER = 'dynesty'
 
-    GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=2000)
+    GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=5000)
     GRB.test_pulse_type(args.indices)
-    GRB.get_evidence_singular()
 
-    GRB = load_3770_b(times=(0.2, 0.7), sampler=SAMPLER, nSamples=2001)
+    GRB = load_3770_b(times=(0.2, 0.7), sampler=SAMPLER, nSamples=5001)
     GRB.test_pulse_type(args.indices)
-    GRB.get_evidence_singular()
 
 
 # GRB = load_3770(sampler = SAMPLER, nSamples = 1000)
