@@ -230,12 +230,12 @@ class BilbyObject(object):
         # clear model dict if not clear already
         self.models = {}
         self.make_singular_models()
-        models = self.models
+        models = [model for key, model in self.models.items()]
         for idx in indices:
             n_channels = 4
             m_index    = idx // n_channels
             channel    = idx %  n_channels
-            self.main_1_channel(channel, models.items()[m_index])
+            self.main_1_channel(channel, models[m_index])
 
     def get_evidence_singular(self):
         # clear model dict if not clear already
