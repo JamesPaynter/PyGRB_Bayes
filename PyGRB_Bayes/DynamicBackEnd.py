@@ -1,15 +1,13 @@
 import sys
+
 import numpy as np
-import matplotlib.pyplot    as plt
-import matplotlib.gridspec  as gridspec
 import scipy.special as special
 from scipy.special import gammaln
-
 import bilby
-from bilby.core.prior       import PriorDict        as bilbyPriorDict
-from bilby.core.prior       import Uniform          as bilbyUniform
-from bilby.core.prior       import Constraint       as bilbyConstraint
-from bilby.core.prior       import LogUniform       as bilbyLogUniform
+from bilby.core.prior import PriorDict        as bilbyPriorDict
+from bilby.core.prior import Uniform          as bilbyUniform
+from bilby.core.prior import Constraint       as bilbyConstraint
+from bilby.core.prior import LogUniform       as bilbyLogUniform
 
 MIN_FLOAT = sys.float_info[3]
 

@@ -11,7 +11,6 @@ import pandas as pd
 from astropy.io import fits
 
 
-
 class EmptyGRB(object):
     """ EmptyGRB for Bilby signal injections. """
 

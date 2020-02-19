@@ -1,24 +1,11 @@
-from pathlib import Path
-import os, sys
+import os
+import sys
 
-os.chdir(os.path.dirname(sys.argv[0]))
+
+# os.chdir(os.path.dirname(sys.argv[0]))
 ## makes the scripts location the current working directory rather than the
 ## directory the script was launched from
-
-import numpy as np
-import matplotlib.pyplot    as plt
-import matplotlib.gridspec  as gridspec
-
-from scipy.special import gammaln
 from prettytable import PrettyTable
-
-import bilby
-from bilby.core.prior       import PriorDict        as bilbyPriorDict
-from bilby.core.prior       import Uniform          as bilbyUniform
-from bilby.core.prior       import Constraint       as bilbyConstraint
-from bilby.core.prior       import LogUniform       as bilbyLogUniform
-from bilby.core.prior       import DeltaFunction    as bilbyDeltaFunction
-from bilby.core.likelihood  import PoissonLikelihood as bilbyPoissonLikelihood
 
 from PyGRB_Bayes import BATSEpreprocess
 from PyGRB_Bayes.DynamicBackEnd import * ## how to import * from this?
@@ -35,7 +22,6 @@ class BilbyObject(object):
                         satellite           = 'BATSE',
                         ## are your bins the right size in rate function ????
                         sampler             = 'dynesty',
-                        verbose             = True,
                         nSamples            = 200):
 
         super(BilbyObject, self).__init__()
@@ -68,6 +54,7 @@ class BilbyObject(object):
 
         # intialise model dict
         self.models = {}
+        self.offsets = None
 
         if not test:
             self.GRB = BATSEpreprocess.BATSESignal(
@@ -114,12 +101,62 @@ class BilbyObject(object):
                                                 count_bes   = [1],
                                                 name = 'FREDx bes residual')
 
-    # def make_two_pulse_models(self):
-    #     self.make_singular_models()
-    #     for model in self.models:
-    #         model['lens'] = True
+    @staticmethod
+    def get_pos_from_key(key, char):
+        """ Returns a list of the indices where char appears in the string.
+            Pass in a list of only the pulses no residuals (ie capital letters)
+            +1 is because the pulses are index from 1.
+            """
+        return [i+1 for i, c in enumerate(key) if c == char]
 
+    @staticmethod
+    def get_pos_from_idx(key, idx_array, char):
+        return [idx_array[i] for i, c in enumerate(key) if c == char]
 
+    def create_model_from_key(self, key):
+        assert(isinstance(key, str))
+        kwargs = {}
+        kwargs['lens'] = True if 'L' in key else False
+        key = key.strip('L')
+        # Gaussian, FRED, FREDx, Convolution
+        # TODO allow SG or BES to be standalone pulses
+        # as needed, may add bugs down the lineif implemented naively
+        pulse_types = ['G', 'F', 'X', 'C']#, 'S', 'B']
+        pulse_kwargs= ['count_Gauss', 'count_FRED', 'count_FREDx', 'count_conv']
+                        # 'count_sg', 'count_bes']
+        res_types   = ['b', 's']
+        res_kwargs  = ['count_sg', 'count_bes']
+        # list of capital letters only (ie pulses)
+        pulse_keys  = ''.join([c for c in key if c.isupper()])
+        pulse_list  = []
+        res_list    = []
+        for i, char in enumerate(pulse_types):
+            # list of indices where current char ('G', 'F' etc.) appears
+            idx_list = self.get_pos_from_key(pulse_keys, char)
+            # appends this to list of pulses
+            pulse_list += idx_list
+            # also adds this list to the kwargs dict to be passed to the model
+            kwargs[pulse_kwargs[i]] = idx_list
+        # sort the list of pulses
+        pulse_list.sort()
+        # indices of where pulses appear in original string
+        pulse_indices = [i for i, c in enumerate(key) if c.isupper()]
+        idx_array = [0 for i in range(len(key))]
+        # idx_array[i] = pulse_indices[]
+        for i in range(len(key)):
+            idx_array[i] = 0
+
+        for i, (j, k) in enumerate(zip(pulse_list, pulse_indices)):
+            idx_array[k] = j
+        for i in range(1, len(key)):
+            if idx_array[i] == 0:
+                idx_array[i] = idx_array[i-1]
+
+        for i, char in enumerate(res_types):
+            kwargs[res_kwargs[i]] = self.get_pos_from_idx(key, idx_array, char)
+
+        model = create_model_dict(**kwargs)
+        return model
 
     def get_trigger_label(self):
         tlabel = str(self.trigger)
@@ -155,7 +192,7 @@ class BilbyObject(object):
         return string
 
     def get_directory_name(self):
-        ''' Code changes the root directory to the directory above this file.
+        """ Code changes the root directory to the directory above this file.
             Then product files (light-curves, posterior chains) are created in:
                 " directory  = '../products/' "
 
@@ -173,7 +210,7 @@ class BilbyObject(object):
             residual is attached to the proceeding pulse.
 
             MC counter is for testing the code over many trials --> save data
-        '''
+        """
         self.get_base_directory()
         directory = self.base_folder
         if self.model['lens']:
@@ -205,6 +242,13 @@ class BilbyObject(object):
         file_string += str(self.nSamples) + '_'
         return file_string
 
+    def setup_labels(self, model):
+        self.model = model
+        self.get_max_pulse()
+        self.tlabel = self.get_trigger_label()
+        self.fstring = self.get_file_string()
+        self.outdir = self.get_directory_name()
+        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
 
     def array_job(self, indices):
         ''' takes one of 24 indices from HPC to parallelise this job. '''
@@ -254,13 +298,7 @@ class BilbyObject(object):
             # One space between column edges and contents (default)
             x.padding_width = 1
             for k in range(6):
-                # dictionaries are ordered in python 3.6+
-                self.model   = models[k]
-                self.get_max_pulse()
-                self.tlabel  = self.get_trigger_label()
-                self.fstring = self.get_file_string()
-                self.outdir  = self.get_directory_name()
-                bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
+                self.setup_labels(models[k])
                 result_label = f'{self.fstring}_result_{self.clabels[i]}'
                 open_result  = f'{self.outdir}/{result_label}_result.json'
                 try:
@@ -277,12 +315,7 @@ class BilbyObject(object):
                 w.write('')
 
     def main_multi_channel(self, channels, model):
-        self.model   = model
-        self.get_max_pulse()
-        self.tlabel  = self.get_trigger_label()
-        self.fstring = self.get_file_string()
-        self.outdir  = self.get_directory_name()
-        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
+        self.setup_labels(model)
 
         if not self.test:
             for i in channels:
@@ -296,12 +329,7 @@ class BilbyObject(object):
         self.get_residuals(channels = channels, model = model)
 
     def main_1_channel(self, channel, model):
-        self.model   = model
-        self.get_max_pulse()
-        self.tlabel  = self.get_trigger_label()
-        self.fstring = self.get_file_string()
-        self.outdir  = self.get_directory_name()
-        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
+        self.setup_labels(model)
 
         i           = channel
         prior_shell = MakePriors(
@@ -343,12 +371,7 @@ class BilbyObject(object):
         self.get_residuals(channels = [channel], model = model)
 
     def get_residuals(self, channels, model):
-        self.model   = model
-        self.get_max_pulse()
-        self.tlabel  = self.get_trigger_label()
-        self.fstring = self.get_file_string()
-        self.outdir  = self.get_directory_name()
-        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
+        self.setup_labels(model)
 
         count_fits      = np.zeros((len(self.GRB.bin_left),4))
         residuals       = np.zeros((len(self.GRB.bin_left),4))
@@ -475,4 +498,8 @@ def create_model_dict(  lens, count_FRED, count_FREDx, count_sg, count_bes,
     return model
 
 if __name__ == '__main__':
+    aaa = BilbyObject(8099, times = (2, 15),
+                datatype = 'discsc', nSamples = 100, sampler = 'nestle',
+                priors_pulse_start = 0, priors_pulse_end = 15)
+    print(aaa.create_model_from_key('FbFsFbFbL'))
     pass

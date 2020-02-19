@@ -1,8 +1,7 @@
 import os
+
 import numpy as np
-from scipy import stats
 import matplotlib.pyplot as plt
-from matplotlib import rc
 from astropy.io import fits
 from astropy.stats import bayesian_blocks
 
@@ -244,6 +243,6 @@ class BATSEGRB(BATSE_BFITS, BATSETTEList):
         super(BATSEGRB, self).__init__()
 
 
-# GRB = BATSEGRB(3770, 'TTE_list')
+GRB = BATSEGRB(3770, 'TTE_list')
 # GRB.bin_and_plot()
 # GRB.tte_bayesian_blocks()
