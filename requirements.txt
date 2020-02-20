@@ -39,6 +39,7 @@ numpy == 1.18.1
 
 # PyGRB_Bayes\BATSEpreprocess.py: 10
 pandas == 1.0.1
+xlrd == 1.0.0
 
 # PyGRB_Bayes\DynamicBilby.py: 13
 # build\lib\PyGRB_Bayes\DynamicBilby.py: 13
