@@ -7,6 +7,7 @@ import bilby
 from bilby.core.prior import PriorDict        as bilbyPriorDict
 from bilby.core.prior import Uniform          as bilbyUniform
 from bilby.core.prior import Constraint       as bilbyConstraint
+print(bilbyConstraint)
 from bilby.core.prior import LogUniform       as bilbyLogUniform
 
 MIN_FLOAT = sys.float_info[3]
@@ -176,7 +177,7 @@ class MakePriors(MakeKeys):
 
             Pass in **kwargs, then overwrite pulse parameters as
             applicable. Otherwise take generic parameters defined in init.
-            
+
             just make an overwrite prior function later
 
             add kwargs to list ??

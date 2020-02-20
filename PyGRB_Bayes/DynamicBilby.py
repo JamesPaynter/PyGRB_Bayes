@@ -274,16 +274,27 @@ class BilbyObject(object):
             model['lens']       = lens_lists[p_index]
             self.main_1_channel(channel, model)
 
-    def test_pulse_type(self, indices):
-        # clear model dict if not clear already
-        self.models = {}
-        self.make_singular_models()
-        models = [model for key, model in self.models.items()]
+    def _split_array_job_to_4_channels(self, models, indices):
         for idx in indices:
             n_channels = 4
             m_index    = idx // n_channels
             channel    = idx %  n_channels
             self.main_1_channel(channel, models[m_index])
+
+    def test_pulse_type(self, indices):
+        # clear model dict if not clear already
+        self.models = {}
+        self.make_singular_models()
+        models = [model for key, model in self.models.items()]
+        self._split_array_job_to_4_channels(models, indices)
+
+    def test_two_pulse_models(self, indices):
+        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        self.models = {}
+        for key in keys:
+            self.models[key] = self.create_model_from_key(key)
+        models = [model for key, model in self.models.items()]
+        self._split_array_job_to_4_channels(models, indices)
 
     def get_evidence_singular(self):
         # clear model dict if not clear already
@@ -502,8 +513,4 @@ def create_model_dict(  lens, count_FRED, count_FREDx, count_sg, count_bes,
     return model
 
 if __name__ == '__main__':
-    aaa = BilbyObject(8099, times = (2, 15),
-                datatype = 'discsc', nSamples = 100, sampler = 'nestle',
-                priors_pulse_start = 0, priors_pulse_end = 15)
-    print(aaa.create_model_from_key('FbFsFbFbL'))
     pass

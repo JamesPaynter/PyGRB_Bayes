@@ -4,8 +4,9 @@ import argparse
 from PyGRB_Bayes.DynamicBilby import BilbyObject
 from PyGRB_Bayes.DynamicBilby import create_model_dict
 
-from bilby.core.utils import logging
-logging.getLogger().setLevel(0)#logging.INFO)
+import bilby
+logger = bilby.core.utils.logger
+logger.disabled = True
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
     bilby_inst = BilbyObject(3770, times = (-.1, 1),
@@ -55,13 +56,7 @@ def load_3770_b(times, sampler = 'dynesty', nSamples = 100):
     return test
 
 
-parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')
-parser.add_argument('--HPC', action = 'store_true',
-                    help = 'Are you running this on SPARTAN ?')
-parser.add_argument('-i', '--indices', type=int, nargs='+',
-                    help='an integer for indexing geomspace array')
-args = parser.parse_args()
-HPC = args.HPC
+
 
 
 def analysis_for_3770():
@@ -78,29 +73,41 @@ def analysis_for_3770():
     GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
     # GRB.get_evidence_singular()
 
-def analysis_for_8099():
+def analysis_for_8099(indices):
     GRB = load_8099(sampler = SAMPLER, nSamples = 500)
     GRB.make_singular_models()
+    GRB.test_pulse_type(indices)
 
-if not HPC:
-    from matplotlib import rc
-    rc('font', **{'family': 'DejaVu Sans',
-                'serif': ['Computer Modern'],'size': 8})
-    rc('text', usetex=True)
-    rc('text.latex',
-    preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
-    SAMPLER = 'Nestle'
-    analysis_for_8099()
 
-else:
-    SAMPLER = 'dynesty'
-    analysis_for_8099()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')
+    parser.add_argument('--HPC', action = 'store_true',
+                        help = 'Are you running this on SPARTAN ?')
+    parser.add_argument('-i', '--indices', type=int, nargs='+',
+                        help='an integer for indexing geomspace array')
+    args = parser.parse_args()
+    HPC = args.HPC
 
-    #
-    # GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=5000)
-    # GRB.test_pulse_type(args.indices)
-    #
-    # GRB = load_3770_b(times=(0.2, 0.7), sampler=SAMPLER, nSamples=5001)
+
+    if not HPC:
+        from matplotlib import rc
+        rc('font', **{'family': 'DejaVu Sans',
+                    'serif': ['Computer Modern'],'size': 8})
+        rc('text', usetex=True)
+        rc('text.latex',
+        preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
+        SAMPLER = 'Nestle'
+        analysis_for_8099()
+
+    else:
+        SAMPLER = 'dynesty'
+        analysis_for_8099(args.indices)
+
+
+        GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=5000)
+        GRB.test_pulse_type(args.indices)
+
+        GRB = load_3770_b(times=(0.2, 0.7), sampler=SAMPLER, nSamples=5001)
 
 
 
