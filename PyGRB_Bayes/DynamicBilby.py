@@ -1,6 +1,10 @@
 import os
 import sys
-
+import numpy as np
+import matplotlib.pyplot    as plt
+import matplotlib.gridspec  as gridspec
+import scipy.special as special
+from scipy.special import gammaln
 
 # os.chdir(os.path.dirname(sys.argv[0]))
 ## makes the scripts location the current working directory rather than the

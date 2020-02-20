@@ -119,13 +119,14 @@ class MakePriors(MakeKeys):
                         priors_scale_min    = 1e0,  ## SCALING IS COUNTS / BIN
                         priors_scale_max    = 1e5,  ## SCALING IS COUNTS / BIN
                         **kwargs):
-        super(MakePriors, self).__init__(  count_FRED   = count_FRED,
+        super(MakePriors, self).__init__(   count_FRED   = count_FRED,
                                             count_FREDx  = count_FREDx,
                                             count_sg  = count_sg,
                                             count_bes = count_bes,
                                             lens = lens)
 
-        self.priors = bilbyPriorDict(conversion_function = self.make_constraints())
+        self.priors = bilbyPriorDict(
+                        conversion_function = self._make_constraints())
 
         self.priors_pulse_start  = priors_pulse_start
         self.priors_pulse_end    = priors_pulse_end
@@ -146,16 +147,22 @@ class MakePriors(MakeKeys):
         self.priors_scale_min    = priors_scale_min
         self.priors_scale_max    = priors_scale_max
         self.populate_priors()
+        print('begin priors')
+        for prior in self.priors:
+            print(prior)
+        print('end priors')
 
-    def make_constraints(self):
+    def _make_constraints(self):
         n = self.max_pulse + 1
         l = self.residual_list
         def constraint_function(parameters):
+            # accessing pulses directly by index
             for i in range(2, n):
                 con_key = f'constraint_{i}'
                 st_key1 = f'start_{i-1}'
                 st_key2 = f'start_{i}'
                 parameters[con_key] = parameters[st_key2] - parameters[st_key1]
+            # accessing residuals through list of residual positions
             for k in range(1, len(l)):
                 con_key = f'constraint_{l[k]}_res'
                 st_key1 = f'res_begin_{l[k-1]}'
@@ -169,6 +176,8 @@ class MakePriors(MakeKeys):
 
             Pass in **kwargs, then overwrite pulse parameters as
             applicable. Otherwise take generic parameters defined in init.
+            
+            just make an overwrite prior function later
 
             add kwargs to list ??
         '''
@@ -177,7 +186,8 @@ class MakePriors(MakeKeys):
             n = ''.join([c for c in key if c.isdigit()])
             self._make_prior(key, n)
 
-    def _make_prior(self, key: str, n: int):
+    def _make_prior(self, key: str, n: str):
+        # where n is an integer given in string format.
         if key == 'background':
             self.priors[key] = bilbyLogUniform(
                 minimum=self.priors_bg_lo,
@@ -315,13 +325,13 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
     @staticmethod
     def FRED_pulse(times, start, scale, tau, xi):
         return np.where(times - start <= 0, MIN_FLOAT, scale * np.exp(
-        - xi * ( (tau / (times - start)) + ((times - start) / tau) - 2)))
+        - xi * ( (tau / (times - start)) + ((times - start) / tau) - 2.)))
 
     @staticmethod
     def FREDx_pulse(times, start, scale, tau, xi, gamma, nu):
         return np.where(times - start <= 0, MIN_FLOAT, scale * np.exp(
         - np.power(xi * (tau / (times - start)), gamma)
-        - np.power(xi * ((times - start) / tau), nu) - 2) )
+        - np.power(xi * ((times - start) / tau), nu) - 2.) )
 
     @staticmethod
     def sine_gaussian(times, sg_A, res_begin, sg_lambda, sg_omega, sg_phi):
@@ -330,12 +340,12 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
 
     @staticmethod
     def count_bessel(times, bes_A, bes_Omega, bes_s, res_begin, bes_Delta):
-        return np.where(times > res_begin + bes_Delta / 2,
+        return np.where(times > res_begin + bes_Delta / 2.,
                 bes_A * special.j0(bes_s * bes_Omega *
-               (- res_begin + times - bes_Delta / 2) ),
-               (np.where(times < res_begin - bes_Delta / 2,
+               (- res_begin + times - bes_Delta / 2.) ),
+               (np.where(times < res_begin - bes_Delta / 2.,
                 bes_A * special.j0(bes_Omega *
-               (res_begin - times - bes_Delta / 2) ),
+               (res_begin - times - bes_Delta / 2.) ),
                bes_A)))
 
     @staticmethod

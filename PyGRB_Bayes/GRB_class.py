@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,17 +28,19 @@ class BATSE_BFITS(object):
 class BATSETTEList(object):
     """docstring for BATSETTEList."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super(BATSETTEList, self).__init__()
         if self.datatype != 'TTE_list':
             pass
         else:
             if self.verbose:
                 print('Analysing BATSE TTE list data')
+            print(live_detectors)
             # open a FITS file
-            self.data_path = 'data/tte_list_' + str(self.trigger) + '.fits'
-            hdul = fits.open(self.data_path)
-            self.get_bin_edges(hdul[1].data)
+            data_path = f'./data/tte_list_{self.trigger}.fits'
+            self.path = Path(__file__).parent / data_path
+            hdul = fits.open(self.path)
+            self.get_energy_bin_edges(hdul[1].data)
 
             count_data  = hdul[2].data
             self.detectors    = np.arange(8)
@@ -49,8 +52,12 @@ class BATSETTEList(object):
                 self.det_count[i] = num_phots
                 self.photon_list.append(photons)
                 self.channel_list.append(channels)
-            if self.live_detectors is None:
-                self.live_detectors = np.arange(5,8)
+            if live_detectors in kwargs:
+                self.live_detectors = kwargs['live_detectors']
+            else:
+                self.live_detectors = np.arange(8)
+            # if self.live_detectors is None:
+                # self.
             self.channel_1_times = self.sum_detectors(1)
             self.channel_2_times = self.sum_detectors(2)
             self.channel_3_times = self.sum_detectors(3)
@@ -81,7 +88,7 @@ class BATSETTEList(object):
             self.counts = self.counts.T
             # self.counts    = np.vstack((ch1_rts.T, ch2_rts.T, ch3_rts.T, ch4_rts.T))
 
-    def get_bin_edges(self, energy_data):
+    def get_energy_bin_edges(self, energy_data):
         ### 8 detectors x 4 bins => 5 edges
         self.energy_bin_edges = np.zeros((8,5))
         for i in range(len(energy_data)):
@@ -229,20 +236,22 @@ class BATSETTEList(object):
             plt.plot(bins[0:-1], ch, color = colours[i], drawstyle = 'steps')
         plt.show()
 
+
 class BATSEGRB(BATSE_BFITS, BATSETTEList):
     """docstring for BATSEGRB."""
 
-    def __init__(self, trigger, datatype, verbose = True):
+    def __init__(self, trigger, datatype, verbose = True, **kwargs):
         self.trigger   = trigger
         self.datatype  = datatype
         self.verbose   = verbose
-        self.directory = 'data/'
-        mkdir(self.directory)
-        self.live_detectors = None
+        self.directory = './data/'
+        self.path = Path(__file__).parent / self.directory
+        mkdir(self.path)
         print('The trigger number is %i' % self.trigger)
-        super(BATSEGRB, self).__init__()
+        print(kwargs)
+        super(BATSEGRB, self).__init__()#**kwargs)
 
 
-GRB = BATSEGRB(3770, 'TTE_list')
+# GRB = BATSEGRB(3770, 'TTE_list', live_detectors = np.arange(5,8))
 # GRB.bin_and_plot()
 # GRB.tte_bayesian_blocks()

@@ -16,6 +16,8 @@ class TestMakePriors(unittest.TestCase):
     ## set up is down before the iteration of each class method
         self.priors_pulse_start = 0.0
         self.priors_pulse_end   = 1.0
+        self.priors_td_lo       = 0.0
+        self.priors_td_hi       = 0.8
         self.FRED_pulses   = []
         self.FREDx_pulses  = []
         self.residuals_sg  = []
@@ -54,7 +56,9 @@ class TestMakePriors(unittest.TestCase):
         priors  = prior_object.priors
         keys    = prior_object.keys
         ## [*priors] makes a list of all the keys in the priors dict
-        prior_keys = [*priors] + ['constraint_2', 'constraint_3']
+        prior_keys = [*priors]
+        # + ['constraint_2', 'constraint_3'] used to add these but these
+        # keys are already in the prior dict
         for key in keys:
             self.assertIn(key, priors)
         for key in priors:
@@ -73,6 +77,8 @@ class TestMakePriors(unittest.TestCase):
                                             count_bes = self.residuals_bes,
                                             lens = self.lens)
         priors  = prior_object.priors
+        # need to remove constraint key from priors before sampling
+        
         sample  = priors.sample(100)
         for i in range(100):
             self.assertTrue(0 <= sample['start_1'][i] <= sample['start_2'][i])
@@ -90,7 +96,9 @@ class TestMakePriors(unittest.TestCase):
         priors  = prior_object.priors
         keys    = prior_object.keys
         ## [*priors] makes a list of all the keys in the priors dict
-        prior_keys = [*priors] + ['constraint_2_res', 'constraint_3_res']
+        prior_keys = [*priors]
+        # + ['constraint_2_res', 'constraint_3_res'] used to add these but these
+        # keys are already in the prior dict
         for key in keys:
             self.assertIn(key, priors)
         for key in priors:
@@ -196,10 +204,14 @@ class TestMakePriors(unittest.TestCase):
                                             count_FREDx = self.FREDx_pulses,
                                             count_sg  = self.residuals_sg,
                                             count_bes = self.residuals_bes,
-                                            lens = lens)
+                                            lens = lens,
+                                            priors_td_lo = self.priors_td_lo,
+                                            priors_td_hi = self.priors_td_hi)
         keys = prior_object.keys
         key_list = ['background', 'start_1', 'scale_1', 'tau_1', 'xi_1',
                     'magnification_ratio', 'time_delay']
+        # asserts that all keys in each list exist in both lists
+        # ie that the lists contain the same keys only
         for key in keys:
             self.assertIn(key, key_list)
         for key in key_list:

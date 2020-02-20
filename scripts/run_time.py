@@ -4,6 +4,9 @@ import argparse
 from PyGRB_Bayes.DynamicBilby import BilbyObject
 from PyGRB_Bayes.DynamicBilby import create_model_dict
 
+from bilby.core.utils import logging
+logging.getLogger().setLevel(0)#logging.INFO)
+
 def load_3770(sampler = 'dynesty', nSamples = 100):
     bilby_inst = BilbyObject(3770, times = (-.1, 1),
                 datatype = 'tte', nSamples = nSamples, sampler = sampler,
@@ -60,6 +63,25 @@ parser.add_argument('-i', '--indices', type=int, nargs='+',
 args = parser.parse_args()
 HPC = args.HPC
 
+
+def analysis_for_3770():
+    GRB = load_3770_a(times=(-0.2, 0.2), sampler=SAMPLER, nSamples=5000)
+    GRB.offsets = [0, 4000, 8000, -3000]
+    # GRB.make_singular_models()
+    # model = GRB.create_model_from_key('FFFFFFFX')
+
+    # GRB.main_1_channel(2, model)
+
+    # for key, model in GRB.models.items():
+    #     GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+    model = GRB.create_model_from_key('X')
+    GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+    # GRB.get_evidence_singular()
+
+def analysis_for_8099():
+    GRB = load_8099(sampler = SAMPLER, nSamples = 500)
+    GRB.make_singular_models()
+
 if not HPC:
     from matplotlib import rc
     rc('font', **{'family': 'DejaVu Sans',
@@ -68,22 +90,18 @@ if not HPC:
     rc('text.latex',
     preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
     SAMPLER = 'Nestle'
-    # GRB = load_8099(sampler = SAMPLER, nSamples = 51)
-    GRB = load_3770_a(times=(-0.2, 0.2), sampler=SAMPLER, nSamples=2000)
-    GRB.offsets = [0, 4000, 8000, -3000]
-    GRB.make_singular_models()
-    for key, model in GRB.models.items():
-        GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
-    # GRB.get_evidence_singular()
+    analysis_for_8099()
 
 else:
     SAMPLER = 'dynesty'
+    analysis_for_8099()
 
-    GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=5000)
-    GRB.test_pulse_type(args.indices)
+    #
+    # GRB = load_3770_a(times=(-0.1, 0.2), sampler=SAMPLER, nSamples=5000)
+    # GRB.test_pulse_type(args.indices)
+    #
+    # GRB = load_3770_b(times=(0.2, 0.7), sampler=SAMPLER, nSamples=5001)
 
-    GRB = load_3770_b(times=(0.2, 0.7), sampler=SAMPLER, nSamples=5001)
-    GRB.test_pulse_type(args.indices)
 
 
 # GRB = load_3770(sampler = SAMPLER, nSamples = 1000)

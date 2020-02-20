@@ -276,7 +276,7 @@ class BATSESignal(SignalFramework):
     def read_T90_table(self):
 
         table = self.open_T90_excel()
-        self.burst_list       = table['trigger_num']
+        self.burst_list     = table['trigger_num']
         self.t90_list       = table['t90']
         self.t90_err_list   = table['t90_error']
         self.t90_st_list    = table['t90_start']
