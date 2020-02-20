@@ -13,7 +13,7 @@ astropy == 3.0.4
 # build\lib\PyGRB_Bayes\DynamicBilby.py: 15,16,17,18,19,20,21,22
 # build\lib\tests\test_makepriors.py: 3,4,5,6,7
 # tests\test_makepriors.py: 3,4,5,6,7
-bilby == 0.5.5
+bilby == 0.6.0
 
 # PyGRB_Bayes\DynamicBackEnd.py: 3,4
 # PyGRB_Bayes\DynamicBilby.py: 9,10
