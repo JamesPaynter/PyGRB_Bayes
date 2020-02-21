@@ -1,12 +1,12 @@
 #!/bin/bash
 #
 #SBATCH --job-name=array_job
-#SBATCH --output=array_job_8099_output.txt
-#SBATCH --error=array_job_8099_errors.txt
+#SBATCH --output=array_job_3770_output.txt
+#SBATCH --error=array_job_3770_errors.txt
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --time=144:00:00
-#SBATCH --array=1-24
+#SBATCH --array=1-32
 ## SBATCH --mem-per-cpu=4000
 
 #%Module module load Python/3.7.3-spartan_gcc-8.1.0
@@ -22,6 +22,6 @@
 #%Module module load astropy/3.2.1-Python-3.7.3-spartan_gcc-8.1.0
 #%Module module load prettytable/0.7.2-Python-3.7.3-spartan_gcc-8.1.0
 
-index=(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23)
+index=(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31)
 
-python /data/projects/punim1050/PyGRB_Bayes/PyGRB_Bayes/scripts/run_8099.py -i ${index[${SLURM_ARRAY_TASK_ID}-1]} --HPC
+python /data/projects/punim1050/PyGRB_Bayes/PyGRB_Bayes/scripts/run_3770_tte.py -i ${index[${SLURM_ARRAY_TASK_ID}-1]} --HPC

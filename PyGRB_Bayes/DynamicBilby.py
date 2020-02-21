@@ -12,6 +12,7 @@ from scipy.special import gammaln
 from prettytable import PrettyTable
 
 from PyGRB_Bayes import BATSEpreprocess
+from PyGRB_Bayes import GRB_class
 from PyGRB_Bayes.DynamicBackEnd import * ## how to import * from this?
 
 
@@ -22,7 +23,7 @@ class BilbyObject(object):
     def __init__(self,  trigger, times, datatype,
                         priors_pulse_start, priors_pulse_end,
                         priors_td_lo = None, priors_td_hi = None,
-                        test                = False,
+                        tte_list            = False,
                         satellite           = 'BATSE',
                         ## are your bins the right size in rate function ????
                         sampler             = 'dynesty',
@@ -54,22 +55,23 @@ class BilbyObject(object):
         self.priors_td_hi       = priors_td_hi
 
         self.MC_counter          = None
-        self.test                = test
+        self.test                = None # test
 
         # intialise model dict
         self.models = {}
         self.offsets = None
 
-        if not test:
+        if not tte_list:
             self.GRB = BATSEpreprocess.BATSESignal(
                 self.trigger, times = (self.start, self.end),
                 datatype = self.datatype, bgs = False)
         else:
-            self.GRB = EmptyGRB()
-            self.GRB.trigger = self.trigger
-            self.GRB.start   = self.start
-            self.GRB.end     = self.end
-            self.GRB.datatype= self.datatype
+            self.GRB = GRB_class.BATSEGRB(3770, 'TTE_list', live_detectors = np.arange(5,8))
+            # self.GRB = EmptyGRB()
+            # self.GRB.trigger = self.trigger
+            # self.GRB.start   = self.start
+            # self.GRB.end     = self.end
+            # self.GRB.datatype= self.datatype
 
     def make_singular_models(self):
         ''' Create the full array of 1-pulse models. '''
@@ -296,7 +298,7 @@ class BilbyObject(object):
         models = [model for key, model in self.models.items()]
         self._split_array_job_to_4_channels(models, indices)
 
-    def get_evidence_from_pulse(self, models):
+    def get_evidence_from_pulse(self, models, keys = None):
         self.tlabel = self.get_trigger_label()
         self.get_base_directory()
         directory = self.base_folder
@@ -308,6 +310,8 @@ class BilbyObject(object):
             # One space between column edges and contents (default)
             x.padding_width = 1
             for k in range(len(models)):
+                if 'name' not in [*models[k]]:
+                    models[k]['name'] = keys[k]
                 self.setup_labels(models[k])
                 result_label = f'{self.fstring}_result_{self.clabels[i]}'
                 open_result  = f'{self.outdir}/{result_label}_result.json'
@@ -333,11 +337,12 @@ class BilbyObject(object):
 
     def get_evidence_singular_lens(self):
         keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        # keys = ['FF', 'FL', 'FbFb', 'FbL', 'XX', 'XL', 'XbXb', 'XbL']
         self.models = {}
         for key in keys:
             self.models[key] = self.create_model_from_key(key)
         models = [model for key, model in self.models.items()]
-        self.get_evidence_from_pulse(models)
+        self.get_evidence_from_pulse(models, keys)
 
 
     def main_multi_channel(self, channels, model):
