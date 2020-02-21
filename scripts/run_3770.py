@@ -29,6 +29,23 @@ def analysis_for_3770(indices):
     GRB.offsets = [0, 4000, 8000, -3000]
     GRB.test_two_pulse_models(indices)
 
+def evidence_for_3770():
+    num_samples = [500, 2000, 4500]
+    for samples in num_samples:
+        GRB = load_3770(sampler=SAMPLER, nSamples=samples)
+        GRB.offsets = [0, 4000, 8000, -3000]
+        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        model_dict = {}
+        for key in keys:
+            model_dict[key] = GRB.create_model_from_key(key)
+        models = [model for key, model in model_dict.items()]
+        for model in models:
+            try:
+                GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+            except:
+                pass
+        GRB.get_evidence_singular_lens()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')
     parser.add_argument('--HPC', action = 'store_true',
@@ -47,7 +64,7 @@ if __name__ == '__main__':
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'Nestle'
-        analysis_for_3770([2])
+        evidence_for_3770()
 
 
     else:

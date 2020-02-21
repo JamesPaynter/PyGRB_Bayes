@@ -128,7 +128,7 @@ class BilbyObject(object):
         pulse_types = ['G', 'F', 'X', 'C']#, 'S', 'B']
         pulse_kwargs= ['count_Gauss', 'count_FRED', 'count_FREDx', 'count_conv']
                         # 'count_sg', 'count_bes']
-        res_types   = ['b', 's']
+        res_types   = ['s', 'b']
         res_kwargs  = ['count_sg', 'count_bes']
         # list of capital letters only (ie pulses)
         pulse_keys  = ''.join([c for c in key if c.isupper()])
@@ -296,12 +296,7 @@ class BilbyObject(object):
         models = [model for key, model in self.models.items()]
         self._split_array_job_to_4_channels(models, indices)
 
-    def get_evidence_singular(self):
-        # clear model dict if not clear already
-        self.models = {}
-        self.make_singular_models()
-        models = [model for key, model in self.models.items()]
-
+    def get_evidence_from_pulse(self, models):
         self.tlabel = self.get_trigger_label()
         self.get_base_directory()
         directory = self.base_folder
@@ -312,7 +307,7 @@ class BilbyObject(object):
             x.align['Model'] = "l" # Left align models
             # One space between column edges and contents (default)
             x.padding_width = 1
-            for k in range(6):
+            for k in range(len(models)):
                 self.setup_labels(models[k])
                 result_label = f'{self.fstring}_result_{self.clabels[i]}'
                 open_result  = f'{self.outdir}/{result_label}_result.json'
@@ -328,6 +323,22 @@ class BilbyObject(object):
                 w.write(f'Channel {i+1}')
                 w.write(str(x))
                 w.write('')
+
+    def get_evidence_singular(self):
+        # clear model dict if not clear already
+        self.models = {}
+        self.make_singular_models()
+        models = [model for key, model in self.models.items()]
+        self.get_evidence_from_pulse(models)
+
+    def get_evidence_singular_lens(self):
+        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        self.models = {}
+        for key in keys:
+            self.models[key] = self.create_model_from_key(key)
+        models = [model for key, model in self.models.items()]
+        self.get_evidence_from_pulse(models)
+
 
     def main_multi_channel(self, channels, model):
         self.setup_labels(model)
@@ -452,7 +463,7 @@ class BilbyObject(object):
         fig_ax1 = fig.add_subplot(spec[0, 1]) ## axes label on the LHS of plot
         axes_list = []
         for i, k in enumerate(channels):
-            if offsets:
+            if offsets and len(channels) > 1:
                 line_label = f'offset {offsets[k]:+,}'
                 fig_ax1.plot(   x, y[:,k] + offsets[k], c = self.colours[k],
                                 drawstyle='steps-mid', linewidth = 0.4,

@@ -7,7 +7,6 @@ import bilby
 from bilby.core.prior import PriorDict        as bilbyPriorDict
 from bilby.core.prior import Uniform          as bilbyUniform
 from bilby.core.prior import Constraint       as bilbyConstraint
-print(bilbyConstraint)
 from bilby.core.prior import LogUniform       as bilbyLogUniform
 
 MIN_FLOAT = sys.float_info[3]
@@ -148,10 +147,6 @@ class MakePriors(MakeKeys):
         self.priors_scale_min    = priors_scale_min
         self.priors_scale_max    = priors_scale_max
         self.populate_priors()
-        print('begin priors')
-        for prior in self.priors:
-            print(prior)
-        print('end priors')
 
     def _make_constraints(self):
         n = self.max_pulse + 1
