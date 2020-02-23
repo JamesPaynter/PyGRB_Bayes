@@ -146,9 +146,16 @@ class BATSETTEList(object):
         path = Path(__file__).parent / direc
         file_path = f'{path}/{string}'
 
+        data_path = f'./data/tte_list_{self.trigger}.fits'
+        path11111 = Path(__file__).parent / data_path
+        print(path11111)
+        print(file_path)
+
         count_str = f'{file_path}_counts.npy'
         bin_str   = f'{file_path}_bins.npy'
         diff_str  = f'{file_path}_diff.npy'
+
+        print(diff_str)
         unique, counts = np.unique(arrival_times, return_counts = True)
         sttt,endd = self.channel_x_times[0], self.channel_x_times[-1]
         num_bins  = int( ( endd - sttt )

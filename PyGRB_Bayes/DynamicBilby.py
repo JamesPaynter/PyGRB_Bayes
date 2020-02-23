@@ -302,7 +302,7 @@ class BilbyObject(object):
         self.tlabel = self.get_trigger_label()
         self.get_base_directory()
         directory = self.base_folder
-        Z_file = directory + '/evidence_table.txt'
+        Z_file = f'{directory}/evidence_table_T{self.trigger}_nlive{self.nSamples}.txt'
         open(Z_file, 'w').close()
         for i in range(4):
             x = PrettyTable(['Model', 'log Z', 'error'])

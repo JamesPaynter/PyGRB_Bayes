@@ -14,7 +14,7 @@ setuptools.setup(
     url='https://github.com/JamesPaynter/PyGRB_Bayes',
     packages=setuptools.find_packages(),
     package_dir = {'PyGRB_Bayes' : 'PyGRB_Bayes'},
-    package_data={'PyGRB_Bayes': ['data/*']},
+    package_data={ 'PyGRB_Bayes' : ['data/*', 'data/TTE_list_data/*']},
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: BSD 3-Clause License',
