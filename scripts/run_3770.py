@@ -4,9 +4,9 @@ import argparse
 from PyGRB_Bayes.DynamicBilby import BilbyObject
 from PyGRB_Bayes.DynamicBilby import create_model_dict
 
-import bilby
-logger = bilby.core.utils.logger
-logger.disabled = True
+# import bilby
+# logger = bilby.core.utils.logger
+# logger.disabled = True
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
     bilby_inst = BilbyObject(3770, times = (-.1, 1),
