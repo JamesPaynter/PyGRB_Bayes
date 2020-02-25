@@ -38,19 +38,16 @@ class EmptyGRB(object):
             raise ValueError(
                 'Input variable `bin_left` should be a numpy array. '
                 'Is {} when it should be np.ndarray.'.format(type(bin_left)))
-        self.bin_left = bin_left
 
         if not isinstance(bin_right, np.ndarray):
             raise ValueError(
                 'Input variable `bin_right` should be a numpy array. '
                 'Is {} when it should be np.ndarray.'.format(type(bin_right)))
-        self.bin_right = bin_right
 
         if not isinstance(rates, np.ndarray):
             raise ValueError(
                 'Input variable `rates` should be a numpy array. '
                 'Is {} when it should be np.ndarray.'.format(type(rates)))
-        self.rates = rates
 
         # assert right and left bin arrays are equal length
         assert(len(bin_left) == len(bin_right))
@@ -64,6 +61,11 @@ class EmptyGRB(object):
         except:
             a, b = 1, 0
         assert(a > b)
+
+        self.bin_left  = bin_left
+        self.bin_right = bin_right
+        self.rates     = rates
+
 
 
 class SignalFramework(metaclass=ABCMeta):

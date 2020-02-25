@@ -351,7 +351,9 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
                (res_begin - times - bes_Delta / 2.) ),
                bes_A)))
 
-
+    @staticmethod
+    def convolution_gaussian(times, parameters):
+        return parameters
 
     @staticmethod
     def insert_name(x, parameters, pulse_arr, key_list, rate_function):

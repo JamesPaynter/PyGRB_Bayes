@@ -35,7 +35,8 @@ def evidence_for_3770():
         GRB = load_3770(sampler=SAMPLER, nSamples=samples)
         GRB.offsets = [0, 4000, 8000, -3000]
         # keys = ['FF', 'FL', 'FbFb', 'FbL', 'XX', 'XL', 'XbXb', 'XbL']
-        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        # keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        keys = ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
         model_dict = {}
         for key in keys:
             model_dict[key] = GRB.create_model_from_key(key)
