@@ -292,7 +292,9 @@ class BilbyObject(object):
         self._split_array_job_to_4_channels(models, indices)
 
     def test_two_pulse_models(self, indices):
-        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        # keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        keys = ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
+
         self.models = {}
         for key in keys:
             self.models[key] = self.create_model_from_key(key)

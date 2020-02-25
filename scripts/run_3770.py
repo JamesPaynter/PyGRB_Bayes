@@ -17,17 +17,12 @@ def load_3770(sampler = 'dynesty', nSamples = 100):
 
 
 def analysis_for_3770(indices):
-    GRB = load_3770(sampler=SAMPLER, nSamples=500)
-    GRB.offsets = [0, 4000, 8000, -3000]
-    GRB.test_two_pulse_models(indices)
+    num_samples = [500, 2000, 4500]
+    for samples in num_samples:
+        GRB = load_3770(sampler=SAMPLER, nSamples=samples)
+        GRB.offsets = [0, 4000, 8000, -3000]
+        GRB.test_two_pulse_models(indices)
 
-    GRB = load_3770(sampler=SAMPLER, nSamples=2000)
-    GRB.offsets = [0, 4000, 8000, -3000]
-    GRB.test_two_pulse_models(indices)
-
-    GRB = load_3770(sampler=SAMPLER, nSamples=4500)
-    GRB.offsets = [0, 4000, 8000, -3000]
-    GRB.test_two_pulse_models(indices)
 
 def evidence_for_3770():
     num_samples = [500, 2000, 4500]
@@ -35,8 +30,8 @@ def evidence_for_3770():
         GRB = load_3770(sampler=SAMPLER, nSamples=samples)
         GRB.offsets = [0, 4000, 8000, -3000]
         # keys = ['FF', 'FL', 'FbFb', 'FbL', 'XX', 'XL', 'XbXb', 'XbL']
-        # keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
-        keys = ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
+        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
         model_dict = {}
         for key in keys:
             model_dict[key] = GRB.create_model_from_key(key)

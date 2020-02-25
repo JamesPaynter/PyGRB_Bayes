@@ -17,17 +17,11 @@ def load_3770_tte(sampler = 'dynesty', nSamples = 100):
 
 
 def analysis_for_3770(indices):
-    GRB = load_3770_tte(sampler=SAMPLER, nSamples=550)
-    GRB.offsets = [0, 4000, 8000, -3000]
-    GRB.test_two_pulse_models(indices)
-
-    GRB = load_3770_tte(sampler=SAMPLER, nSamples=2050)
-    GRB.offsets = [0, 4000, 8000, -3000]
-    GRB.test_two_pulse_models(indices)
-
-    GRB = load_3770_tte(sampler=SAMPLER, nSamples=4550)
-    GRB.offsets = [0, 4000, 8000, -3000]
-    GRB.test_two_pulse_models(indices)
+    num_samples = [550, 2050, 4550]
+    for samples in num_samples:
+        GRB = load_3770(sampler=SAMPLER, nSamples=samples)
+        GRB.offsets = [0, 4000, 8000, -3000]
+        GRB.test_two_pulse_models(indices)
 
 def evidence_for_3770():
     num_samples = [550, 2050, 4550]
