@@ -1,6 +1,7 @@
 import os
 import sys
-import numpy as np
+import numpy  as np
+import pandas as pd
 import matplotlib.pyplot    as plt
 import matplotlib.gridspec  as gridspec
 import scipy.special as special
@@ -164,7 +165,7 @@ class BilbyObject(object):
         model = create_model_dict(**kwargs)
         return model
 
-    def get_trigger_label(self):
+    def _get_trigger_label(self):
         tlabel = str(self.trigger)
         if len(tlabel) < 4:
             tlabel = ''.join('0' for i in range(4-len(tlabel))) + tlabel
@@ -179,7 +180,7 @@ class BilbyObject(object):
         except:
             self.num_pulses = 0
 
-    def get_base_directory(self):
+    def _get_base_directory(self):
         directory  = '../products/'
         directory += self.tlabel + '_model_comparison_' + str(self.nSamples)
         self.base_folder = directory
@@ -197,7 +198,7 @@ class BilbyObject(object):
                 string += 'b'
         return string
 
-    def get_directory_name(self):
+    def _get_directory_name(self):
         """ Code changes the root directory to the directory above this file.
             Then product files (light-curves, posterior chains) are created in:
                 " directory  = '../products/' "
@@ -217,7 +218,7 @@ class BilbyObject(object):
 
             MC counter is for testing the code over many trials --> save data
         """
-        self.get_base_directory()
+        self._get_base_directory()
         directory = self.base_folder
         if self.model['lens']:
             directory += '/lens_model'
@@ -248,12 +249,12 @@ class BilbyObject(object):
         file_string += str(self.nSamples) + '_'
         return file_string
 
-    def setup_labels(self, model):
+    def _setup_labels(self, model):
         self.model = model
         self.get_max_pulse()
-        self.tlabel = self.get_trigger_label()
+        self.tlabel = self._get_trigger_label()
         self.fstring = self.get_file_string()
-        self.outdir = self.get_directory_name()
+        self.outdir = self._get_directory_name()
         bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
 
     def array_job(self, indices):
@@ -298,13 +299,13 @@ class BilbyObject(object):
         models = [model for key, model in self.models.items()]
         self._split_array_job_to_4_channels(models, indices)
 
-    def get_evidence_from_pulse(self, models, keys = None):
-        self.tlabel = self.get_trigger_label()
-        self.get_base_directory()
+    def evidence_table_to_txt(self, models, channels, keys = None):
+        self.tlabel = self._get_trigger_label()
+        self._get_base_directory()
         directory = self.base_folder
         Z_file = f'{directory}/evidence_table_T{self.trigger}_nlive{self.nSamples}.txt'
         open(Z_file, 'w').close()
-        for i in range(4):
+        for i in channels:
             x = PrettyTable(['Model', 'log Z', 'error'])
             x.align['Model'] = "l" # Left align models
             # One space between column edges and contents (default)
@@ -312,7 +313,7 @@ class BilbyObject(object):
             for k in range(len(models)):
                 if 'name' not in [*models[k]]:
                     models[k]['name'] = keys[k]
-                self.setup_labels(models[k])
+                self._setup_labels(models[k])
                 result_label = f'{self.fstring}_result_{self.clabels[i]}'
                 open_result  = f'{self.outdir}/{result_label}_result.json'
                 try:
@@ -328,31 +329,71 @@ class BilbyObject(object):
                 w.write(str(x))
                 w.write('')
 
+    def evidence_table_to_latex(self, models, channels, keys = None):
+        self.tlabel = self._get_trigger_label()
+        self._get_base_directory()
+        directory = self.base_folder
+        Z_file = f'{directory}/evidence_table_T{self.trigger}_nlive{self.nSamples}.txt'
+
+        columns = ['Model', 'log evidence', 'log error', 'log BF']
+        index = np.arange(len(models))
+        for i in channels:
+            channel_df = pd.DataFrame(columns=columns, index = index)
+            for k in range(len(models)):
+                if 'name' not in [*models[k]]:
+                    models[k]['name'] = keys[k]
+                self._setup_labels(models[k])
+                result_label = f'{self.fstring}_result_{self.clabels[i]}'
+                open_result  = f'{self.outdir}/{result_label}_result.json'
+                try:
+                    result = bilby.result.read_in_result(filename=open_result)
+                    new_row = { 'Model' : [models[k]['name']],
+                                'log evidence' : [result.log_evidence],
+                                'log error' : [result.log_evidence_err],
+                                'log BF' : [result.log_evidence]
+                              }
+                except:
+                    print(f'Could not find {open_result}')
+                    new_row = { 'Model' : [models[k]['name']]}
+                df = pd.DataFrame(new_row, index = [k])
+                channel_df.update(df)
+            base_BF = channel_df['log evidence'].max()
+            for k in range(len(models)):
+                channel_df.loc[[k], ['log BF']] = channel_df.loc[[k], ['log BF']] - base_BF
+            print(channel_df.to_latex(  index=False, float_format="{:0.2f}".format))
+            channel_df.to_latex(f'{directory}/BF_table_ch_{i+1}.tex',
+                                index=False, float_format="{:0.2f}".format)
+
+
     def get_evidence_singular(self):
         # clear model dict if not clear already
         self.models = {}
         self.make_singular_models()
         models = [model for key, model in self.models.items()]
-        self.get_evidence_from_pulse(models)
+        self.evidence_table_to_latex(models, channels = [0, 1, 2, 3])
+        # self.evidence_table_to_txt(models, channels = [0, 1, 2, 3])
 
     def get_evidence_singular_lens(self):
         keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
-        # keys = ['FF', 'FL', 'FbFb', 'FbL', 'XX', 'XL', 'XbXb', 'XbL']
+        keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
+        # keys+= ['FbFb', 'FbL', 'XbXb', 'XbL']
+        # keys+= ['FbF', 'FFb', 'XbX', 'XXb', 'FbX', 'XbF', 'FXb', 'XFb']
         self.models = {}
         for key in keys:
             self.models[key] = self.create_model_from_key(key)
         models = [model for key, model in self.models.items()]
-        self.get_evidence_from_pulse(models, keys)
+        self.evidence_table_to_txt( models = models,
+                                    channels = [0, 1, 2, 3], keys = keys)
 
 
     def main_multi_channel(self, channels, model):
-        self.setup_labels(model)
+        self._setup_labels(model)
 
         if not self.test:
             for i in channels:
                 plt.plot(self.GRB.bin_left, self.GRB.rates[:,i],
                             c = self.colours[i], drawstyle='steps-mid')
-            plot_name = self.base_folder + '/injected_signal'
+            plot_name = f'{self.base_folder}/injected_signal'
             plt.savefig(plot_name)
 
         for i in channels:
@@ -360,7 +401,7 @@ class BilbyObject(object):
         self.get_residuals(channels = channels, model = model)
 
     def main_1_channel(self, channel, model):
-        self.setup_labels(model)
+        self._setup_labels(model)
 
         i           = channel
         prior_shell = MakePriors(
@@ -375,7 +416,7 @@ class BilbyObject(object):
         y = np.rint(self.GRB.counts[:,i]).astype('uint')
         likelihood = PoissonRate(x, y, **self.model)
 
-        result_label = self.fstring + '_result_' + self.clabels[i]
+        result_label = f'{self.fstring}_result_{self.clabels[i]}'
         result = bilby.run_sampler( likelihood = likelihood,
                                     priors     = priors,
                                     sampler    = self.sampler,
@@ -383,15 +424,15 @@ class BilbyObject(object):
                                     outdir     = self.outdir,
                                     label      = result_label,
                                     save       = True)
-        plotname = self.outdir + '/' + result_label +'_corner.pdf'
+        plotname = f'{self.outdir}/{result_label}_corner.pdf'
         result.plot_corner(filename = plotname)
 
         MAP = dict()
         for j in range(1, self.num_pulses + 1):
             try:
-                key = 'constraint_' + str(j)
+                key = f'constraint_{j}'
                 del priors[key]
-                key = 'constraint_' + str(j) + '_res'
+                key = f'constraint_{j}_res'
                 del priors[key]
             except:
                 pass
@@ -402,7 +443,7 @@ class BilbyObject(object):
         self.get_residuals(channels = [channel], model = model)
 
     def get_residuals(self, channels, model):
-        self.setup_labels(model)
+        self._setup_labels(model)
 
         count_fits      = np.zeros((len(self.GRB.bin_left),4))
         residuals       = np.zeros((len(self.GRB.bin_left),4))
@@ -419,13 +460,13 @@ class BilbyObject(object):
             y = np.rint(self.GRB.counts[:,i]).astype('uint')
             likelihood = PoissonRate(x, y, **self.model)
 
-            result_label = self.fstring + '_result_' + self.clabels[i]
-            open_result  = self.outdir + '/' + result_label +'_result.json'
+            result_label = f'{self.fstring}_result_{self.clabels[i]}'
+            open_result  = f'{self.outdir}/{result_label}_result.json'
             result = bilby.result.read_in_result(filename=open_result)
             MAP = dict()
             for j in range(1, self.num_pulses + 1):
                 try:
-                    key = 'constraint_' + str(j)
+                    key = f'constraint_{j}'
                     del priors[key]
                 except:
                     pass
@@ -506,10 +547,10 @@ class BilbyObject(object):
 
         fig_ax1.set_xlim(x[0], x[-1])
         if len(channels) == 1:
-            result_label = self.fstring + '_result_' + self.clabels[channels[0]]
-            plot_name    = self.outdir + '/' + result_label +'_rates.pdf'
+            result_label = f'{self.fstring}_result_{self.clabels[channels[0]]}'
+            plot_name    = f'{self.outdir}/{result_label}_rates.pdf'
         else:
-            plot_name = self.outdir + '/' + self.fstring + '_rates.pdf'
+            plot_name = f'{self.outdir}/{self.fstring}_rates.pdf'
         # if residuals is True:
         #     plot_name = self.outdir + '/' + self.fstring + '_residuals.pdf'
         fig.savefig(plot_name)

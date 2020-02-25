@@ -261,6 +261,7 @@ class BATSESignal(SignalFramework):
             super().__init__(times, bgs)
 
     def open_T90_excel(self):
+        """ Open the BATSE 4B csv information file. """
         xls_file = f'./data/BATSE_4B_catalogue.xls'
         path = Path(__file__).parent / xls_file
         cols = ['trigger_num', 't90', 't90_error', 't90_start']
@@ -274,7 +275,8 @@ class BATSESignal(SignalFramework):
                     print(fnf_error)
 
     def read_T90_table(self):
-
+        """ Potentially deprecated now information is stored in 4B.csv file.
+        """
         table = self.open_T90_excel()
         self.burst_list     = table['trigger_num']
         self.t90_list       = table['t90']

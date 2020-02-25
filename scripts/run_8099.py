@@ -21,17 +21,17 @@ def analysis_for_8099(indices):
 
 def evidence_for_8099():
     GRB = load_8099(sampler = SAMPLER, nSamples = 500)
-    # keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+    # keys = ['F', 'Fs', 'X', 'Xs']
     # model_dict = {}
     # for key in keys:
     #     model_dict[key] = GRB.create_model_from_key(key)
-    GRB.make_singular_models()
-    models = [model for key, model in GRB.models.items()]
-    for model in models:
-        try:
-            GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
-        except:
-            pass
+    # GRB.make_singular_models()
+    # models = [model for key, model in GRB.models.items()]
+    # for model in models:
+    #     try:
+    #         GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+    #     except:
+    #         pass
     GRB.get_evidence_singular()
 
 if __name__ == '__main__':

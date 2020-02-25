@@ -319,6 +319,13 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
         self.parameters = {k: None for k in self.keys} ## creates a dict
 
     @staticmethod
+    def gaussian_pulse(times, start, scale, sigma):
+        """ start = mode = mu, sigma is std dev = width of pulse.
+            scale is height."""
+        return scale * np.exp(- np.power(times - start, 2.) / (
+                            2 * np.power(sigma, 2.)))
+
+    @staticmethod
     def FRED_pulse(times, start, scale, tau, xi):
         return np.where(times - start <= 0, MIN_FLOAT, scale * np.exp(
         - xi * ( (tau / (times - start)) + ((times - start) / tau) - 2.)))
@@ -335,7 +342,7 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
                 np.cos(sg_omega * times + sg_phi) )
 
     @staticmethod
-    def count_bessel(times, bes_A, bes_Omega, bes_s, res_begin, bes_Delta):
+    def modified_bessel(times, bes_A, bes_Omega, bes_s, res_begin, bes_Delta):
         return np.where(times > res_begin + bes_Delta / 2.,
                 bes_A * special.j0(bes_s * bes_Omega *
                (- res_begin + times - bes_Delta / 2.) ),
@@ -343,6 +350,8 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
                 bes_A * special.j0(bes_Omega *
                (res_begin - times - bes_Delta / 2.) ),
                bes_A)))
+
+
 
     @staticmethod
     def insert_name(x, parameters, pulse_arr, key_list, rate_function):
@@ -402,7 +411,7 @@ class PoissonRate(MakeKeys, bilby.Likelihood):
         rates+= insert_name_func(   x, parameters,     self.count_sg,
                                     self.res_sg_list,  self.sine_gaussian)
         rates+= insert_name_func(   x, parameters,     self.count_bes,
-                                    self.res_bes_list, self.count_bessel)
+                                    self.res_bes_list, self.modified_bessel)
         try:
             rates += parameters['background']
         except:

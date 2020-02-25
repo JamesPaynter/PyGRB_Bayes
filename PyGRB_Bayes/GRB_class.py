@@ -13,17 +13,6 @@ def mkdir(directory):
     else:
         pass
 
-#
-# class BATSE_BFITS(object):
-#     """docstring for BATSE_BFITS."""
-#
-#     def __init__(self):
-#         super(BATSE_BFITS, self).__init__()
-#         if self.datatype != 'TTE' or self.datatype != 'DISCSC':
-#             pass
-#         else:
-#             print('Analysing BATSE bfits  data')
-
 
 class BATSETTEList(object):
     """docstring for BATSETTEList."""
