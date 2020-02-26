@@ -1,6 +1,6 @@
 import unittest
 
-from PyGRB_Bayes import DynamicBackEnd
+from PyGRB_Bayes.analyse import makekeys
 
 
 
@@ -21,7 +21,7 @@ class TestMakeKeys(unittest.TestCase):
         del self.lens
 
     def test_lens(self):
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = self.FRED_pulses,
+        key_object   = makekeys.MakeKeys( count_FRED  = self.FRED_pulses,
                                                 count_FREDx = self.FREDx_pulses,
                                                 count_sg  = self.residuals_sg,
                                                 count_bes = self.residuals_bes,
@@ -29,7 +29,7 @@ class TestMakeKeys(unittest.TestCase):
         self.assertEqual(self.lens, key_object.lens)
 
     def test_background(self):
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = self.FRED_pulses,
+        key_object   = makekeys.MakeKeys( count_FRED  = self.FRED_pulses,
                                                 count_FREDx = self.FREDx_pulses,
                                                 count_sg  = self.residuals_sg,
                                                 count_bes = self.residuals_bes,
@@ -39,7 +39,7 @@ class TestMakeKeys(unittest.TestCase):
 
     def test_FRED(self):
         FRED_pulses  = [1]
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = FRED_pulses,
+        key_object   = makekeys.MakeKeys( count_FRED  = FRED_pulses,
                                                 count_FREDx = self.FREDx_pulses,
                                                 count_sg  = self.residuals_sg,
                                                 count_bes = self.residuals_bes,
@@ -53,7 +53,7 @@ class TestMakeKeys(unittest.TestCase):
 
     def test_sg(self):
         residuals_sg = [1]
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = self.FRED_pulses,
+        key_object   = makekeys.MakeKeys( count_FRED  = self.FRED_pulses,
                                                 count_FREDx = self.FREDx_pulses,
                                                 count_sg  = residuals_sg,
                                                 count_bes = self.residuals_bes,
@@ -69,7 +69,7 @@ class TestMakeKeys(unittest.TestCase):
     def test_FRED_lens(self):
         FRED_pulses  = [1]
         lens         = True
-        key_object   = DynamicBackEnd.MakeKeys( count_FRED  = FRED_pulses,
+        key_object   = makekeys.MakeKeys( count_FRED  = FRED_pulses,
                                                 count_FREDx = self.FREDx_pulses,
                                                 count_sg  = self.residuals_sg,
                                                 count_bes = self.residuals_bes,
