@@ -6,12 +6,11 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.stats import bayesian_blocks
 
+# from PyGRB_Bayes.preprocess.abstract import make_GRB
+from PyGRB_Bayes.backend.admin import mkdir
 
-def mkdir(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    else:
-        pass
+
+
 
 
 class BATSETTEList(object):
@@ -22,7 +21,7 @@ class BATSETTEList(object):
         if self.verbose:
             print('Analysing BATSE TTE list data')
         # open a FITS file
-        data_path = f'./data/tte_list_{self.trigger}.fits'
+        data_path = f'../data/tte_list_{self.trigger}.fits'
         path = Path(__file__).parent / data_path
         hdul = fits.open(path)
         self.get_energy_bin_edges(hdul[1].data)
@@ -131,11 +130,11 @@ class BATSETTEList(object):
             arrival_times = self.channels[int(channel - 1)]
             string        = f'channel_{channel}'
 
-        direc     = './data/TTE_list_data/'
+        direc     = '../data/TTE_list_data/'
         path = Path(__file__).parent / direc
         file_path = f'{path}/{string}'
 
-        data_path = f'./data/tte_list_{self.trigger}.fits'
+        data_path = f'../data/tte_list_{self.trigger}.fits'
         path11111 = Path(__file__).parent / data_path
         print(path11111)
         print(file_path)

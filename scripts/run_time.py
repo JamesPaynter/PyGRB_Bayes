@@ -3,10 +3,8 @@ import sys, os
 import argparse
 from PyGRB_Bayes.DynamicBilby import BilbyObject
 from PyGRB_Bayes.DynamicBilby import create_model_dict
+from PyGRB_Bayes.backend.makemodels import create_model_from_key
 
-import bilby
-logger = bilby.core.utils.logger
-logger.disabled = True
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
     bilby_inst = BilbyObject(3770, times = (-.1, 1),
@@ -97,7 +95,9 @@ if __name__ == '__main__':
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'Nestle'
-        analysis_for_8099()
+
+        # analysis_for_8099()
+        GRB = load_8099(sampler = SAMPLER, nSamples = 500)
 
     else:
         SAMPLER = 'dynesty'

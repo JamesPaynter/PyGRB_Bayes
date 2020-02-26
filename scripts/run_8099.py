@@ -2,11 +2,8 @@ import sys, os
 
 import argparse
 from PyGRB_Bayes.DynamicBilby import BilbyObject
-from PyGRB_Bayes.DynamicBilby import create_model_dict
+from PyGRB_Bayes.backend.makemodels import create_model_from_key
 
-import bilby
-logger = bilby.core.utils.logger
-logger.disabled = True
 
 def load_8099(sampler = 'dynesty', nSamples = 200):
     test = BilbyObject(8099, times = (2, 15),
@@ -24,7 +21,7 @@ def evidence_for_8099():
     # keys = ['F', 'Fs', 'X', 'Xs']
     # model_dict = {}
     # for key in keys:
-    #     model_dict[key] = GRB.create_model_from_key(key)
+    #     model_dict[key] = create_model_from_key(key)
     # GRB.make_singular_models()
     # models = [model for key, model in GRB.models.items()]
     # for model in models:

@@ -11,14 +11,17 @@ from scipy.special import gammaln
 ## makes the scripts location the current working directory rather than the
 ## directory the script was launched from
 from prettytable import PrettyTable
+import bilby
 
-from PyGRB_Bayes import BATSEpreprocess
-from PyGRB_Bayes import GRB_class
-from PyGRB_Bayes.DynamicBackEnd import * ## how to import * from this?
+from PyGRB_Bayes.preprocess import BATSEpreprocess
+from PyGRB_Bayes.preprocess import GRB_class
+from PyGRB_Bayes.backend import *
+from PyGRB_Bayes.backend.makemodels import make_singular_models
+from PyGRB_Bayes.backend.admin import Admin, mkdir
+from PyGRB_Bayes.postprocess.make_evidence_tables import EvidenceTables
 
 
-
-class BilbyObject(object):
+class BilbyObject(Admin, EvidenceTables):
     ''' Wrapper object for Bayesian analysis. '''
 
     def __init__(self,  trigger, times, datatype,
@@ -32,12 +35,25 @@ class BilbyObject(object):
 
         super(BilbyObject, self).__init__()
 
-        print('\n\n\n\n')
+        print('\n\n')
+        print('What are you working on!!!???')
+        print('\n')
+        print('The priorities for this project are:')
+        print('1) Unit tests for all the current .py files.')
+        print('2) Getting the automated pulse fitting algorithm working.')
+        print('3) Import BATSE fetch module from masters.')
+        print('4) Complete SWIFT; Fermi, INTEGRAL, KONUS etc. fetch modules.')
+        print('5) Automated .pdf reports for model fitting / selection.')
+        print('6) Integration tests.')
+        print('7) Generalise lensing fits (convolutions).')
+        print('8) Documentation; sphinx.')
+        print('9) Release in JOSS (ask ADACS for help?).')
+        print('\n\n\n')
         print('DO THE PRIORS MAKE SENSE !! ??')
         print('Prior scaling is in counts / bin !!! ')
         print('THIS IS NOT COUNTS / SECOND !!!')
         print('This should only affect the A and B scale and background params')
-        print('\n\n\n\n')
+        print('\n\n\n')
 
 
         (self.start, self.end)   = times
@@ -63,9 +79,14 @@ class BilbyObject(object):
         self.offsets = None
 
         if not tte_list:
-            self.GRB = BATSEpreprocess.BATSESignal(
-                self.trigger, times = (self.start, self.end),
+            # scaf = BATSEpreprocess.BATSESignal(
+            #     self.trigger, times = (self.start, self.end),
+            #     datatype = self.datatype, bgs = False)
+
+            self.GRB = BATSEpreprocess.make_GRB(
+                burst = self.trigger, times = (self.start, self.end),
                 datatype = self.datatype, bgs = False)
+
         else:
             self.GRB = GRB_class.BATSEGRB(3770, 'TTE_list', live_detectors = np.arange(5,8))
             # self.GRB = EmptyGRB()
@@ -73,189 +94,9 @@ class BilbyObject(object):
             # self.GRB.start   = self.start
             # self.GRB.end     = self.end
             # self.GRB.datatype= self.datatype
+        print(self.GRB)
 
-    def make_singular_models(self):
-        ''' Create the full array of 1-pulse models. '''
-        # TODO create gaussian
-        self.models['F']  = create_model_dict(  lens = False, count_FRED  = [1],
-                                                count_FREDx = [],
-                                                count_sg    = [],
-                                                count_bes   = [],
-                                                name = 'FRED')
-        self.models['Fs'] = create_model_dict(  lens = False, count_FRED  = [1],
-                                                count_FREDx = [],
-                                                count_sg    = [1],
-                                                count_bes   = [],
-                                                name = 'FRED sg residual')
-        self.models['Fb'] = create_model_dict(  lens = False, count_FRED  = [1],
-                                                count_FREDx = [],
-                                                count_sg    = [],
-                                                count_bes   = [1],
-                                                name = 'FRED bes residual')
-        self.models['X']  = create_model_dict(  lens = False, count_FRED  = [],
-                                                count_FREDx = [1],
-                                                count_sg    = [],
-                                                count_bes   = [],
-                                                name = 'FREDx')
-        self.models['Xs'] = create_model_dict(  lens = False, count_FRED  = [],
-                                                count_FREDx = [1],
-                                                count_sg    = [1],
-                                                count_bes   = [],
-                                                name = 'FREDx sg residual')
-        self.models['Xb'] = create_model_dict(  lens = False, count_FRED  = [],
-                                                count_FREDx = [1],
-                                                count_sg    = [],
-                                                count_bes   = [1],
-                                                name = 'FREDx bes residual')
 
-    @staticmethod
-    def get_pos_from_key(key, char):
-        """ Returns a list of the indices where char appears in the string.
-            Pass in a list of only the pulses no residuals (ie capital letters)
-            +1 is because the pulses are index from 1.
-            """
-        return [i+1 for i, c in enumerate(key) if c == char]
-
-    @staticmethod
-    def get_pos_from_idx(key, idx_array, char):
-        return [idx_array[i] for i, c in enumerate(key) if c == char]
-
-    def create_model_from_key(self, key):
-        assert(isinstance(key, str))
-        kwargs = {}
-        kwargs['lens'] = True if 'L' in key else False
-        key = key.strip('L')
-        # Gaussian, FRED, FREDx, Convolution
-        # TODO allow SG or BES to be standalone pulses
-        # as needed, may add bugs down the lineif implemented naively
-        pulse_types = ['G', 'F', 'X', 'C']#, 'S', 'B']
-        pulse_kwargs= ['count_Gauss', 'count_FRED', 'count_FREDx', 'count_conv']
-                        # 'count_sg', 'count_bes']
-        res_types   = ['s', 'b']
-        res_kwargs  = ['count_sg', 'count_bes']
-        # list of capital letters only (ie pulses)
-        pulse_keys  = ''.join([c for c in key if c.isupper()])
-        pulse_list  = []
-        res_list    = []
-        for i, char in enumerate(pulse_types):
-            # list of indices where current char ('G', 'F' etc.) appears
-            idx_list = self.get_pos_from_key(pulse_keys, char)
-            # appends this to list of pulses
-            pulse_list += idx_list
-            # also adds this list to the kwargs dict to be passed to the model
-            kwargs[pulse_kwargs[i]] = idx_list
-        # sort the list of pulses
-        pulse_list.sort()
-        # indices of where pulses appear in original string
-        pulse_indices = [i for i, c in enumerate(key) if c.isupper()]
-        idx_array = [0 for i in range(len(key))]
-        # idx_array[i] = pulse_indices[]
-        for i in range(len(key)):
-            idx_array[i] = 0
-
-        for i, (j, k) in enumerate(zip(pulse_list, pulse_indices)):
-            idx_array[k] = j
-        for i in range(1, len(key)):
-            if idx_array[i] == 0:
-                idx_array[i] = idx_array[i-1]
-
-        for i, char in enumerate(res_types):
-            kwargs[res_kwargs[i]] = self.get_pos_from_idx(key, idx_array, char)
-
-        model = create_model_dict(**kwargs)
-        return model
-
-    def _get_trigger_label(self):
-        tlabel = str(self.trigger)
-        if len(tlabel) < 4:
-            tlabel = ''.join('0' for i in range(4-len(tlabel))) + tlabel
-        return tlabel
-
-    def get_max_pulse(self):
-        mylist = self.model['count_FRED'] + self.model['count_FREDx']
-        ## set gets the unique values of the list
-        myset  = set(mylist)
-        try:
-            self.num_pulses = max(myset) ## WILL NEED EXPANDING
-        except:
-            self.num_pulses = 0
-
-    def _get_base_directory(self):
-        directory  = '../products/'
-        directory += self.tlabel + '_model_comparison_' + str(self.nSamples)
-        self.base_folder = directory
-
-    def get_pulse_list(self):
-        string = ''
-        for i in range(1, self.num_pulses + 1):
-            if i in self.model['count_FRED']:
-                string += 'F'
-            elif i in self.model['count_FREDx']:
-                string += 'X'
-            if i in self.model['count_sg']:
-                string += 's'
-            elif i in self.model['count_bes']:
-                string += 'b'
-        return string
-
-    def _get_directory_name(self):
-        """ Code changes the root directory to the directory above this file.
-            Then product files (light-curves, posterior chains) are created in:
-                " directory  = '../products/' "
-
-            self.tlabel : 4 character burst trigger number
-
-            adds '_model_comparison_' (could be removed really)
-
-            add number of live points (~ accuracy proxy)
-
-            add lens model or null model (if self.lens)
-
-            add number of pulses
-
-            add pulse keys (eg FFbXsF : Fred F <- bessel_res FREDx <- sg_res F)
-            residual is attached to the proceeding pulse.
-
-            MC counter is for testing the code over many trials --> save data
-        """
-        self._get_base_directory()
-        directory = self.base_folder
-        if self.model['lens']:
-            directory += '/lens_model'
-        else:
-            directory += '/null_model'
-        directory += '_' + str(self.num_pulses)
-
-        directory += '_' + self.get_pulse_list()
-        if self.MC_counter:
-            directory += '_' + str(self.MC_counter)
-        return directory
-
-    def get_file_string(self):
-        file_string = ''
-        if self.satellite == 'BATSE':
-            file_string += 'B_'
-        file_string += self.tlabel
-        if   self.datatype == 'discsc':
-            file_string += '__d'
-        elif self.datatype == 'TTE':
-            file_string += '__t'
-        elif self.datatype == 'TTElist':
-            file_string += '_tl'
-        if self.model['lens']:
-            file_string += '_YL'
-        else:
-            file_string +='_NL'
-        file_string += str(self.nSamples) + '_'
-        return file_string
-
-    def _setup_labels(self, model):
-        self.model = model
-        self.get_max_pulse()
-        self.tlabel = self._get_trigger_label()
-        self.fstring = self.get_file_string()
-        self.outdir = self._get_directory_name()
-        bilby.utils.check_directory_exists_and_if_not_mkdir(self.outdir)
 
     def array_job(self, indices):
         ''' takes one of 24 indices from HPC to parallelise this job. '''
@@ -287,7 +128,7 @@ class BilbyObject(object):
     def test_pulse_type(self, indices):
         # clear model dict if not clear already
         self.models = {}
-        self.make_singular_models()
+        makemodels.make_singular_models()
         models = [model for key, model in self.models.items()]
         self._split_array_job_to_4_channels(models, indices)
 
@@ -297,96 +138,9 @@ class BilbyObject(object):
 
         self.models = {}
         for key in keys:
-            self.models[key] = self.create_model_from_key(key)
+            self.models[key] = makemodels.create_model_from_key(key)
         models = [model for key, model in self.models.items()]
         self._split_array_job_to_4_channels(models, indices)
-
-    def evidence_table_to_txt(self, models, channels, keys = None):
-        self.tlabel = self._get_trigger_label()
-        self._get_base_directory()
-        directory = self.base_folder
-        Z_file = f'{directory}/evidence_table_T{self.trigger}_nlive{self.nSamples}.txt'
-        open(Z_file, 'w').close()
-        for i in channels:
-            x = PrettyTable(['Model', 'log Z', 'error'])
-            x.align['Model'] = "l" # Left align models
-            # One space between column edges and contents (default)
-            x.padding_width = 1
-            for k in range(len(models)):
-                if 'name' not in [*models[k]]:
-                    models[k]['name'] = keys[k]
-                self._setup_labels(models[k])
-                result_label = f'{self.fstring}_result_{self.clabels[i]}'
-                open_result  = f'{self.outdir}/{result_label}_result.json'
-                try:
-                    result = bilby.result.read_in_result(filename=open_result)
-                    x.add_row([ models[k]['name'],
-                                f'{result.log_evidence:.2f}',
-                                f'{result.log_evidence_err:.2f}'])
-                except:
-                    print(f'Could not find {open_result}')
-            # indentation should be same as k loop
-            with open(Z_file, 'a') as w:
-                w.write(f'Channel {i+1}')
-                w.write(str(x))
-                w.write('')
-
-    def evidence_table_to_latex(self, models, channels, keys = None):
-        self.tlabel = self._get_trigger_label()
-        self._get_base_directory()
-        directory = self.base_folder
-        Z_file = f'{directory}/evidence_table_T{self.trigger}_nlive{self.nSamples}.txt'
-
-        columns = ['Model', 'log evidence', 'log error', 'log BF']
-        index = np.arange(len(models))
-        for i in channels:
-            channel_df = pd.DataFrame(columns=columns, index = index)
-            for k in range(len(models)):
-                if 'name' not in [*models[k]]:
-                    models[k]['name'] = keys[k]
-                self._setup_labels(models[k])
-                result_label = f'{self.fstring}_result_{self.clabels[i]}'
-                open_result  = f'{self.outdir}/{result_label}_result.json'
-                try:
-                    result = bilby.result.read_in_result(filename=open_result)
-                    new_row = { 'Model' : [models[k]['name']],
-                                'log evidence' : [result.log_evidence],
-                                'log error' : [result.log_evidence_err],
-                                'log BF' : [result.log_evidence]
-                              }
-                except:
-                    print(f'Could not find {open_result}')
-                    new_row = { 'Model' : [models[k]['name']]}
-                df = pd.DataFrame(new_row, index = [k])
-                channel_df.update(df)
-            base_BF = channel_df['log evidence'].max()
-            for k in range(len(models)):
-                channel_df.loc[[k], ['log BF']] = channel_df.loc[[k], ['log BF']] - base_BF
-            print(channel_df.to_latex(  index=False, float_format="{:0.2f}".format))
-            channel_df.to_latex(f'{directory}/BF_table_ch_{i+1}.tex',
-                                index=False, float_format="{:0.2f}".format)
-
-
-    def get_evidence_singular(self):
-        # clear model dict if not clear already
-        self.models = {}
-        self.make_singular_models()
-        models = [model for key, model in self.models.items()]
-        self.evidence_table_to_latex(models, channels = [0, 1, 2, 3])
-        # self.evidence_table_to_txt(models, channels = [0, 1, 2, 3])
-
-    def get_evidence_singular_lens(self):
-        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
-        keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
-        # keys+= ['FbFb', 'FbL', 'XbXb', 'XbL']
-        # keys+= ['FbF', 'FFb', 'XbX', 'XXb', 'FbX', 'XbF', 'FXb', 'XFb']
-        self.models = {}
-        for key in keys:
-            self.models[key] = self.create_model_from_key(key)
-        models = [model for key, model in self.models.items()]
-        self.evidence_table_to_txt( models = models,
-                                    channels = [0, 1, 2, 3], keys = keys)
-
 
     def main_multi_channel(self, channels, model):
         self._setup_labels(model)
@@ -479,10 +233,10 @@ class BilbyObject(object):
 
             if model['lens']:
                 counts_fit = likelihood.calculate_rate(x, MAP,
-                                                likelihood.insert_name_lens)
+                                                likelihood.calculate_rate_lens)
             else:
                 counts_fit = likelihood.calculate_rate(x, MAP,
-                                                likelihood.insert_name)
+                                                likelihood.calculate_rate)
 
             count_fits[:,i] = counts_fit
             residuals[:,i] = self.GRB.counts[:,i] - counts_fit
@@ -558,18 +312,7 @@ class BilbyObject(object):
         fig.savefig(plot_name)
 
 
-def create_model_dict(  lens, count_FRED, count_FREDx, count_sg, count_bes,
-                        **kwargs):
-    model = {}
-    model['lens']        = lens
-    model['count_FRED']  = count_FRED
-    model['count_FREDx'] = count_FREDx
-    model['count_sg']    = count_sg
-    model['count_bes']   = count_bes
-    if kwargs:
-        for kwarg in kwargs:
-            model[kwarg] = kwargs[kwarg]
-    return model
+
 
 if __name__ == '__main__':
     pass

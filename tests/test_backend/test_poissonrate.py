@@ -3,7 +3,8 @@ import unittest
 
 from scipy.special import gammaln
 
-from PyGRB_Bayes import DynamicBackEnd
+from PyGRB_Bayes.backend.makepriors import MakePriors
+from PyGRB_Bayes.backend.rateclass  import PoissonRate
 
 
 
@@ -44,7 +45,7 @@ class TestPoissonRate(unittest.TestCase):
             Not sure if this is important.
         '''
     #     with self.assertRaises(ValueError):
-    #         DynamicBackEnd.PoissonRate( x = self.x, y = self.yfloat,
+    #         PoissonRate( x = self.x, y = self.yfloat,
     #                                     FRED_pulses   = self.FRED_pulses,
     #                                     FREDx_pulses  = self.FREDx_pulses,
     #                                     residuals_sg  = self.residuals_sg,
@@ -55,7 +56,7 @@ class TestPoissonRate(unittest.TestCase):
     def test_init__y_negative(self):
         ''' Doesn't work because calculate_rate catches negatives already. '''
         # with self.assertRaises(ValueError):
-        #     DynamicBackEnd.PoissonRate( x = self.x, y = self.yneg,
+        #     PoissonRate( x = self.x, y = self.yneg,
         #                                 FRED_pulses   = self.FRED_pulses,
         #                                 FREDx_pulses  = self.FREDx_pulses,
         #                                 residuals_sg  = self.residuals_sg,
@@ -66,15 +67,15 @@ class TestPoissonRate(unittest.TestCase):
     def test_3_FRED_priors(self):
         ''' Tests the prior keys match the rate keys. '''
         self.FRED_pulses  = [1, 2, 3]
-        prior_object = DynamicBackEnd.MakePriors(self.priors_pulse_start,
-                                            self.priors_pulse_end,
-                                            count_FRED   = self.FRED_pulses,
-                                            count_FREDx  = self.FREDx_pulses,
-                                            count_sg  = self.residuals_sg,
-                                            count_bes = self.residuals_bes,
-                                            lens = self.lens)
+        prior_object = MakePriors(  self.priors_pulse_start,
+                                    self.priors_pulse_end,
+                                    count_FRED   = self.FRED_pulses,
+                                    count_FREDx  = self.FREDx_pulses,
+                                    count_sg  = self.residuals_sg,
+                                    count_bes = self.residuals_bes,
+                                    lens = self.lens)
 
-        rates_object = DynamicBackEnd.PoissonRate( x = self.x, y = self.y,
+        rates_object = PoissonRate( x = self.x, y = self.y,
                                     count_FRED   = self.FRED_pulses,
                                     count_FREDx  = self.FREDx_pulses,
                                     count_sg  = self.residuals_sg,
@@ -97,10 +98,10 @@ class TestPoissonRate(unittest.TestCase):
     #                              ('scale', 10),
     #                              ('tau'  , 3),
     #                              ('xi'   , 7)  ])
-    #     rate = DynamicBackEnd.PoissonRate.FRED_pulse(self.x, **self.parameters)
+    #     rate = PoissonRate.FRED_pulse(self.x, **self.parameters)
     #     ll = np.sum(-rate + y * np.log(rate) - gammaln(y + 1))
     #
-    #     rates_object = DynamicBackEnd.PoissonRate( x = self.x, y = y,
+    #     rates_object = PoissonRate( x = self.x, y = y,
     #                                 FRED_pulses   = self.FRED_pulses,
     #                                 FREDx_pulses  = self.FREDx_pulses,
     #                                 residuals_sg  = self.residuals_sg,

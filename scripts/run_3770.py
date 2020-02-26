@@ -1,12 +1,9 @@
 import sys, os
-
 import argparse
-from PyGRB_Bayes.DynamicBilby import BilbyObject
-from PyGRB_Bayes.DynamicBilby import create_model_dict
 
-# import bilby
-# logger = bilby.core.utils.logger
-# logger.disabled = True
+from PyGRB_Bayes.DynamicBilby import BilbyObject
+from PyGRB_Bayes.backend.makemodels import create_model_from_key
+
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
     bilby_inst = BilbyObject(3770, times = (-.1, 1),
@@ -34,7 +31,7 @@ def evidence_for_3770():
         keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
         model_dict = {}
         for key in keys:
-            model_dict[key] = GRB.create_model_from_key(key)
+            model_dict[key] = create_model_from_key(key)
         models = [model for key, model in model_dict.items()]
 
         for model in models:

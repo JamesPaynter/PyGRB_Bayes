@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from PyGRB_Bayes.BATSEpreprocess import EmptyGRB
+from PyGRB_Bayes.preprocess.grb import EmptyGRB
 
 
 class TestEmptyGRB(unittest.TestCase):
