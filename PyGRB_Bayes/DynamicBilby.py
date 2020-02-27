@@ -15,6 +15,7 @@ import bilby
 from PyGRB_Bayes.preprocess import BATSEpreprocess
 from PyGRB_Bayes.preprocess import GRB_class
 from PyGRB_Bayes.backend.makepriors import MakePriors
+from PyGRB_Bayes.backend.makemodels import create_model_from_key
 from PyGRB_Bayes.backend.makemodels import make_singular_models
 from PyGRB_Bayes.backend.rateclass import PoissonRate
 from PyGRB_Bayes.backend.admin import Admin, mkdir
@@ -31,7 +32,8 @@ class BilbyObject(Admin, EvidenceTables):
                         satellite           = 'BATSE',
                         ## are your bins the right size in rate function ????
                         sampler             = 'dynesty',
-                        nSamples            = 200):
+                        nSamples            = 200,
+                        **kwargs):
 
         super(BilbyObject, self).__init__()
 
@@ -54,6 +56,8 @@ class BilbyObject(Admin, EvidenceTables):
         print('THIS IS NOT COUNTS / SECOND !!!')
         print('This should only affect the A and B scale and background params')
         print('\n\n\n')
+
+        self.kwargs = kwargs
 
 
         (self.start, self.end)   = times
@@ -106,9 +110,7 @@ class BilbyObject(Admin, EvidenceTables):
             self.main_1_channel(channel, models[m_index])
 
     def test_pulse_type(self, indices):
-        # clear model dict if not clear already
-        self.models = {}
-        makemodels.make_singular_models()
+        self.models = make_singular_models()
         models = [model for key, model in self.models.items()]
         self._split_array_job_to_4_channels(models, indices)
 
@@ -118,7 +120,7 @@ class BilbyObject(Admin, EvidenceTables):
 
         self.models = {}
         for key in keys:
-            self.models[key] = makemodels.create_model_from_key(key)
+            self.models[key] = create_model_from_key(key)
         models = [model for key, model in self.models.items()]
         self._split_array_job_to_4_channels(models, indices)
 
@@ -149,7 +151,8 @@ class BilbyObject(Admin, EvidenceTables):
                             priors_pulse_end = self.priors_pulse_end,
                             priors_td_lo = self.priors_td_lo,
                             priors_td_hi = self.priors_td_hi,
-                            **self.model)
+                            **self.model,
+                            **self.kwargs)
         priors = prior_shell.return_prior_dict()
 
         x = self.GRB.bin_left

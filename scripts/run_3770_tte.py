@@ -74,7 +74,9 @@ if __name__ == '__main__':
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'Nestle'
-        evidence_for_3770()
+        # evidence_for_3770()
+        analysis_for_3770([2])
+
 
     else:
         SAMPLER = 'dynesty'
