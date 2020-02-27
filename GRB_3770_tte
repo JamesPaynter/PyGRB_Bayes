@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=array_job
-#SBATCH --output=array_job_3770_output.txt
-#SBATCH --error=array_job_3770_errors.txt
+#SBATCH --output=array_job_3770_tte_output_%A_%a.txt
+#SBATCH --error=array_job_3770_tte_errors_%A_%a.txt
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --time=144:00:00
