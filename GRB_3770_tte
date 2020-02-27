@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1
 #SBATCH --time=144:00:00
 #SBATCH --array=1-64
-## SBATCH --mem-per-cpu=1600
+## SBATCH --mem-per-cpu=16000
 
 #%Module module load Python/3.7.3-spartan_gcc-8.1.0
 #%Module module load numpy/1.18.1-Python-3.7.3-spartan_gcc-8.1.0
