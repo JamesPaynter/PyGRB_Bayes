@@ -101,9 +101,6 @@ class SignalFramework(metaclass=ABCMeta):
             self.sum_rates      = self.sum_rates    [self.start:self.stop]
             self.max_bin        = np.max(self.bin_widths)
 
-        # if self.light_GRB:
-            # self.return_GRB()
-
     def get_background(self):
         """ Creates background from bins of width greater than nominated
             resolution. ie for 64ms uses the larger 1024ms+ bins.
@@ -112,4 +109,4 @@ class SignalFramework(metaclass=ABCMeta):
 
     def return_GRB(self):
         """ Creates a new GRB object with only bins and rates. """
-        return EmptyGRB(self.bin_left, self.bin_right, self.rates)
+        return EmptyGRB(self.bin_left, self.bin_right, self.counts)

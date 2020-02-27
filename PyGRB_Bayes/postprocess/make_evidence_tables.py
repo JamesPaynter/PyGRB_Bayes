@@ -3,7 +3,10 @@ import pandas as pd
 from abc import ABCMeta
 
 import bilby
+from prettytable import PrettyTable
 
+
+from PyGRB_Bayes.backend.makemodels import create_model_from_key
 from PyGRB_Bayes.backend.makemodels import make_singular_models
 
 class EvidenceTables(object):
@@ -40,7 +43,7 @@ class EvidenceTables(object):
         if return_tex:
             self._evidence_table_to_latex(models, channels, keys)
         else:
-            self.evidence_table_to_txt(models, channels, keys)
+            self._evidence_table_to_txt(models, channels, keys)
 
     def _evidence_table_to_txt(self, models, channels, keys):
         """
@@ -136,7 +139,9 @@ class EvidenceTables(object):
         # keys+= ['FbF', 'FFb', 'XbX', 'XXb', 'FbX', 'XbF', 'FXb', 'XFb']
         self.models = {}
         for key in keys:
-            self.models[key] = makemodels.create_model_from_key(key)
+            self.models[key] = create_model_from_key(key)
         models = [model for key, model in self.models.items()]
         self.get_evidence_table(models = models, return_tex = False,
+                                channels = [0, 1, 2, 3], keys = keys)
+        self.get_evidence_table(models = models, return_tex = True,
                                 channels = [0, 1, 2, 3], keys = keys)

@@ -10,20 +10,21 @@ def gaussian_pulse(times, start, scale, sigma):
     """ start = mode = mu, sigma is std dev = width of pulse.
         scale is height."""
     return scale * np.exp(- np.power(times - start, 2.) / (
-                        2 * np.power(sigma, 2.)))
+                        2 * np.power(sigma, 2.) + MIN_FLOAT))
 
 
 
 def FRED_pulse(times, start, scale, tau, xi):
-    return np.where(times - start <= 0, MIN_FLOAT, scale * np.exp(
-    - xi * ( (tau / (times - start)) + ((times - start) / tau) - 2.)))
+    return np.where(times - start <= 0, MIN_FLOAT, scale * np.exp( - xi * (
+    (tau / np.where(times - start <= 0, times - start - MIN_FLOAT, times - start + MIN_FLOAT))
+    + ((times - start) / (tau + MIN_FLOAT)) - 2.)))
 
 
 
 def FREDx_pulse(times, start, scale, tau, xi, gamma, nu):
     return np.where(times - start <= 0, MIN_FLOAT, scale * np.exp(
     - np.power(xi * (tau / (times - start)), gamma)
-    - np.power(xi * ((times - start) / tau), nu) - 2.) )
+    - np.power(xi * ((times - start) / tau), nu)) )
 
 
 
@@ -50,4 +51,10 @@ def convolution_gaussian(times, parameters):
 
 
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    x = np.linspace(-2, 5, 1000)
+    # y = FRED_pulse(x, start = -1, scale = 5, tau = 1, xi = 1)
+    y = FREDx_pulse(x, start = -1, scale = 5, tau = 1, xi = 1, gamma = 3, nu = 1)
+    plt.plot(x,y)
+    plt.show()
     pass

@@ -45,9 +45,6 @@ class BATSESignal(SignalFramework):
             calling the :meth:`~get_background` method. The method is a first
             order approximation. This parameter should be set to *False* for
             light-curve fitting with the main :mod:`~DynamicBilby` methods.
-        light_GRB: bool.
-            If *True* generates a new GRB object without all the scaffolding and
-            extra methods and properties of this class. Used for Bilby analysis.
         """
 
         self.colours   = ['red', 'orange', 'green', 'blue']

@@ -4,7 +4,7 @@ import numpy as np
 class EmptyGRB(object):
     """ EmptyGRB for Bilby signal injections. """
 
-    def __init__(self, bin_left, bin_right, rates):
+    def __init__(self, bin_left, bin_right, counts):
         """
         Initialize the :class:`~SignalFramework` abstract class. This class
         should be inherited by each Satellite's child class and the init ran
@@ -18,9 +18,10 @@ class EmptyGRB(object):
         bin_left : np.array.
             The parameter specifies the right bins of the GRB.
 
-        rates : np.array.
-            The parameter specifies rates at each bin of the GRB.
-            If multi-channel, it should be in the form
+        counts : np.array.
+            The parameter specifies counts at each bin of the GRB.
+            If multi-channel, it should be in the form [:,k], where k is the
+            number of channels.
         """
         super(EmptyGRB, self).__init__()
 
@@ -34,24 +35,24 @@ class EmptyGRB(object):
                 'Input variable `bin_right` should be a numpy array. '
                 'Is {} when it should be np.ndarray.'.format(type(bin_right)))
 
-        if not isinstance(rates, np.ndarray):
+        if not isinstance(counts, np.ndarray):
             raise ValueError(
-                'Input variable `rates` should be a numpy array. '
-                'Is {} when it should be np.ndarray.'.format(type(rates)))
+                'Input variable `counts` should be a numpy array. '
+                'Is {} when it should be np.ndarray.'.format(type(counts)))
 
         # assert right and left bin arrays are equal length
         assert(len(bin_left) == len(bin_right))
-        # assert rates array is also the same length
-        assert(len(bin_left)) == max(np.shape(rates))
+        # assert counts array is also the same length
+        assert(len(bin_left)) == max(np.shape(counts))
         # assert that each left bin begins after the last right bin finishes
         assert(((bin_left[1:] - bin_right[:-1]) >= -1e-3).all())
-        # assert rates has the right shape
+        # assert counts has the right shape
         try:
-            (a,b) = np.shape(rates)
+            (a,b) = np.shape(counts)
         except:
             a, b = 1, 0
         assert(a > b)
 
         self.bin_left  = bin_left
         self.bin_right = bin_right
-        self.rates     = rates
+        self.counts     = counts

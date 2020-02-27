@@ -132,18 +132,20 @@ class BATSETTEList(object):
 
         direc     = '../data/TTE_list_data/'
         path = Path(__file__).parent / direc
-        file_path = f'{path}/{string}'
+        # file_path = f'{path}/{string}'
+        print(self.live_detectors)
+        d_list = [f'{d}' for d in self.live_detectors]
+        dets   = ''.join(d_list)
+        file_path = f'{path}/{string}_d{dets}'
+        print(file_path)
 
         data_path = f'../data/tte_list_{self.trigger}.fits'
         path11111 = Path(__file__).parent / data_path
-        print(path11111)
-        print(file_path)
 
         count_str = f'{file_path}_counts.npy'
         bin_str   = f'{file_path}_bins.npy'
         diff_str  = f'{file_path}_diff.npy'
 
-        print(diff_str)
         unique, counts = np.unique(arrival_times, return_counts = True)
         sttt,endd = self.channel_x_times[0], self.channel_x_times[-1]
         num_bins  = int( ( endd - sttt )
@@ -250,6 +252,7 @@ class BATSEGRB(BATSETTEList):
     """docstring for BATSEGRB."""
 
     def __init__(self, trigger, datatype, verbose = True, **kwargs):
+        self.colours   = ['r', 'orange', 'g', 'b']
         self.trigger   = trigger
         self.datatype  = datatype
         self.verbose   = verbose

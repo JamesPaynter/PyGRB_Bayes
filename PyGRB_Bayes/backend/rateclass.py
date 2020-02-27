@@ -48,7 +48,7 @@ class PoissonRate(MakeKeys, bilbyLikelihood):
         for j in pulse_arr:
             kwargs = { 'times' : x}
             for key in key_list:
-                p_key      = key + f'_{j}'
+                p_key       = f'{key}_{j}'
                 kwargs[key] = parameters[p_key]
             rates += rate_function(**kwargs)
         return rates
@@ -60,7 +60,7 @@ class PoissonRate(MakeKeys, bilbyLikelihood):
             kwargs   = { 'times' : x}
             l_kwargs = { 'times' : x}
             for key in key_list:
-                p_key           = key + f'_{j}'
+                p_key           = f'{key}_{j}'
                 kwargs[key]     = parameters[p_key]
                 l_kwargs[key]   = parameters[p_key]
             rates += rate_function(**kwargs)

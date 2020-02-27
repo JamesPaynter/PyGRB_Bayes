@@ -8,7 +8,11 @@ def load_3770_tte(sampler = 'dynesty', nSamples = 100):
     bilby_inst = BilbyObject(3770, times = (-.1, 1), tte_list = True,
                 datatype = 'tte', nSamples = nSamples, sampler = sampler,
                 priors_pulse_start = -.1, priors_pulse_end = 0.6,
-                priors_td_lo = 0,  priors_td_hi = 0.5)
+                priors_td_lo = 0,  priors_td_hi = 0.5,
+                #### tte scaling is much lower than u think !!!!
+                #### the scaling is not universal !!!!!
+            priors_scale_min = 1e-4,  priors_scale_max = 1e1,
+            priors_bg_lo     = 1e-4,  priors_bg_hi     = 1e1)
     return bilby_inst
 
 
@@ -22,21 +26,34 @@ def analysis_for_3770(indices):
 def evidence_for_3770():
     num_samples = [550, 2050, 4550]
     for samples in num_samples:
-        GRB = load_3770(sampler=SAMPLER, nSamples=samples)
+        GRB = load_3770_tte(sampler=SAMPLER, nSamples=samples)
         GRB.offsets = [0, 4000, 8000, -3000]
-        # keys = ['FF', 'FL', 'FbFb', 'FbL', 'XX', 'XL', 'XbXb', 'XbL']
         keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
         model_dict = {}
         for key in keys:
             model_dict[key] = create_model_from_key(key)
         models = [model for key, model in model_dict.items()]
+
+        for model in models:
+            try:
+                GRB.get_residuals_tte(channels = [0, 1, 2, 3], model = model)
+            except:
+                pass
+        GRB.get_evidence_singular_lens()
+        # # keys = ['FF', 'FL', 'FbFb', 'FbL', 'XX', 'XL', 'XbXb', 'XbL']
+        # keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        # model_dict = {}
+        # for key in keys:
+        #     model_dict[key] = create_model_from_key(key)
+        # models = [model for key, model in model_dict.items()]
 
         # for model in models:
             # try:
             #     GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
             # except:
             #     pass
-        GRB.get_evidence_singular_lens()
+        # GRB.get_evidence_singular_lens()
 
 
 if __name__ == '__main__':
@@ -57,8 +74,7 @@ if __name__ == '__main__':
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'Nestle'
-        analysis_for_3770([0])
-
+        evidence_for_3770()
 
     else:
         SAMPLER = 'dynesty'
