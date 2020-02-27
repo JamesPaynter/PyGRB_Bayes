@@ -98,26 +98,6 @@ class BilbyObject(Admin, EvidenceTables):
 
 
 
-    def array_job(self, indices):
-        ''' takes one of 24 indices from HPC to parallelise this job. '''
-        FRED_lists  = [[k for k in range(1, i)] for i in range(2, 6)]
-        FRED_lists += [[k for k in range(1, i)] for i in range(2, 4)]
-        lens_lists  = ['False' for i in range(4)]
-        lens_lists += ['True'  for i in range(2)]
-
-        model = dict()
-        for idx in indices:
-            n_channels = 4
-            p_index    = idx // n_channels
-            channel    = idx %  n_channels
-
-            model['count_FRED'] = FRED_lists[p_index]
-            model['count_FREDx']= []
-            model['count_sg']   = []
-            model['count_bes']  = []
-            model['lens']       = lens_lists[p_index]
-            self.main_1_channel(channel, model)
-
     def _split_array_job_to_4_channels(self, models, indices):
         for idx in indices:
             n_channels = 4
@@ -133,8 +113,8 @@ class BilbyObject(Admin, EvidenceTables):
         self._split_array_job_to_4_channels(models, indices)
 
     def test_two_pulse_models(self, indices):
-        # keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
-        keys = ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
+        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
 
         self.models = {}
         for key in keys:
