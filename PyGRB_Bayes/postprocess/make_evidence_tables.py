@@ -73,6 +73,21 @@ class EvidenceTables(object):
                                 f'{result.log_evidence_err:.2f}'])
                 except:
                     print(f'Could not find {open_result}')
+
+            max_e = - np.inf
+            for row in x:
+                row.border = False
+                row.header = False
+                e = float(row.get_string(fields=['log Z']).strip())
+                if e > max_e:
+                    max_e = e
+            bayes_facs = []
+            for row in x:
+                row.border = False
+                row.header = False
+                e = float(row.get_string(fields=['log Z']).strip())
+                bayes_facs.append(f'{max_e - e:.2f}')
+            x.add_column('Log BF', bayes_facs)
             # indentation should be same as k loop
             with open(Z_file, 'a') as w:
                 w.write(f'Channel {i+1}')
@@ -81,7 +96,7 @@ class EvidenceTables(object):
 
     def _evidence_table_to_latex(self, models, channels, keys):
         """
-        Returns the evidence tables as a separate .text files for each channel.
+        Returns the evidence tables as a separate .tex files for each channel.
         See :meth:`~get_evidence_table`.
         """
         self.tlabel = self._get_trigger_label()
@@ -111,7 +126,7 @@ class EvidenceTables(object):
                 channel_df.update(df)
             base_BF = channel_df['log evidence'].max()
             for k in range(len(models)):
-                channel_df.loc[[k], ['log BF']] = channel_df.loc[[k], ['log BF']] - base_BF
+                channel_df.loc[[k], ['log BF']] = base_BF - channel_df.loc[[k], ['log BF']]
             print(channel_df.to_latex(  index=False, float_format="{:0.2f}".format))
             channel_df.to_latex(f'{directory}/BF_table_ch_{i+1}.tex',
                                 index=False, float_format="{:0.2f}".format)
@@ -133,8 +148,14 @@ class EvidenceTables(object):
         A method to evaluate the possible two pulse models, including one-pulse
         lens models.
         """
-        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
-        keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
+        lens_keys = ['FL', 'FsL', 'XL', 'XsL']
+        fred_keys = ['FF', 'FsF', 'FFs', 'FsFs']
+        frex_keys = ['XX', 'XsX', 'XXs', 'XsXs']
+        mixx_keys = ['FX', 'XF', 'FsX', 'XsF', 'FXs', 'XFs']
+        keys = lens_keys + fred_keys + frex_keys + mixx_keys
+
+        # keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
+        # keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
         # keys+= ['FbFb', 'FbL', 'XbXb', 'XbL']
         # keys+= ['FbF', 'FFb', 'XbX', 'XXb', 'FbX', 'XbF', 'FXb', 'XFb']
         self.models = {}

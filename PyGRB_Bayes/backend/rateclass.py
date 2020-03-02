@@ -85,6 +85,9 @@ class PoissonRate(MakeKeys, bilbyLikelihood):
                             self.res_sg_list,  sine_gaussian)
         rates+= return_rate(x, parameters,     self.count_bes,
                             self.res_bes_list, modified_bessel)
+        # for count_list, p_list, rate in zip(
+        # self.count_lists, self.param_lists, self.rate_lists):
+        #     rates+= return_rate(x, parameters, count_list, p_list, rate)
         try:
             rates += parameters['background']
         except:

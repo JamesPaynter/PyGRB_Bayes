@@ -18,7 +18,8 @@ def make_GRB(**kwargs):
 class BATSESignal(SignalFramework):
     """ Inherits from the SignalFramework abstract class. """
 
-    def __init__(self,  burst: int = None, datatype: str = None, times = None,
+    def __init__(self,  burst: int = None, datatype: str = None,
+                        times = None,
                         bgs: bool = False, light_GRB: bool = True):
         """
         Initialize the :class:`~BATSESignal` class. This class inherits from the
@@ -48,6 +49,7 @@ class BATSESignal(SignalFramework):
         """
 
         self.colours   = ['red', 'orange', 'green', 'blue']
+        self.clabels   = ['1', '2', '3', '4']
         self.labels    = ['  20 - 50   keV', '  50 - 100 keV',
                           ' 100 - 300  keV', '300 +      keV']
         self.datatypes = {'discsc':'discsc', 'tte':'tte'}
@@ -63,6 +65,13 @@ class BATSESignal(SignalFramework):
             raise AssertionError(
                 'Input variable `datatype` is {} when it '
                 'should be `discsc` or `tte`.'.format(datatype))
+
+        self.kwargs    = {  'colours'   : self.colours,
+                            'clabels'   : self.clabels,
+                            'labels'    : self.labels,
+                            'datatype'  : self.datatype,
+                            'burst'     : self.burst,
+                            'satellite' : 'BATSE'}
 
         self.times     = times
         self.light_GRB = light_GRB
@@ -82,7 +91,6 @@ class BATSESignal(SignalFramework):
             self.errors = np.array(self.data['ERRORS'][:, :])
             self.counts = np.array([np.multiply(self.rates[:, i],
                     self.bin_right - self.bin_left) for i in range(4)]).T
-
             self.count_err = np.sqrt(self.counts)
             # could delete this line
             # self.rates_max = self.data['RATES'][:, :].max()
@@ -91,10 +99,10 @@ class BATSESignal(SignalFramework):
                 (self.t90_st, self.end) = times
             except:
                 if times == 'T90':
-                    self.read_T90_table()
+                    self._read_T90_table()
             super().__init__(times, bgs)
 
-    def open_T90_excel(self):
+    def _open_T90_excel(self):
         """ Open the BATSE 4B csv information file. """
         xls_file = f'../data/BATSE_4B_catalogue.xls'
         path = Path(__file__).parent / xls_file
@@ -108,10 +116,10 @@ class BATSESignal(SignalFramework):
         except FileNotFoundError as fnf_error:
                     print(fnf_error)
 
-    def read_T90_table(self):
+    def _read_T90_table(self):
         """ Potentially deprecated now information is stored in 4B.csv file.
         """
-        table = self.open_T90_excel()
+        table = self._open_T90_excel()
         self.burst_list     = table['trigger_num']
         self.t90_list       = table['t90']
         self.t90_err_list   = table['t90_error']

@@ -1,11 +1,6 @@
 import os
 import sys
 import numpy  as np
-import pandas as pd
-import matplotlib.pyplot    as plt
-import matplotlib.gridspec  as gridspec
-import scipy.special as special
-from scipy.special import gammaln
 
 # os.chdir(os.path.dirname(sys.argv[0]))
 ## makes the scripts location the current working directory rather than the
@@ -17,9 +12,12 @@ from PyGRB_Bayes.preprocess import GRB_class
 from PyGRB_Bayes.backend.makepriors import MakePriors
 from PyGRB_Bayes.backend.makemodels import create_model_from_key
 from PyGRB_Bayes.backend.makemodels import make_singular_models
+from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
 from PyGRB_Bayes.backend.rateclass import PoissonRate
 from PyGRB_Bayes.backend.admin import Admin, mkdir
 from PyGRB_Bayes.postprocess.make_evidence_tables import EvidenceTables
+from PyGRB_Bayes.postprocess.plot_grb import GRBPlotter
+from PyGRB_Bayes.postprocess.plot_analysis import PlotPulseFit
 
 
 class BilbyObject(Admin, EvidenceTables):
@@ -28,7 +26,6 @@ class BilbyObject(Admin, EvidenceTables):
     def __init__(self,  trigger, times, datatype,
                         priors_pulse_start, priors_pulse_end,
                         priors_td_lo = None, priors_td_hi = None,
-                        tte_list            = False,
                         satellite           = 'BATSE',
                         ## are your bins the right size in rate function ????
                         sampler             = 'dynesty',
@@ -57,6 +54,7 @@ class BilbyObject(Admin, EvidenceTables):
         print('This should only affect the A and B scale and background params')
         print('\n\n\n')
 
+        self.variable = kwargs.get('variable')
         self.kwargs = kwargs
 
 
@@ -82,17 +80,15 @@ class BilbyObject(Admin, EvidenceTables):
         self.models = {}
         self.offsets = None
 
-        if not tte_list:
-            # scaf = BATSEpreprocess.BATSESignal(
-            #     self.trigger, times = (self.start, self.end),
-            #     datatype = self.datatype, bgs = False)
-
+        if datatype == 'tte_list':
+            self.GRB = GRB_class.make_GRB(
+                3770, 'TTE_list', live_detectors = np.arange(5,8))
+        else:
             self.GRB = BATSEpreprocess.make_GRB(
                 burst = self.trigger, times = (self.start, self.end),
                 datatype = self.datatype, bgs = False)
 
-        else:
-            self.GRB = GRB_class.BATSEGRB(3770, 'TTE_list', live_detectors = np.arange(5,8))
+        # if test:
             # self.GRB = EmptyGRB()
             # self.GRB.trigger = self.trigger
             # self.GRB.start   = self.start
@@ -102,12 +98,22 @@ class BilbyObject(Admin, EvidenceTables):
 
 
 
-    def _split_array_job_to_4_channels(self, models, indices):
+
+    def _split_array_job_to_4_channels(self, models, indices, channels = None):
         for idx in indices:
             n_channels = 4
             m_index    = idx // n_channels
             channel    = idx %  n_channels
             self.main_1_channel(channel, models[m_index])
+        #
+        # for idx in indices:
+        #     n_channels = len(channels)
+        #     m_index    = idx // n_channels
+        #     channel    = channels[idx %  n_channels]
+        #     self.main_1_channel(channel, models[m_index])
+
+
+
 
     def test_pulse_type(self, indices):
         self.models = make_singular_models()
@@ -115,29 +121,15 @@ class BilbyObject(Admin, EvidenceTables):
         self._split_array_job_to_4_channels(models, indices)
 
     def test_two_pulse_models(self, indices):
-        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
-        keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
-
-        self.models = {}
-        for key in keys:
-            self.models[key] = create_model_from_key(key)
+        self.models = make_two_pulse_models()
         models = [model for key, model in self.models.items()]
         self._split_array_job_to_4_channels(models, indices)
 
     def main_multi_channel(self, channels, model):
         self._setup_labels(model)
-
         if not self.test:
-            fig, ax = plt.subplots()
-            for i in channels:
-                rates = self.GRB.counts[:,i] / (self.GRB.bin_right - self.GRB.bin_left)
-                ax.plot(self.GRB.bin_left, rates,
-                            c = self.colours[i], drawstyle='steps-mid')
-                ax.set_xlabel('Time (s)')
-                ax.set_ylabel('Counts / second')
-            plot_name = f'{self.base_folder}/injected_signal'
-            fig.savefig(plot_name)
-
+            GRBPlotter( GRB = self.GRB, channels = channels,
+                        outdir = self.base_folder)
         for i in channels:
             self.main_1_channel(i, model)
         self.get_residuals(channels = channels, model = model)
@@ -187,6 +179,9 @@ class BilbyObject(Admin, EvidenceTables):
 
     def get_residuals(self, channels, model):
         self._setup_labels(model)
+        strings = { 'fstring' : self.fstring,
+                    'clabels' : self.clabels,
+                    'outdir'  : self.outdir}
 
         count_fits      = np.zeros((len(self.GRB.bin_left),4))
         residuals       = np.zeros((len(self.GRB.bin_left),4))
@@ -224,194 +219,31 @@ class BilbyObject(Admin, EvidenceTables):
             else:
                 counts_fit = likelihood._sum_rates(x, MAP,
                                                 likelihood.calculate_rate)
-
-            count_fits[:,i] = counts_fit
+            count_fits[:,i]= counts_fit
             residuals[:,i] = self.GRB.counts[:,i] - counts_fit
+
+            # for k in range(len(self.GRB.bin_left)):
+            #     print(k, self.GRB.bin_left[k], y[k], counts_fit[k])
+            widths = self.GRB.bin_right - self.GRB.bin_left
+            rates_i= self.GRB.counts[:,i] / widths
+            rates_fit_i = counts_fit / widths
+            rates_err_i = np.sqrt(self.GRB.counts[:,i]) / widths
+            strings['widths'] = widths
+            PlotPulseFit(   x = self.GRB.bin_left, y = rates_i,
+                            y_err = rates_err_i,
+                            y_cols = self.GRB.colours[i],
+                            y_fit = rates_fit_i,
+                            channels = [i], **strings)
 
         widths = self.GRB.bin_right - self.GRB.bin_left
         rates  = self.GRB.counts        / widths[:,None]
         rates_fit       = count_fits    / widths[:,None]
+        rates_err       = np.sqrt(self.GRB.counts) / widths[:,None]
         residual_rates  = residuals     / widths[:,None]
-
-        self.plot_routine(  x = self.GRB.bin_left, y = rates,
-                            y_fit = rates_fit,
-                            channels = channels, y_res_fit = None)
-
-    def plot_routine(self, x, y, y_fit, channels, y_res_fit = None, residuals = False):
-        offsets = self.offsets
-        n_axes  = len(channels) + 1
-        width   = 3.321
-        height  = (width / 1.8) * 2
-        heights = [5] + ([1 for i in range(n_axes - 1)])
-        fig     = plt.figure(figsize = (width, height), constrained_layout=False)
-        spec    = gridspec.GridSpec(ncols=2, nrows=n_axes, figure=fig,
-                                    height_ratios=heights,
-                                    width_ratios=[0.05, 0.95],
-                                    hspace=0.0, wspace=0.0)
-        ax      = fig.add_subplot(spec[:, 0], frameon = False)
-        fig_ax1 = fig.add_subplot(spec[0, 1]) ## axes label on the LHS of plot
-        axes_list = []
-        for i, k in enumerate(channels):
-            if offsets and len(channels) > 1:
-                line_label = f'offset {offsets[k]:+,}'
-                fig_ax1.plot(   x, y[:,k] + offsets[k], c = self.colours[k],
-                                drawstyle='steps-mid', linewidth = 0.4,
-                                label = line_label)
-                fig_ax1.plot(x, y_fit[:,k] + offsets[k], 'k', linewidth = 0.4)
-            else:
-                fig_ax1.plot(   x, y[:,k], c = self.colours[k],
-                                drawstyle='steps-mid', linewidth = 0.4)
-                fig_ax1.plot(x, y_fit[:,k], 'k', linewidth = 0.4)
-                #, label = plot_legend)
-
-            axes_list.append(fig.add_subplot(spec[i+1, 1]))
-            difference = y[:,k] - y_fit[:,k]
-            axes_list[i].plot(  x, difference, c = self.colours[k],
-                                drawstyle='steps-mid',  linewidth = 0.4)
-            if y_res_fit is not None:
-                axes_list[i].plot(  x, y_res_fit[:,k], 'k:', linewidth = 0.4)
-            axes_list[i].set_xlim(x[0], x[-1])
-            axes_list[i].set_xticks(())
-            tick = int(np.max(difference) * 0.67 / 100) * 100
-            axes_list[i].set_yticks(([int(0), tick]))
-
-        axes_list[-1].set_xlabel('time since trigger (s)')
-        ax.tick_params(labelcolor='none', top=False,
-                        bottom=False, left=False, right=False)
-        ax.set_ylabel('counts / sec')
-        plt.subplots_adjust(left=0.16)
-        plt.subplots_adjust(right=0.98)
-        plt.subplots_adjust(top=0.98)
-        plt.subplots_adjust(bottom=0.05)
-
-        fig_ax1.ticklabel_format(axis = 'y', style = 'sci')
-        if offsets:
-            fig_ax1.legend()
-
-        fig_ax1.set_xlim(x[0], x[-1])
-        if len(channels) == 1:
-            result_label = f'{self.fstring}_result_{self.clabels[channels[0]]}'
-            plot_name    = f'{self.outdir}/{result_label}_rates.pdf'
-        else:
-            plot_name = f'{self.outdir}/{self.fstring}_rates.pdf'
-        # if residuals is True:
-        #     plot_name = self.outdir + '/' + self.fstring + '_residuals.pdf'
-        fig.savefig(plot_name)
-
-
-    def get_residuals_tte(self, channels, model):
-        self._setup_labels(model)
-
-        count_fits      = np.zeros((len(self.GRB.bin_left),4))
-        residuals       = np.zeros((len(self.GRB.bin_left),4))
-        for i in channels:
-            prior_shell = MakePriors(
-                                priors_pulse_start = self.priors_pulse_start,
-                                priors_pulse_end = self.priors_pulse_end,
-                                priors_td_lo = self.priors_td_lo,
-                                priors_td_hi = self.priors_td_hi,
-                                **self.model)
-            priors = prior_shell.return_prior_dict()
-
-            x = self.GRB.bin_left
-            y = np.rint(self.GRB.counts[:,i]).astype('uint')
-            likelihood = PoissonRate(x, y, **self.model)
-
-            result_label = f'{self.fstring}_result_{self.clabels[i]}'
-            open_result  = f'{self.outdir}/{result_label}_result.json'
-            result = bilby.result.read_in_result(filename=open_result)
-            MAP = dict()
-            for j in range(1, self.num_pulses + 1):
-                try:
-                    key = f'constraint_{j}'
-                    del priors[key]
-                except:
-                    pass
-            for parameter in priors:
-                summary = result.get_one_dimensional_median_and_error_bar(
-                                parameter)
-                MAP[parameter] = summary.median
-
-            if model['lens']:
-                counts_fit = likelihood._sum_rates(x, MAP,
-                                                likelihood.calculate_rate_lens)
-            else:
-                counts_fit = likelihood._sum_rates(x, MAP,
-                                                likelihood.calculate_rate)
-
-            count_fits[:,i] = counts_fit
-            residuals[:,i] = self.GRB.counts[:,i] - counts_fit
-
-        widths = self.GRB.bin_right - self.GRB.bin_left
-        rates  = self.GRB.counts        / widths[:,None]
-        rates_fit       = count_fits    / widths[:,None]
-        residual_rates  = residuals     / widths[:,None]
-
-        self.plot_routine_tte(  x = self.GRB.bin_left, y = rates,
-                            y_fit = rates_fit,
-                            channels = channels, y_res_fit = None)
-
-    def plot_routine_tte(self, x, y, y_fit, channels, y_res_fit = None, residuals = False):
-        offsets = self.offsets
-        n_axes  = len(channels) + 1
-        width   = 3.321
-        height  = (width / 1.8) * 2
-        heights = [5] + ([1 for i in range(n_axes - 1)])
-        fig     = plt.figure(figsize = (width, height), constrained_layout=False)
-        spec    = gridspec.GridSpec(ncols=2, nrows=n_axes, figure=fig,
-                                    height_ratios=heights,
-                                    width_ratios=[0.05, 0.95],
-                                    hspace=0.0, wspace=0.0)
-        ax      = fig.add_subplot(spec[:, 0], frameon = False)
-        fig_ax1 = fig.add_subplot(spec[0, 1]) ## axes label on the LHS of plot
-        axes_list = []
-        for i, k in enumerate(channels):
-            if offsets and len(channels) > 1:
-                line_label = f'offset {offsets[k]:+,}'
-                # fig_ax1.plot(   x, y[:,k] + offsets[k], c = self.colours[k],
-                #                 drawstyle='steps-mid', linewidth = 0.4,
-                #                 label = line_label)
-                fig_ax1.plot(x, y_fit[:,k] + offsets[k], 'k', linewidth = 0.4)
-            else:
-                # fig_ax1.plot(   x, y[:,k], c = self.colours[k],
-                                # drawstyle='steps-mid', linewidth = 0.4)
-                fig_ax1.plot(x, y_fit[:,k], 'k', linewidth = 0.4)
-                #, label = plot_legend)
-
-            axes_list.append(fig.add_subplot(spec[i+1, 1]))
-            difference = y[:,k] - y_fit[:,k]
-            axes_list[i].plot(  x, difference, c = self.colours[k],
-                                drawstyle='steps-mid',  linewidth = 0.4)
-            if y_res_fit is not None:
-                axes_list[i].plot(  x, y_res_fit[:,k], 'k:', linewidth = 0.4)
-            axes_list[i].set_xlim(x[0], x[-1])
-            axes_list[i].set_xticks(())
-            tick = int(np.max(difference) * 0.67 / 100) * 100
-            axes_list[i].set_yticks(([int(0), tick]))
-
-        axes_list[-1].set_xlabel('time since trigger (s)')
-        ax.tick_params(labelcolor='none', top=False,
-                        bottom=False, left=False, right=False)
-        ax.set_ylabel('counts / sec')
-        plt.subplots_adjust(left=0.16)
-        plt.subplots_adjust(right=0.98)
-        plt.subplots_adjust(top=0.98)
-        plt.subplots_adjust(bottom=0.05)
-
-        fig_ax1.ticklabel_format(axis = 'y', style = 'sci')
-        if offsets:
-            fig_ax1.legend()
-
-        fig_ax1.set_xlim(x[0], x[-1])
-        if len(channels) == 1:
-            result_label = f'{self.fstring}_result_{self.clabels[channels[0]]}'
-            plot_name    = f'{self.outdir}/{result_label}_rates.pdf'
-        else:
-            plot_name = f'{self.outdir}/{self.fstring}_rates.pdf'
-        # if residuals is True:
-        #     plot_name = self.outdir + '/' + self.fstring + '_residuals.pdf'
-        fig.savefig(plot_name)
-
+        PlotPulseFit(   x = self.GRB.bin_left, y = rates, y_err = rates_err,
+                        y_cols = self.GRB.colours, y_offsets = self.offsets,
+                        y_fit = rates_fit,
+                        channels = channels, **strings)
 
 if __name__ == '__main__':
     pass

@@ -3,6 +3,7 @@ import argparse
 
 from PyGRB_Bayes.DynamicBilby import BilbyObject
 from PyGRB_Bayes.backend.makemodels import create_model_from_key
+from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
 
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
@@ -27,19 +28,15 @@ def evidence_for_3770():
         GRB = load_3770(sampler=SAMPLER, nSamples=samples)
         GRB.offsets = [0, 4000, 8000, -3000]
         # keys = ['FF', 'FL', 'FbFb', 'FbL', 'XX', 'XL', 'XbXb', 'XbL']
-        keys = ['FF', 'FL', 'FsFs', 'FsL', 'XX', 'XL', 'XsXs', 'XsL']
-        keys+= ['FsF', 'FFs', 'XsX', 'XXs', 'FsX', 'XsF', 'FXs', 'XFs']
-        model_dict = {}
-        for key in keys:
-            model_dict[key] = create_model_from_key(key)
+        model_dict = make_two_pulse_models()
         models = [model for key, model in model_dict.items()]
-
         for model in models:
-            try:
-                GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
-            except:
-                pass
-        GRB.get_evidence_singular_lens()
+            # try:
+            GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+            # except:
+                # pass
+            break
+        # GRB.get_evidence_singular_lens()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')

@@ -10,7 +10,9 @@ from astropy.stats import bayesian_blocks
 from PyGRB_Bayes.backend.admin import mkdir
 
 
-
+def make_GRB(**kwargs):
+    GRB = BATSEGRB(**kwargs)
+    return GRB.return_GRB()
 
 
 class BATSETTEList(object):
@@ -24,7 +26,7 @@ class BATSETTEList(object):
         data_path = f'../data/tte_list_{self.trigger}.fits'
         path = Path(__file__).parent / data_path
         hdul = fits.open(path)
-        self.get_energy_bin_edges(hdul[1].data)
+        self._get_energy_bin_edges(hdul[1].data)
 
         count_data  = hdul[2].data
         self.detectors    = np.arange(8)
@@ -43,21 +45,21 @@ class BATSETTEList(object):
             self.live_detectors = np.arange(8)
             print('Analysis running over all 8 detectors.')
 
-        self.channel_1_times = self.sum_detectors(1)
-        self.channel_2_times = self.sum_detectors(2)
-        self.channel_3_times = self.sum_detectors(3)
-        self.channel_4_times = self.sum_detectors(4)
+        self.channel_1_times = self._sum_detectors(1)
+        self.channel_2_times = self._sum_detectors(2)
+        self.channel_3_times = self._sum_detectors(3)
+        self.channel_4_times = self._sum_detectors(4)
         self.channels = [   self.channel_1_times, self.channel_2_times,
                             self.channel_3_times, self.channel_4_times]
         # channel x times are the photon arrival times in ANY channel.
-        self.channel_x_times = self.sum_channels([1,2,3,4])
-        self.sampling_rate = self.get_sampling_rate()
+        self.channel_x_times = self._sum_channels([1,2,3,4])
+        self.sampling_rate = self._get_sampling_rate()
         if self.verbose:
             self._plot_arrival_histogram()
-        times, ch1_rts = self.interpolate_bins(1)
-        times, ch2_rts = self.interpolate_bins(2)
-        times, ch3_rts = self.interpolate_bins(3)
-        times, ch4_rts = self.interpolate_bins(4)
+        times, ch1_rts = self._interpolate_bins(1)
+        times, ch2_rts = self._interpolate_bins(2)
+        times, ch3_rts = self._interpolate_bins(3)
+        times, ch4_rts = self._interpolate_bins(4)
         if self.verbose:
             print(times.shape)
             print(ch1_rts.shape)
@@ -67,16 +69,13 @@ class BATSETTEList(object):
 
         self.bin_left  = times
         self.bin_right = times + self.sampling_rate
-        self.counts    = np.zeros((4, len(self.bin_left)))
-        self.counts[0,:] = ch1_rts
-        self.counts[1,:] = ch2_rts
-        self.counts[2,:] = ch3_rts
-        self.counts[3,:] = ch4_rts
-        self.counts = self.counts.T
-        print(self.counts)
-        # self.counts    = np.vstack((ch1_rts.T, ch2_rts.T, ch3_rts.T, ch4_rts.T))
+        self.counts    = np.zeros((len(self.bin_left),4))
+        self.counts[:,0] = ch1_rts
+        self.counts[:,1] = ch2_rts
+        self.counts[:,2] = ch3_rts
+        self.counts[:,3] = ch4_rts
 
-    def get_energy_bin_edges(self, energy_data):
+    def _get_energy_bin_edges(self, energy_data):
         ### 8 detectors x 4 bins => 5 edges
         self.energy_bin_edges = np.zeros((8,5))
         for i in range(len(energy_data)):
@@ -94,7 +93,7 @@ class BATSETTEList(object):
         """ get triggered detectors. """
         pass
 
-    def sum_detectors(self, j):
+    def _sum_detectors(self, j):
         ''' j indexes channel '''
         ch_j = np.array([])
         # sum photons in the same channel and sort by arrival time
@@ -103,7 +102,7 @@ class BATSETTEList(object):
             ch_j       = np.sort(np.hstack((ch_j, ch_j_det_k)))
         return ch_j
 
-    def sum_channels(self, channels):
+    def _sum_channels(self, channels):
         try:
             channels = np.array(channels, dtype = 'i')
         except:
@@ -111,7 +110,7 @@ class BATSETTEList(object):
         idx = channels - 1
         return np.sort(np.hstack(([self.channels[i] for i in idx])))
 
-    def get_sampling_rate(self, numbins = 100):
+    def _get_sampling_rate(self, numbins = 100):
         unique_times  = np.unique(self.channel_x_times)
         sort_diff     = np.sort(np.diff(unique_times))
         logbins       = np.geomspace(sort_diff[0], sort_diff[-1], numbins)
@@ -122,7 +121,7 @@ class BATSETTEList(object):
                      % (sampling_rate * 1e6, std * 1e6))
         return sampling_rate
 
-    def interpolate_bins(self, channel = 'sum'):
+    def _interpolate_bins(self, channel = 'sum'):
         if channel == 'sum':
             arrival_times = self.channel_x_times
             string        = 'channel_sum'
@@ -130,14 +129,11 @@ class BATSETTEList(object):
             arrival_times = self.channels[int(channel - 1)]
             string        = f'channel_{channel}'
 
-        direc     = '../data/TTE_list_data/'
-        path = Path(__file__).parent / direc
-        # file_path = f'{path}/{string}'
-        print(self.live_detectors)
-        d_list = [f'{d}' for d in self.live_detectors]
-        dets   = ''.join(d_list)
+        direc = '../data/TTE_list_data/'
+        path  = Path(__file__).parent / direc
+        d_list    = [f'{d}' for d in self.live_detectors]
+        dets      = ''.join(d_list)
         file_path = f'{path}/{string}_d{dets}'
-        print(file_path)
 
         data_path = f'../data/tte_list_{self.trigger}.fits'
         path11111 = Path(__file__).parent / data_path
@@ -150,8 +146,6 @@ class BATSETTEList(object):
         sttt,endd = self.channel_x_times[0], self.channel_x_times[-1]
         num_bins  = int( ( endd - sttt )
                         / self.sampling_rate )
-
-
 
         try:
             self.interpolated_counts = np.load(count_str, allow_pickle = False)
@@ -196,16 +190,14 @@ class BATSETTEList(object):
 
     def tte_bayesian_blocks(self, channel = 'sum'):
         ''' from astropy import scargle.BB '''
-        string = 'tte_bayesian_blocks'
-        edges_str = 'tte_bayesian_blocks'
         if self.verbose:
             print('Initiating Bayesian Blocks')
         if channel == 'sum':
             counts = np.sum(self.counts, axis = 1)
         else:
             counts = self.counts[:,int(channel - 1)]
-        string += f'_{channel}.pdf'
-        edges_str += f'_{channel}'
+        string    = f'tte_bayesian_blocks_{channel}.pdf'
+        edges_str = f'tte_bayesian_blocks_{channel}'
         edges = bayesian_blocks(t = self.bin_left,
                                 ## heaviside flattens array to binary
                                 ## (some bins have 2 photons)
@@ -252,9 +244,21 @@ class BATSEGRB(BATSETTEList):
     """docstring for BATSEGRB."""
 
     def __init__(self, trigger, datatype, verbose = True, **kwargs):
-        self.colours   = ['r', 'orange', 'g', 'b']
-        self.trigger   = trigger
-        self.datatype  = datatype
+        self.colours   = ['red', 'orange', 'green', 'blue']
+        self.clabels   = ['1', '2', '3', '4']
+        self.datatypes = {'discsc':'discsc', 'tte':'tte'}
+        try:
+            self.trigger = int(trigger)
+        except:
+            raise ValueError(
+                'Input variable `burst` should be an integer. '
+                'Is {} when it should be int.'.format(type(burst)))
+        try:
+            self.datatype = self.datatypes[datatype]
+        except:
+            raise AssertionError(
+                'Input variable `datatype` is {} when it '
+                'should be `discsc` or `tte`.'.format(datatype))
         self.verbose   = verbose
         self.directory = './data/'
         path = Path(__file__).parent / self.directory
@@ -262,11 +266,16 @@ class BATSEGRB(BATSETTEList):
         print('The trigger number is %i' % self.trigger)
         super(BATSEGRB, self).__init__(**kwargs)
 
+        self.kwargs    = {  'colours'   : self.colours,
+                            'clabels'   : self.clabels,
+                            'labels'    : self.labels,
+                            'datatype'  : self.datatype,
+                            'burst'     : self.trigger,
+                            'satellite' : 'BATSE'}
 
-def test():
-    GRB = BATSEGRB(3770, 'TTE_list', live_detectors = np.arange(5,8))
-    GRB.bin_and_plot()
-
+    def return_GRB(self):
+        """ Creates a new GRB object with only bins and rates. """
+        return EmptyGRB(self.bin_left, self.bin_right, self.counts, **self.kwargs)
 
 if __name__ == '__main__':
-    test()
+    pass

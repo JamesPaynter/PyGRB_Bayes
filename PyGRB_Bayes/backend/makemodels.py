@@ -13,7 +13,6 @@ def create_model_dict(  lens, count_FRED, count_FREDx, count_sg, count_bes,
 
 def make_singular_models():
     ''' Create the full array of 1-pulse models. '''
-    # TODO create gaussian
     models       = {}
     models['F']  = create_model_dict(   lens = False, count_FRED  = [1],
                                         count_FREDx = [],
@@ -46,6 +45,19 @@ def make_singular_models():
                                         count_bes   = [1],
                                         name = 'FREDx bes residual')
     return models
+
+def make_two_pulse_models():
+    # 18 X 4 = 72 arrays to the job
+    lens_keys = ['FL', 'FsL', 'XL', 'XsL']
+    fred_keys = ['FF', 'FsF', 'FFs', 'FsFs']
+    frex_keys = ['XX', 'XsX', 'XXs', 'XsXs']
+    mixx_keys = ['FX', 'XF', 'FsX', 'XsF', 'FXs', 'XFs']
+    keys = lens_keys + fred_keys + frex_keys + mixx_keys
+
+    model_dict = {}
+    for key in keys:
+        model_dict[key] = create_model_from_key(key)
+    return model_dict
 
 def _get_pos_from_key(key, char):
     """ Returns a list of the indices where char appears in the string.
@@ -100,4 +112,6 @@ def create_model_from_key(key):
         kwargs[res_kwargs[i]] = _get_pos_from_idx(key, idx_array, char)
 
     model = create_model_dict(**kwargs)
+    if model.get('name') is None:
+        model['name'] = key
     return model

@@ -5,8 +5,8 @@ from PyGRB_Bayes.DynamicBilby import BilbyObject
 from PyGRB_Bayes.backend.makemodels import create_model_from_key
 
 def load_3770_tte(sampler = 'dynesty', nSamples = 100):
-    bilby_inst = BilbyObject(3770, times = (-.1, 1), tte_list = True,
-                datatype = 'tte', nSamples = nSamples, sampler = sampler,
+    bilby_inst = BilbyObject(3770, times = (-.1, 1),
+                datatype = 'tte_list', nSamples = nSamples, sampler = sampler,
                 priors_pulse_start = -.1, priors_pulse_end = 0.6,
                 priors_td_lo = 0,  priors_td_hi = 0.5,
                 #### tte scaling is much lower than u think !!!!

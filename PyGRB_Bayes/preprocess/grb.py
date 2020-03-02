@@ -4,7 +4,7 @@ import numpy as np
 class EmptyGRB(object):
     """ EmptyGRB for Bilby signal injections. """
 
-    def __init__(self, bin_left, bin_right, counts):
+    def __init__(self, bin_left, bin_right, counts, **kwargs):
         """
         Initialize the :class:`~SignalFramework` abstract class. This class
         should be inherited by each Satellite's child class and the init ran
@@ -43,7 +43,7 @@ class EmptyGRB(object):
         # assert right and left bin arrays are equal length
         assert(len(bin_left) == len(bin_right))
         # assert counts array is also the same length
-        assert(len(bin_left)) == max(np.shape(counts))
+        assert(len(bin_left) == max(np.shape(counts)))
         # assert that each left bin begins after the last right bin finishes
         assert(((bin_left[1:] - bin_right[:-1]) >= -1e-3).all())
         # assert counts has the right shape
@@ -55,4 +55,9 @@ class EmptyGRB(object):
 
         self.bin_left  = bin_left
         self.bin_right = bin_right
-        self.counts     = counts
+        self.counts    = counts
+        self.burst     = kwargs.get('burst')
+        self.colours   = kwargs.get('colours')
+        self.clabels   = kwargs.get('clabels')
+        self.datatype  = kwargs.get('datatype')
+        self.satellite = kwargs.get('satellite')

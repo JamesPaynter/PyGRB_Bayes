@@ -109,4 +109,4 @@ class SignalFramework(metaclass=ABCMeta):
 
     def return_GRB(self):
         """ Creates a new GRB object with only bins and rates. """
-        return EmptyGRB(self.bin_left, self.bin_right, self.counts)
+        return EmptyGRB(self.bin_left, self.bin_right, self.counts, **self.kwargs)
