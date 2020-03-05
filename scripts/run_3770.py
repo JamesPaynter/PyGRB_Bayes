@@ -1,17 +1,17 @@
 import sys, os
 import argparse
 
-from PyGRB_Bayes.DynamicBilby import BilbyObject
+from PyGRB_Bayes.main.fitpulse import PulseFitter
 from PyGRB_Bayes.backend.makemodels import create_model_from_key
 from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
 
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
-    bilby_inst = BilbyObject(3770, times = (-.1, 1),
+    test = PulseFitter(3770, times = (-.1, 1),
                 datatype = 'tte', nSamples = nSamples, sampler = sampler,
                 priors_pulse_start = -.1, priors_pulse_end = 0.6,
                 priors_td_lo = 0,  priors_td_hi = 0.5)
-    return bilby_inst
+    return test
 
 
 def analysis_for_3770(indices):
@@ -32,10 +32,10 @@ def evidence_for_3770():
         models = [model for key, model in model_dict.items()]
         for model in models:
             # try:
-            GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+            GRB.main_joint_multi_channel(channels = [0, 1, 2, 3], model = model)
+            # GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
             # except:
                 # pass
-            break
         # GRB.get_evidence_singular_lens()
 
 if __name__ == '__main__':

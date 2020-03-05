@@ -31,13 +31,23 @@ class Admin(metaclass=ABCMeta):
         pulse number in the set. Assumes that the pulse counts are a
         continuous set of integers from 1 to num_pulses.
         """
-        mylist = self.model['count_FRED'] + self.model['count_FREDx']
+        mylist = []
+        if self.model['count_FRED']:
+            mylist += self.model['count_FRED']
+        if self.model['count_FREDx']:
+            mylist += self.model['count_FREDx']
+        if self.model['count_gauss']:
+            mylist += self.model['count_gauss']
+        if self.model['count_conv']:
+            mylist += self.model['count_conv']
         ## set gets the unique values of the list
         myset  = set(mylist)
         try:
             self.num_pulses = max(myset) ## WILL NEED EXPANDING
         except:
             self.num_pulses = 0
+        # self.num_pulses = self.model['max_pulse']
+        # self.num_pulses = self.max_pulse
 
     def _get_base_directory(self):
         """
@@ -51,10 +61,14 @@ class Admin(metaclass=ABCMeta):
         """ Generates the pulse list from a model to name the out directory. """
         string = ''
         for i in range(1, self.num_pulses + 1):
-            if i in self.model['count_FRED']:
+            if i in self.model['count_gauss']:
+                string += 'G'
+            elif i in self.model['count_FRED']:
                 string += 'F'
             elif i in self.model['count_FREDx']:
                 string += 'X'
+            elif i in self.model['count_conv']:
+                string += 'C'
             if i in self.model['count_sg']:
                 string += 's'
             elif i in self.model['count_bes']:

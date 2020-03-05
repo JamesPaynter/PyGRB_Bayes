@@ -9,6 +9,7 @@ class TestMakeKeys(unittest.TestCase):
         self.FREDx_pulses  = []
         self.residuals_sg  = []
         self.residuals_bes = []
+        self.channel       = 0
         self.lens          = False
 
     def tearDown(self):
@@ -22,7 +23,8 @@ class TestMakeKeys(unittest.TestCase):
                                 count_FREDx = self.FREDx_pulses,
                                 count_sg  = self.residuals_sg,
                                 count_bes = self.residuals_bes,
-                                lens = self.lens)
+                                lens = self.lens,
+                                channel = self.channel)
         self.assertEqual(self.lens, key_object.lens)
 
     def test_background(self):
@@ -30,9 +32,10 @@ class TestMakeKeys(unittest.TestCase):
                                 count_FREDx = self.FREDx_pulses,
                                 count_sg  = self.residuals_sg,
                                 count_bes = self.residuals_bes,
-                                lens = self.lens)
+                                lens = self.lens,
+                                channel = self.channel)
         keys = key_object.keys
-        self.assertEqual(['background'], keys)
+        self.assertEqual(['background_a'], keys)
 
     def test_FRED(self):
         FRED_pulses  = [1]
@@ -40,9 +43,10 @@ class TestMakeKeys(unittest.TestCase):
                                 count_FREDx = self.FREDx_pulses,
                                 count_sg  = self.residuals_sg,
                                 count_bes = self.residuals_bes,
-                                lens = self.lens)
+                                lens = self.lens,
+                                channel = self.channel)
         keys = key_object.keys
-        key_list = ['background', 'start_1', 'scale_1', 'tau_1', 'xi_1']
+        key_list = ['background_a', 'start_1_a', 'scale_1_a', 'tau_1_a', 'xi_1_a']
         for key in keys:
             self.assertIn(key, key_list)
         for key in key_list:
@@ -54,10 +58,11 @@ class TestMakeKeys(unittest.TestCase):
                                 count_FREDx = self.FREDx_pulses,
                                 count_sg  = residuals_sg,
                                 count_bes = self.residuals_bes,
-                                lens = self.lens)
+                                lens = self.lens,
+                                channel = self.channel)
         keys = key_object.keys
-        key_list = ['background', 'sg_A_1',
-                    'res_begin_1', 'sg_lambda_1', 'sg_omega_1', 'sg_phi_1']
+        key_list = ['background_a', 'sg_A_1_a',
+                    'res_begin_1_a', 'sg_lambda_1_a', 'sg_omega_1_a', 'sg_phi_1_a']
         for key in keys:
             self.assertIn(key, key_list)
         for key in key_list:
@@ -70,9 +75,10 @@ class TestMakeKeys(unittest.TestCase):
                                 count_FREDx = self.FREDx_pulses,
                                 count_sg  = self.residuals_sg,
                                 count_bes = self.residuals_bes,
-                                lens = lens)
+                                lens = lens,
+                                channel = self.channel)
         keys = key_object.keys
-        key_list = ['background', 'start_1', 'scale_1', 'tau_1', 'xi_1',
+        key_list = ['background_a', 'start_1_a', 'scale_1_a', 'tau_1_a', 'xi_1_a',
                     'magnification_ratio', 'time_delay']
         for key in keys:
             self.assertIn(key, key_list)

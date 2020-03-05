@@ -7,7 +7,7 @@ from prettytable import PrettyTable
 
 
 from PyGRB_Bayes.backend.makemodels import create_model_from_key
-from PyGRB_Bayes.backend.makemodels import make_singular_models
+from PyGRB_Bayes.backend.makemodels import make_one_pulse_models
 
 class EvidenceTables(object):
     """
@@ -137,7 +137,7 @@ class EvidenceTables(object):
         A method to generate the single pulse models and evaluate the evidence
         for each model.
         """
-        self.models = make_singular_models()
+        self.models = make_one_pulse_models()
         keys = self.models.keys()
         models = [model for key, model in self.models.items()]
         self.get_evidence_table(models = models, return_tex = True,
@@ -162,6 +162,18 @@ class EvidenceTables(object):
         for key in keys:
             self.models[key] = create_model_from_key(key)
         models = [model for key, model in self.models.items()]
+        self.get_evidence_table(models = models, return_tex = False,
+                                channels = [0, 1, 2, 3], keys = keys)
+        self.get_evidence_table(models = models, return_tex = True,
+                                channels = [0, 1, 2, 3], keys = keys)
+
+    def get_evidence_from_models(self, model_dict):
+        """
+        A method to generate the single pulse models and evaluate the evidence
+        for each model.
+        """
+        keys = model_dict.keys()
+        models = [model for key, model in model_dict.items()]
         self.get_evidence_table(models = models, return_tex = False,
                                 channels = [0, 1, 2, 3], keys = keys)
         self.get_evidence_table(models = models, return_tex = True,

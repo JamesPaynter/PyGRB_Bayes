@@ -1,50 +1,20 @@
-def create_model_dict(  lens, count_FRED, count_FREDx, count_sg, count_bes,
-                        **kwargs):
+import copy
+
+def create_model_dict(lens = False, **kwargs):
     model = {}
-    model['lens']        = lens
-    model['count_FRED']  = count_FRED
-    model['count_FREDx'] = count_FREDx
-    model['count_sg']    = count_sg
-    model['count_bes']   = count_bes
-    if kwargs:
-        for kwarg in kwargs:
-            model[kwarg] = kwargs[kwarg]
+    model['lens'] = lens
+    for kwarg in kwargs:
+        model[kwarg] = kwargs[kwarg]
     return model
 
-def make_singular_models():
-    ''' Create the full array of 1-pulse models. '''
-    models       = {}
-    models['F']  = create_model_dict(   lens = False, count_FRED  = [1],
-                                        count_FREDx = [],
-                                        count_sg    = [],
-                                        count_bes   = [],
-                                        name = 'FRED')
-    models['Fs'] = create_model_dict(   lens = False, count_FRED  = [1],
-                                        count_FREDx = [],
-                                        count_sg    = [1],
-                                        count_bes   = [],
-                                        name = 'FRED sg residual')
-    models['Fb'] = create_model_dict(   lens = False, count_FRED  = [1],
-                                        count_FREDx = [],
-                                        count_sg    = [],
-                                        count_bes   = [1],
-                                        name = 'FRED bes residual')
-    models['X']  = create_model_dict(   lens = False, count_FRED  = [],
-                                        count_FREDx = [1],
-                                        count_sg    = [],
-                                        count_bes   = [],
-                                        name = 'FREDx')
-    models['Xs'] = create_model_dict(   lens = False, count_FRED  = [],
-                                        count_FREDx = [1],
-                                        count_sg    = [1],
-                                        count_bes   = [],
-                                        name = 'FREDx sg residual')
-    models['Xb'] = create_model_dict(   lens = False, count_FRED  = [],
-                                        count_FREDx = [1],
-                                        count_sg    = [],
-                                        count_bes   = [1],
-                                        name = 'FREDx bes residual')
-    return models
+def make_one_pulse_models():
+    keys = ['G',  'F',  'X',  'C' ]
+    keys+= ['Gs', 'Fs', 'Xs', 'Cs']
+    keys+= ['Gb', 'Fb', 'Xb', 'Cb']
+    model_dict = {}
+    for key in keys:
+        model_dict[key] = create_model_from_key(key)
+    return model_dict
 
 def make_two_pulse_models():
     # 18 X 4 = 72 arrays to the job
@@ -73,13 +43,11 @@ def create_model_from_key(key):
     assert(isinstance(key, str))
     kwargs = {}
     kwargs['lens'] = True if 'L' in key else False
+    name = copy.deepcopy(key)
     key = key.strip('L')
     # Gaussian, FRED, FREDx, Convolution
-    # TODO allow SG or BES to be standalone pulses
-    # as needed, may add bugs down the lineif implemented naively
-    pulse_types = ['G', 'F', 'X', 'C']#, 'S', 'B']
-    pulse_kwargs= ['count_Gauss', 'count_FRED', 'count_FREDx', 'count_conv']
-                    # 'count_sg', 'count_bes']
+    pulse_types = ['G', 'F', 'X', 'C']
+    pulse_kwargs= ['count_gauss', 'count_FRED', 'count_FREDx', 'count_conv']
     res_types   = ['s', 'b']
     res_kwargs  = ['count_sg', 'count_bes']
     # list of capital letters only (ie pulses)
@@ -113,5 +81,9 @@ def create_model_from_key(key):
 
     model = create_model_dict(**kwargs)
     if model.get('name') is None:
-        model['name'] = key
+        model['name'] = name
     return model
+
+
+if __name__ == '__main__':
+    pass

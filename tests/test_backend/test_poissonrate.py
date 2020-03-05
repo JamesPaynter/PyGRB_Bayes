@@ -22,6 +22,7 @@ class TestPoissonRate(unittest.TestCase):
         self.residuals_sg  = []
         self.residuals_bes = []
         self.lens    = False
+        self.channel = 0
         self.yfloat  = np.copy(self.y) * 1.
         self.yneg    = np.copy(self.y)
         self.yneg[0] = -1
@@ -73,14 +74,16 @@ class TestPoissonRate(unittest.TestCase):
                                     count_FREDx  = self.FREDx_pulses,
                                     count_sg  = self.residuals_sg,
                                     count_bes = self.residuals_bes,
-                                    lens = self.lens)
+                                    lens = self.lens,
+                                    channel = self.channel)
 
         rates_object = PoissonRate( x = self.x, y = self.y,
                                     count_FRED   = self.FRED_pulses,
                                     count_FREDx  = self.FREDx_pulses,
                                     count_sg  = self.residuals_sg,
                                     count_bes = self.residuals_bes,
-                                    lens = self.lens)
+                                    lens = self.lens,
+                                    channel = self.channel)
 
         priors  = prior_object.priors
         keys    = rates_object.keys

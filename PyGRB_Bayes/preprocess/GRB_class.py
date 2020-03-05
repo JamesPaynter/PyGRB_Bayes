@@ -8,6 +8,7 @@ from astropy.stats import bayesian_blocks
 
 # from PyGRB_Bayes.preprocess.abstract import make_GRB
 from PyGRB_Bayes.backend.admin import mkdir
+from PyGRB_Bayes.preprocess.grb import EmptyGRB
 
 
 def make_GRB(**kwargs):
@@ -246,7 +247,7 @@ class BATSEGRB(BATSETTEList):
     def __init__(self, trigger, datatype, verbose = True, **kwargs):
         self.colours   = ['red', 'orange', 'green', 'blue']
         self.clabels   = ['1', '2', '3', '4']
-        self.datatypes = {'discsc':'discsc', 'tte':'tte'}
+        self.datatypes = {'discsc':'discsc', 'tte':'tte', 'tte_list' : 'tte_list'}
         try:
             self.trigger = int(trigger)
         except:
@@ -268,7 +269,7 @@ class BATSEGRB(BATSETTEList):
 
         self.kwargs    = {  'colours'   : self.colours,
                             'clabels'   : self.clabels,
-                            'labels'    : self.labels,
+                            # 'labels'    : self.labels,
                             'datatype'  : self.datatype,
                             'burst'     : self.trigger,
                             'satellite' : 'BATSE'}
