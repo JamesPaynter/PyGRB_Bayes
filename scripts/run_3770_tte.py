@@ -12,7 +12,8 @@ def load_3770_tte(sampler = 'dynesty', nSamples = 100):
                 #### tte scaling is much lower than u think !!!!
                 #### the scaling is not universal !!!!!
             priors_scale_min = 1e-4,  priors_scale_max = 1e1,
-            priors_bg_lo     = 1e-4,  priors_bg_hi     = 1e1)
+            priors_bg_lo     = 1e-4,  priors_bg_hi     = 1e1,
+            live_detectors = np.arange(5,8))
     return bilby_inst
 
 

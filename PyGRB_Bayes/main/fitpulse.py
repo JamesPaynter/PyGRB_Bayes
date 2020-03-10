@@ -43,11 +43,11 @@ class PulseFitter(Admin, EvidenceTables):
         print('1) Unit tests for all the current .py files.')
         print('2) Getting the automated pulse fitting algorithm working.')
         print('3) Import BATSE fetch module from masters.')
-        print('4) Complete SWIFT; Fermi, INTEGRAL, KONUS etc. fetch modules.')
+        print('4) Complete SWIFT, Fermi, INTEGRAL, KONUS etc. fetch modules.')
         print('5) Automated .pdf reports for model fitting / selection.')
         print('6) Integration tests.')
         print('7) Generalise lensing fits (convolutions).')
-        print('8) Documentation; sphinx.')
+        print('8) Documentation, sphinx.')
         print('9) Release in JOSS (ask ADACS for help?).')
         print('\n\n\n')
         print('DO THE PRIORS MAKE SENSE !! ??')
@@ -83,11 +83,10 @@ class PulseFitter(Admin, EvidenceTables):
         self.offsets = None
 
         test = kwargs.get('test')
-        print(test)
         if not test:
             if datatype == 'tte_list':
                 self.GRB = GRB_class.make_GRB(
-                    trigger = 3770, datatype = 'tte_list', live_detectors = np.arange(5,8))
+                    trigger = self.trigger, datatype = self.datatype, **kwargs)
             else:
                 self.GRB = BATSEpreprocess.make_GRB(
                     burst = self.trigger, times = (self.start, self.end),
@@ -101,7 +100,6 @@ class PulseFitter(Admin, EvidenceTables):
             # self.GRB.start   = self.start
             # self.GRB.end     = self.end
             # self.GRB.datatype= self.datatype
-        print(self.GRB)
 
 
 

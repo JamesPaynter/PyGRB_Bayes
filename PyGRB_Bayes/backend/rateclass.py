@@ -15,7 +15,7 @@ class PoissonRate(MakeKeys, bilbyLikelihood):
             kwargs is there because sometime model dict
             comes with a name.
         '''
-        super(PoissonRate, self).__init__(  lens = lens, channel = channel,   
+        super(PoissonRate, self).__init__(  lens = lens, channel = channel,
                                             **kwargs)
         self.x = x
         self.y = y
@@ -102,6 +102,12 @@ class PoissonRate(MakeKeys, bilbyLikelihood):
         else:
             return np.sum(-rate + self.y * np.log(rate) - gammaln(self.y + 1))
 
+    def return_line_from_sample(self, sample_dict):
+        if self.lens:
+            rate = self._sum_rates(self.x, sample_dict, self.calculate_rate_lens)
+        else:
+            rate = self._sum_rates(self.x, sample_dict, self.calculate_rate)
+        return rate
 
 if __name__ == '__main__':
     pass

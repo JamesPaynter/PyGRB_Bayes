@@ -1,28 +1,8 @@
-import sys, os
-import numpy as np
-
 from PyGRB_Bayes.main.fitpulse import PulseFitter
 from PyGRB_Bayes.backend.makemodels import create_model_dict
 from PyGRB_Bayes.backend.makemodels import create_model_from_key
-from PyGRB_Bayes.preprocess.grb import EmptyGRB
+from PyGRB_Bayes.preprocess.simulated_grb import GRB_discsc, GRB_tte
 
-
-GRB_discsc = EmptyGRB(  bin_left  = np.arange(100) * 0.064,
-                        bin_right = np.arange(100) * 0.064 + 0.064,
-                        counts    = np.ones((100,1)),
-                        burst     = 1,
-                        colours   = ['g'],
-                        clabels   = ['1'],
-                        datatype  = 'discsc',
-                        satellite = 'test')
-GRB_tte    = EmptyGRB(  bin_left  = np.arange(100) * 0.064,
-                        bin_right = np.arange(100) * 0.005 + 0.005,
-                        counts    = np.ones((100,1)),
-                        burst     = 1,
-                        colours   = ['g'],
-                        clabels   = ['1'],
-                        datatype  = 'tte',
-                        satellite = 'test')
 
 def make_models():
     keys = ['FF', 'XX', 'FL', 'XL']
