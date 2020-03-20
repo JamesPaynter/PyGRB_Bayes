@@ -1,5 +1,6 @@
 import sys, os
 import argparse
+import numpy as np
 
 from bilby.core.prior import Uniform          as bilbyUniform
 from bilby.core.prior import DeltaFunction    as bilbyDeltaFunction
@@ -135,21 +136,21 @@ def analysis_for_3770(indices):
         GRB_wrap._setup_labels(model)
         overwrite_priors = dict()
         for n in range(1, GRB_wrap.num_pulses + 1):
-            overwrite_priors[f'gamma_{n}_a'] = bilbyGaussian(1,
+            overwrite_priors[f'gamma_{n}_a'] = bilbyGaussian(
                 mu = 0.7, sigma = 2.5,  latex_label = f'$\\gamma$ {n} a')
-            overwrite_priors[f'gamma_{n}_b'] = bilbyGaussian(1,
+            overwrite_priors[f'gamma_{n}_b'] = bilbyGaussian(
                 mu = 0.3, sigma = 0.4,  latex_label = f'$\\gamma$ {n} b')
-            overwrite_priors[f'gamma_{n}_c'] = bilbyGaussian(1,
+            overwrite_priors[f'gamma_{n}_c'] = bilbyGaussian(
                 mu = 0.38, sigma = 0.3, latex_label = f'$\\gamma$ {n} c')
-            overwrite_priors[f'gamma_{n}_d'] = bilbyGaussian(1,
+            overwrite_priors[f'gamma_{n}_d'] = bilbyGaussian(
                 mu = 0.5, sigma = 5,    latex_label = f'$\\gamma$ {n} d')
-            overwrite_priors[f'nu_{n}_a'] = bilbyGaussian(1,
+            overwrite_priors[f'nu_{n}_a'] = bilbyGaussian(
                 mu = 2, sigma = 2,      latex_label = f'$\\nu$ {n} a')
-            overwrite_priors[f'nu_{n}_b'] = bilbyGaussian(1,
+            overwrite_priors[f'nu_{n}_b'] = bilbyGaussian(
                 mu = 3.3, sigma = 1.2,  latex_label = f'$\\nu$ {n} b')
-            overwrite_priors[f'nu_{n}_c'] = bilbyGaussian(1,
+            overwrite_priors[f'nu_{n}_c'] = bilbyGaussian(
                 mu = 2.74, sigma = 0.8, latex_label = f'$\\nu$ {n} c')
-            overwrite_priors[f'nu_{n}_d'] = bilbyGaussian(1,
+            overwrite_priors[f'nu_{n}_d'] = bilbyGaussian(
                 mu = 2.7, sigma = 5,    latex_label = f'$\\nu$ {n} d')
         GRB_wrap.overwrite_priors = overwrite_priors
         GRB._split_array_job_to_4_channels(models = [model],
@@ -177,7 +178,7 @@ if __name__ == '__main__':
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'Nestle'
-        analysis_for_3770(0)
+        analysis_for_3770(np.arange(1))
 
 
     else:
