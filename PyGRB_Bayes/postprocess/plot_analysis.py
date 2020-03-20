@@ -29,11 +29,13 @@ class PlotPulseFit(object):
             else:
                 self.plot_single_channel_tte(*args, **kwargs)
     @staticmethod
-    def plot_single_channel(x, y, y_err, y_cols, y_fit, channels,**strings):
-        fstring = strings.get('fstring')
-        clabels = strings.get('clabels')
-        outdir  = strings.get('outdir')
-        widths  = strings.get('widths')
+    def plot_single_channel(x, y, y_err, y_cols, y_fit, channels,**kwargs):
+        posterior_draws  = kwargs.get('posterior_draws')
+        nDraws  = kwargs.get('nDraws')
+        fstring = kwargs.get('fstring')
+        clabels = kwargs.get('clabels')
+        outdir  = kwargs.get('outdir')
+        widths  = kwargs.get('widths')
         n_axes  = 1 + 3 +1
         width   = 3.321
         # arbitrary scaled height
@@ -62,6 +64,16 @@ class PlotPulseFit(object):
         fig_ax1.plot(   x, y, c = y_cols,
                         drawstyle='steps-mid', linewidth = 0.4)
         fig_ax1.plot(x, y_fit, 'k', linewidth = 0.4)
+        if posterior_draws is not None:
+            drawLines = []
+            for ii in range(nDraws):
+                drawLines.append(x)
+                drawLines.append(posterior_draws[:,ii])
+            d = {'c': 'k', 'linewidth' : 0.5, 'alpha' : 0.02}
+            # kwogs = [d for i in range(nDraws)]
+            fig_ax1.plot(*drawLines, **d)
+            # fig_ax1.plot(*drawLines, 'k', linewidth = 0.5, alpha = 0.02)
+
         fig_ax1.fill_between(x, y + y_err, y - y_err, step = 'mid',
                                 color = y_cols, alpha = 0.15)
 
@@ -92,7 +104,7 @@ class PlotPulseFit(object):
         ticks = ticks[0:2] if len(ticks) > 2 else ticks
         axes_list[0].set_yticks(ticks)
 
-        PlotPulseFit._make_correlogram(axes_list[1], difference, x)
+        PlotPulseFit._make_correlogram(axes_list[1], x, difference)
 
         axes_list[0].set_xlim(x[0], x[-1])
         axes_list[1].set_xlim(x[0], x[-1])
@@ -178,9 +190,9 @@ class PlotPulseFit(object):
         # from statsmodels.tsa.stattools import acf, pacf
         # lag_acf = acf(difference)
         # lag_pacf = pacf(difference)
-        axes_list[1].scatter(x[1:], c[1:], s=0.1, c='k', marker='+')
-        # axes_list[1].scatter(x[1:len(lag_pacf)], lag_pacf[1:],  s = 0.1, c = 'r', marker = 'x')
-        # axes_list[1].scatter(x, c2, s = 0.1, c = 'r', marker = 'x')
+        axes.scatter(x[1:], c[1:], s=0.1, c='k', marker='+')
+        # axes.scatter(x[1:len(lag_pacf)], lag_pacf[1:],  s = 0.1, c = 'r', marker = 'x')
+        # axes.scatter(x, c2, s = 0.1, c = 'r', marker = 'x')
         n = len(x)
         z95 = 1.959963984540054
         z99 = 2.5758293035489004
@@ -196,10 +208,12 @@ class PlotPulseFit(object):
         axes.legend()
 
     @staticmethod
-    def plot_multi_channel(x, y, y_err, y_cols, y_offsets, y_fit, channels, **strings):
-        fstring = strings.get('fstring')
-        clabels = strings.get('clabels')
-        outdir  = strings.get('outdir')
+    def plot_multi_channel(x, y, y_err, y_cols, y_offsets, y_fit, channels, **kwargs):
+        fstring = kwargs.get('fstring')
+        clabels = kwargs.get('clabels')
+        outdir  = kwargs.get('outdir')
+        nDraws  = kwargs.get('nDraws')
+        posterior_draws  = kwargs.get('posterior_draws')
 
         # number axes is the main plot plus one per channel for residuals
         # extra axis for x-label
@@ -237,6 +251,10 @@ class PlotPulseFit(object):
                                         y[:,k] + y_offsets[k] - y_err[:,k],
                                         step = 'mid', color = y_cols[k],
                                         alpha = 0.15)
+                # if posterior_draws is not None:
+                #     for ii in range(nDraws):
+                #         fig_ax1.plot(x, posterior_draws[:,ii] + y_offsets[k],
+                #                     'k', linewidth = 0.4, alpha = 0.01)
             else:
                 fig_ax1.plot(   x, y[:,k], c = y_cols[k],
                                 drawstyle='steps-mid', linewidth = 0.4)
@@ -244,6 +262,10 @@ class PlotPulseFit(object):
                 #, label = plot_legend)
                 fig_ax1.fill_between(x, y[:,k] + y_err[:,k], y[:,k] - y_err[:,k], step = 'mid',
                                         color = y_cols[k], alpha = 0.15)
+                # if posterior_draws is not None:
+                #     for ii in range(nDraws):
+                #         fig_ax1.plot(x, posterior_draws[:,ii],
+                #                     'k', linewidth = 0.4, alpha = 0.01)
             # append another axes to the residual list
             axes_list.append(fig.add_subplot(spec[i+1, 1]))
             # get the residual
@@ -346,7 +368,7 @@ class PlotPulseFit(object):
         ticks = ticks[0:2] if len(ticks) > 2 else ticks
         axes_list[0].set_yticks(ticks)
 
-        # PlotPulseFit._make_correlogram(axes_list[1], difference, x)
+        # PlotPulseFit._make_correlogram(axes_list[1], x, difference)
 
         axes_list[0].set_xlim(x[0], x[-1])
         axes_list[1].set_xlim(x[0], x[-1])

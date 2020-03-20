@@ -31,12 +31,12 @@ def evidence_for_3770():
         model_dict = make_two_pulse_models()
         models = [model for key, model in model_dict.items()]
         for model in models:
-            # try:
-            GRB.main_joint_multi_channel(channels = [0, 1, 2, 3], model = model)
-            # GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
-            # except:
-                # pass
-        # GRB.get_evidence_singular_lens()
+            try:
+            # GRB.main_joint_multi_channel(channels = [0, 1, 2, 3], model = model)
+                GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+            except:
+                pass
+        GRB.get_evidence_singular_lens()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')

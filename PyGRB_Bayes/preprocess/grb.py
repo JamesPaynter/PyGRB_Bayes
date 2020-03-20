@@ -61,3 +61,7 @@ class EmptyGRB(object):
         self.clabels   = kwargs.get('clabels')
         self.datatype  = kwargs.get('datatype')
         self.satellite = kwargs.get('satellite')
+
+        self.simulated = kwargs.get('simulated')
+        if self.simulated:
+            self.counts = np.random.poisson(counts)

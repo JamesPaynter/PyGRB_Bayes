@@ -107,6 +107,8 @@ class Admin(metaclass=ABCMeta):
         directory += '_' + self._get_pulse_list()
         if self.MC_counter:
             directory += '_' + str(self.MC_counter)
+        if self.directory_label:
+            directory += '_' + str(self.directory_label)
         return directory
 
     def _get_file_string(self):
@@ -152,7 +154,7 @@ class Admin(metaclass=ABCMeta):
            'background' : (ps.priors_bg_lo,       ps.priors_bg_hi),
                   'tau' : (1e-1,      1e1),
                   # 'tau' : (ps.priors_tau_lo,      ps.priors_tau_hi),
-                   'xi' : (1e-1,      1e1),
+                   'xi' : (1e-1,      1e0),
                    # 'xi' : (ps.priors_xi_lo,       ps.priors_xi_hi),
                 'gamma' : (ps.priors_gamma_min,   ps.priors_gamma_max),
                    'nu' : (ps.priors_nu_min,      ps.priors_nu_max),

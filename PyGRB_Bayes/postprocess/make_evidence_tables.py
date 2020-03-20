@@ -56,7 +56,7 @@ class EvidenceTables(object):
         Z_file = f'{directory}/evidence_table_T{self.trigger}_nlive{self.nSamples}.txt'
         open(Z_file, 'w').close()
         for i in channels:
-            x = PrettyTable(['Model', 'log Z', 'error'])
+            x = PrettyTable(['Model', 'ln Z', 'error'])
             x.align['Model'] = "l" # Left align models
             # One space between column edges and contents (default)
             x.padding_width = 1
@@ -74,20 +74,20 @@ class EvidenceTables(object):
                 except:
                     print(f'Could not find {open_result}')
 
-            max_e = - np.inf
+            min_e = np.inf
             for row in x:
                 row.border = False
                 row.header = False
-                e = float(row.get_string(fields=['log Z']).strip())
-                if e > max_e:
-                    max_e = e
+                e = float(row.get_string(fields=['ln Z']).strip())
+                if e < min_e:
+                    min_e = e
             bayes_facs = []
             for row in x:
                 row.border = False
                 row.header = False
-                e = float(row.get_string(fields=['log Z']).strip())
-                bayes_facs.append(f'{max_e - e:.2f}')
-            x.add_column('Log BF', bayes_facs)
+                e = float(row.get_string(fields=['ln Z']).strip())
+                bayes_facs.append(f'{e - min_e:.2f}')
+            x.add_column('ln BF', bayes_facs)
             # indentation should be same as k loop
             with open(Z_file, 'a') as w:
                 w.write(f'Channel {i+1}')
@@ -102,7 +102,7 @@ class EvidenceTables(object):
         self.tlabel = self._get_trigger_label()
         self._get_base_directory()
         directory = self.base_folder
-        columns = ['Model', 'log evidence', 'log error', 'log BF']
+        columns = ['Model', 'ln evidence', 'ln error', 'ln BF']
         index = np.arange(len(models))
         for i in channels:
             channel_df = pd.DataFrame(columns=columns, index = index)
@@ -115,18 +115,18 @@ class EvidenceTables(object):
                 try:
                     result = bilby.result.read_in_result(filename=open_result)
                     new_row = { 'Model' : [models[k]['name']],
-                                'log evidence' : [result.log_evidence],
-                                'log error' : [result.log_evidence_err],
-                                'log BF' : [result.log_evidence]
+                                'ln evidence' : [result.log_evidence],
+                                'ln error' : [result.log_evidence_err],
+                                'ln BF' : [result.log_evidence]
                               }
                 except:
                     print(f'Could not find {open_result}')
                     new_row = { 'Model' : [models[k]['name']]}
                 df = pd.DataFrame(new_row, index = [k])
                 channel_df.update(df)
-            base_BF = channel_df['log evidence'].max()
+            base_BF = channel_df['ln evidence'].min()
             for k in range(len(models)):
-                channel_df.loc[[k], ['log BF']] = base_BF - channel_df.loc[[k], ['log BF']]
+                channel_df.loc[[k], ['ln BF']] = channel_df.loc[[k], ['ln BF']] - base_BF
             print(channel_df.to_latex(  index=False, float_format="{:0.2f}".format))
             channel_df.to_latex(f'{directory}/BF_table_ch_{i+1}.tex',
                                 index=False, float_format="{:0.2f}".format)

@@ -1,10 +1,10 @@
 import sys
+import math
 import numpy as np
 import scipy.special as special
 from scipy.signal import convolve
 
 MIN_FLOAT = sys.float_info[3]
-# MIN_FLOAT = 1e-20
 
 
 
@@ -23,11 +23,37 @@ def FRED_pulse(times, start, scale, tau, xi):
 
 
 def FREDx_pulse(times, start, scale, tau, xi, gamma, nu):
+    # X =   np.where(times - start <= 0, MIN_FLOAT, np.exp(
+    #     - np.power(xi * (tau / np.where(times - start <= 0,
+    #     times - start - MIN_FLOAT, times - start + MIN_FLOAT)), gamma)
+    #     - np.power(xi * ((times - start) / tau), nu) ))
+     # - xi * (
+     #    (tau / np.where(times - start <= 0, times - start - MIN_FLOAT, times - start + MIN_FLOAT))
+     #    + ((times - start) / (tau + MIN_FLOAT)) - 2.)))
+
+    #
+    #
+    # m_t = start + tau * math.pow((gamma / nu * math.pow(xi, gamma - nu)), - 1 / (gamma + nu))
+    # # print(xi, gamma, nu)
     X   = np.where(times - start <= 0, MIN_FLOAT, np.exp(
         - np.power(xi * (tau / (times - start)), gamma)
-        - np.power(xi * ((times - start) / tau), nu)) )
-    X  /= np.max(X)
-    return X * scale
+        - np.power(xi * ((times - start) / tau), nu)
+        # + (xi ** ((2 * gamma * nu) / (gamma + nu) )
+        # * (
+        # + (gamma / nu) **(       nu / (gamma + nu))
+        # + (gamma / nu) **((- gamma) / (gamma + nu)) ))
+         ))
+        # - xi * np.power(((times - start) / tau), nu) ))
+        # - xi * np.power((tau / (times - start)), gamma)
+    # M   = np.where(m_t - start <= 0, MIN_FLOAT, np.exp(
+    #     - np.power(xi * (tau / (m_t - start)), gamma)
+    #     - np.power(xi * ((m_t - start) / tau), nu))   )
+    # try:
+    #     X  /= np.max(X)
+    #     # print('success')
+    # except:
+    #     return None
+    return X * scale #/ (M + MIN_FLOAT)
 
 
 
@@ -69,7 +95,8 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     x = np.linspace(-2, 5, 1000)
     # y = FRED_pulse(x, start = -1, scale = 5, tau = 1, xi = 1)
-    y = FREDx_pulse(x, start = -1, scale = 5, tau = .12, xi = 1, gamma = 3, nu = 1)
-    plt.plot(x,y)
+    for xi in [0.1, 40, 100]:
+        y = FREDx_pulse(x, start = -1, scale = 5, tau = .12, xi = xi, gamma = 1, nu = 1)
+        plt.plot(x,y)
     plt.show()
     pass

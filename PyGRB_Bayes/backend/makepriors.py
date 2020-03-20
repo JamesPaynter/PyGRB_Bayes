@@ -154,7 +154,7 @@ class MakePriors(MakeKeys):
             self.priors[key] = bilbyLogUniform(
                 minimum=self.priors_gamma_min,
                 maximum=self.priors_gamma_max,
-                latex_label=f'$\\gamma_{n} {k}', unit=' ')
+                latex_label=f'$\\gamma_{n} {k}$', unit=' ')
 
         elif 'nu' in key:
             self.priors[key] = bilbyLogUniform(

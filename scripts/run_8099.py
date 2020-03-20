@@ -17,18 +17,26 @@ def analysis_for_8099(indices):
     GRB.test_pulse_type(indices, channels = [0, 1, 2, 3])
 
 
+def make_one_pulse_models():
+    keys = ['X]']#[ 'G', 'F',  'X' ]
+    model_dict = {}
+    for key in keys:
+        model_dict[key] = create_model_from_key(key)
+    return model_dict
+
 
 def evidence_for_8099():
     GRB = load_8099(sampler = SAMPLER, nSamples = 200)
     GRB.models = make_one_pulse_models()
     models = [model for key, model in GRB.models.items()]
     for model in models:
-        # try:
-        GRB.main_joint_multi_channel(channels = [0, 1, 2, 3], model = model)
-            # GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+    #     # try:
+    #     # GRB.main_joint_multi_channel(channels = [0, 1, 2, 3], model = model)
+        GRB.main_multi_channel(channels = [0, 1, 2, 3], model = model)
+        # GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
         # except:
             # pass
-    GRB.get_evidence_singular()
+    GRB.get_evidence_from_models(GRB.models)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(   description = 'Core wrapper')

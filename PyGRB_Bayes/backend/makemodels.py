@@ -39,11 +39,14 @@ def _get_pos_from_key(key, char):
 def _get_pos_from_idx(key, idx_array, char):
     return [idx_array[i] for i, c in enumerate(key) if c == char]
 
-def create_model_from_key(key):
+def create_model_from_key(key, custom_name = None):
     assert(isinstance(key, str))
     kwargs = {}
     kwargs['lens'] = True if 'L' in key else False
-    name = copy.deepcopy(key)
+    if custom_name:
+        name = custom_name
+    else:
+        name = copy.deepcopy(key)
     key = key.strip('L')
     # Gaussian, FRED, FREDx, Convolution
     pulse_types = ['G', 'F', 'X', 'C']

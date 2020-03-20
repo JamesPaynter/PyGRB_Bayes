@@ -7,7 +7,7 @@ from PyGRB_Bayes.preprocess.simulated_grb import GRB_discsc, GRB_tte
 
 
 def make_models():
-    keys = ['F', 'X', 'Fs', 'Xs'] # ,'G', 'C']
+    keys = ['X', 'Fs', 'Xs'] # ,'G', 'C']
     model_dict = {}
     for key in keys:
         model_dict[key] = create_model_from_key(key)
