@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 #SBATCH --job-name=test_priors
-#SBATCH --output=array_job_3770_priors_output.txt
-#SBATCH --error=array_job_3770_priors_errors.txt
+#SBATCH --output=array_job_3770_priors_output_%A_%a.txt
+#SBATCH --error=array_job_3770_priors_errors_%A_%a.txt
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --time=300:00:00
@@ -24,4 +24,4 @@
 
 index=(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79)
 
-python /data/projects/punim1050/PyGRB_Bayes/PyGRB_Bayes/scripts/test_prior_evidence_effect_3770.py -i ${index[${SLURM_ARRAY_TASK_ID}-1]} --HPC
+python /data/projects/punim1050/PyGRB_Bayes/scripts/test_prior_evidence_effect_3770.py -i ${index[${SLURM_ARRAY_TASK_ID}-1]} --HPC
