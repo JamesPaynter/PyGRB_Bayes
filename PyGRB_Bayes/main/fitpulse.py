@@ -17,7 +17,7 @@ from PyGRB_Bayes.backend.rateclass import PoissonRate
 from PyGRB_Bayes.backend.makemodels import create_model_from_key
 from PyGRB_Bayes.backend.makemodels import make_one_pulse_models
 from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
-from PyGRB_Bayes.postprocess.plot_grb import GRBPlotter
+# from PyGRB_Bayes.postprocess.plot_grb import GRBPlotter
 from PyGRB_Bayes.postprocess.plot_analysis import PlotPulseFit
 from PyGRB_Bayes.postprocess.make_evidence_tables import EvidenceTables
 
@@ -137,9 +137,9 @@ class PulseFitter(Admin, EvidenceTables):
 
     def main_multi_channel(self, channels, model):
         self._setup_labels(model)
-        if not self.test:
-            GRBPlotter( GRB = self.GRB, channels = channels,
-                        outdir = self.base_folder)
+        # if not self.test:
+        #     GRBPlotter( GRB = self.GRB, channels = channels,
+        #                 outdir = self.base_folder)
         for i in channels:
             self.main_1_channel(i, model)
         self.get_residuals(channels = channels, model = model)
