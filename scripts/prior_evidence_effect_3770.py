@@ -50,7 +50,7 @@ def analysis_for_3770(indices):
                         custom_name = f'{key}_{directory_labels[ii]}')
         models = [model for key, model in model_dict.items()]
         GRB._split_array_job_to_4_channels(models = models,
-            indices = indices[indices < 32],
+            indices = np.intersect1d(indices, np.arange(32)),
             channels = [0, 1, 2, 3])
         # GRB.get_evidence_from_models(model_dict)
 #################################
