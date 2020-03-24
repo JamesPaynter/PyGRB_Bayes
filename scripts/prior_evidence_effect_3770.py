@@ -11,6 +11,7 @@ from PyGRB_Bayes.backend.makemodels import create_model_from_key
 from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
 
 
+# np.seterr(divide='ignore', invalid='ignore')
 
 
 
@@ -50,7 +51,8 @@ def analysis_for_3770(indices):
                         custom_name = f'{key}_{directory_labels[ii]}')
         models = [model for key, model in model_dict.items()]
         GRB._split_array_job_to_4_channels(models = models,
-            indices = np.intersect1d(indices, np.arange(32)),
+            indices = np.intersect1d(indices,
+                            np.arange(8 * ii, 8 * (ii + 1))),
             channels = [0, 1, 2, 3])
         # GRB.get_evidence_from_models(model_dict)
 #################################
@@ -87,10 +89,11 @@ def analysis_for_3770(indices):
             GRB_wrap.overwrite_priors = overwrite_priors
             GRB._split_array_job_to_4_channels(models = [model],
                 indices = np.intersect1d(indices,
-                                np.arange(32 + 4 * mm, 32 + 4 * (mm + 1))),
+                                    np.arange(  24 + 4 * ( mm + ii),
+                                                24 + 4 * ((mm + ii) + 1))),
                 channels = [0, 1, 2, 3])
 
-    # should be at index 64 by now
+    # should be at index 48 by now
     directory_label = 'delta'
     GRB_wrap = PulseFitter(3770, times = (-.1, 1),
                 datatype = 'tte', nSamples = nSamples, sampler = SAMPLER,
@@ -115,7 +118,7 @@ def analysis_for_3770(indices):
         GRB_wrap.overwrite_priors = overwrite_priors
         GRB._split_array_job_to_4_channels(models = [model],
             indices = np.intersect1d(indices,
-                            np.arange(64 + 4 * mm, 64 + 4 * (mm + 1))),
+                            np.arange(48 + 4 * mm, 48 + 4 * (mm + 1))),
             channels = [0, 1, 2, 3])
 
     directory_label = 'gaussian'
@@ -155,9 +158,9 @@ def analysis_for_3770(indices):
         GRB_wrap.overwrite_priors = overwrite_priors
         GRB._split_array_job_to_4_channels(models = [model],
             indices = np.intersect1d(indices,
-                            np.arange(72 + 4 * mm, 72 + 4 * (mm + 1))),
+                            np.arange(56 + 4 * mm, 56 + 4 * (mm + 1))),
             channels = [0, 1, 2, 3])
-# at index 80 by now.... DONE
+# at index 64 by now.... DONE
 
 
 if __name__ == '__main__':

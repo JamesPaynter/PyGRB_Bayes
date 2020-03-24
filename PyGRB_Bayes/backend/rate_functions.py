@@ -23,6 +23,8 @@ def FRED_pulse(times, start, scale, tau, xi):
 
 
 def FREDx_pulse(times, start, scale, tau, xi, gamma, nu):
+    # np.seterr(divide='ignore', invalid='ignore')
+
     # X =   np.where(times - start <= 0, MIN_FLOAT, np.exp(
     #     - np.power(xi * (tau / np.where(times - start <= 0,
     #     times - start - MIN_FLOAT, times - start + MIN_FLOAT)), gamma)
@@ -38,10 +40,10 @@ def FREDx_pulse(times, start, scale, tau, xi, gamma, nu):
     X   = np.where(times - start <= 0, MIN_FLOAT, np.exp(
         - np.power(xi * (tau / (times - start)), gamma)
         - np.power(xi * ((times - start) / tau), nu)
-        # + (xi ** ((2 * gamma * nu) / (gamma + nu) )
-        # * (
-        # + (gamma / nu) **(       nu / (gamma + nu))
-        # + (gamma / nu) **((- gamma) / (gamma + nu)) ))
+        + (xi ** ((2 * gamma * nu) / (gamma + nu) )
+        * (
+        + (gamma / nu) **(       nu / (gamma + nu))
+        + (gamma / nu) **((- gamma) / (gamma + nu)) ))
          ))
         # - xi * np.power(((times - start) / tau), nu) ))
         # - xi * np.power((tau / (times - start)), gamma)
@@ -60,7 +62,7 @@ def FREDx_pulse(times, start, scale, tau, xi, gamma, nu):
 def sine_gaussian(times, res_begin, sg_A, sg_lambda, sg_omega, sg_phi):
     s = (np.exp(- np.square((times - res_begin) / sg_lambda)) *
          np.cos(sg_omega * times + sg_phi))
-    s  /= np.max(np.abs(s))
+    # s  /= np.max(np.abs(s))
     return sg_A * s
 
 
@@ -73,7 +75,7 @@ def modified_bessel(times, bes_A, bes_Omega, bes_s, res_begin, bes_Delta):
             special.j0(bes_Omega *
            (res_begin - times - bes_Delta / 2.) ),
            1)))
-    b  /= np.max(np.abs(b))
+    # b  /= np.max(np.abs(b))
     return bes_A * b
 
 

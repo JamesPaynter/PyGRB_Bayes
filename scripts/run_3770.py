@@ -5,6 +5,10 @@ from PyGRB_Bayes.main.fitpulse import PulseFitter
 from PyGRB_Bayes.backend.makemodels import create_model_from_key
 from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
 
+import numpy as np
+# status = 'print'
+# status = 'ignore'
+# np.seterr(divide=status, invalid=status)#, over = status)
 
 def load_3770(sampler = 'dynesty', nSamples = 100):
     test = PulseFitter(3770, times = (-.1, 1),
@@ -15,11 +19,11 @@ def load_3770(sampler = 'dynesty', nSamples = 100):
 
 
 def analysis_for_3770(indices):
-    num_samples = [500, 2000, 4500]
+    num_samples = [2000, 4500]
     for samples in num_samples:
         GRB = load_3770(sampler=SAMPLER, nSamples=samples)
         GRB.offsets = [0, 4000, 8000, -3000]
-        GRB.test_two_pulse_models(indices)
+        GRB.test_two_pulse_models(indices, channels = [0, 1, 2, 3])
 
 
 def evidence_for_3770():
@@ -56,7 +60,8 @@ if __name__ == '__main__':
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'Nestle'
-        evidence_for_3770()
+        # evidence_for_3770()
+        analysis_for_3770([12])
 
 
     else:
