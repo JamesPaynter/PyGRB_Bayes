@@ -181,7 +181,7 @@ if __name__ == '__main__':
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'Nestle'
-        analysis_for_3770(np.arange(1))
+        analysis_for_3770([1])
 
 
     else:

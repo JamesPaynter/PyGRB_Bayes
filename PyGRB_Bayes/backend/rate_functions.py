@@ -5,7 +5,8 @@ import scipy.special as special
 from scipy.signal import convolve
 
 MIN_FLOAT = sys.float_info[3]
-
+MAX_FLOAT = sys.float_info[0]
+MAX_EXP   = np.log(MAX_FLOAT)
 
 
 def gaussian_pulse(times, start, scale, sigma):
@@ -37,14 +38,20 @@ def FREDx_pulse(times, start, scale, tau, xi, gamma, nu):
     #
     # m_t = start + tau * math.pow((gamma / nu * math.pow(xi, gamma - nu)), - 1 / (gamma + nu))
     # # print(xi, gamma, nu)
-    X   = np.where(times - start <= 0, MIN_FLOAT, np.exp(
-        - np.power(xi * (tau / (times - start)), gamma)
-        - np.power(xi * ((times - start) / tau), nu)
-        + (xi ** ((2 * gamma * nu) / (gamma + nu) )
-        * (
-        + (gamma / nu) **(       nu / (gamma + nu))
-        + (gamma / nu) **((- gamma) / (gamma + nu)) ))
-         ))
+    pow_1 = xi * (tau / (times - start))
+    pow_2 = xi * ((times - start) / tau)
+    norm  =   (xi ** ((2 * gamma * nu) / (gamma + nu) )
+            * (
+            + (gamma / nu) **(       nu / (gamma + nu))
+            + (gamma / nu) **((- gamma) / (gamma + nu)) ))
+
+    exp = ( - np.power( pow_1, gamma )
+            - np.power( pow_2, nu )
+            + norm
+            )
+    X   = np.where(times - start <= 0, MIN_FLOAT,
+            np.where(exp < MAX_EXP, np.exp( exp ), MAX_EXP))
+
         # - xi * np.power(((times - start) / tau), nu) ))
         # - xi * np.power((tau / (times - start)), gamma)
     # M   = np.where(m_t - start <= 0, MIN_FLOAT, np.exp(
