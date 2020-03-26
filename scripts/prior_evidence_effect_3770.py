@@ -17,6 +17,10 @@ from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
 
 def analysis_for_3770(indices):
     nSamples = 2000
+    keys = ['XsL', 'XsXs']
+    channels = [0, 1, 2, 3]
+    n_per_split = len(keys) * len(channels)
+
     prior_sets = [{ 'priors_gamma_min': 1e-1, ## generic
                     'priors_gamma_max': 1e1,
                     'priors_nu_min'   : 1e-1,
@@ -31,7 +35,6 @@ def analysis_for_3770(indices):
                     'priors_nu_max'   : 1e3}
                     ]
 
-
     directory_labels = ['small_box_log_flat', 'mid_box_log_flat', 'large_box_log_flat']
     for ii, prior_set in enumerate(prior_sets):
         GRB = PulseFitter(3770, times = (-.1, 1),
@@ -42,19 +45,18 @@ def analysis_for_3770(indices):
                     **prior_set)
 
         GRB.offsets = [0, 4000, 8000, -3000]
-        # GRB.test_two_pulse_models(indices)
         ## need to break up into indices (belowwww)
-        keys = ['XsL', 'XsXs']
+
         model_dict = {}
         for key in keys:
             model_dict[key] = create_model_from_key(key,
                         custom_name = f'{key}_{directory_labels[ii]}')
         models = [model for key, model in model_dict.items()]
+        indx = np.intersect1d(indices,
+            np.arange(n_per_split * ii, n_per_split * (ii + 1))) % n_per_split
         GRB._split_array_job_to_4_channels(models = models,
-            indices = np.intersect1d(indices,
-                            np.arange(8 * ii, 8 * (ii + 1))),
-            channels = [0, 1, 2, 3])
-        # GRB.get_evidence_from_models(model_dict)
+            indices = indx,
+            channels = channels)
 #################################
 
     directory_labels = ['small_box_flat', 'mid_box_flat', 'large_box_flat']
@@ -67,7 +69,6 @@ def analysis_for_3770(indices):
         GRB_wrap.offsets = [0, 4000, 8000, -3000]
         # GRB.test_two_pulse_models(indices)
         ## need to break up into indices (belowwww)
-        keys = ['XsL', 'XsXs'] #= 8 indices
         model_dict = {}
         for key in keys:
             model_dict[key] = create_model_from_key(key,
@@ -87,11 +88,12 @@ def analysis_for_3770(indices):
                     maximum=prior_set['priors_nu_max'],
                     latex_label=f'$\\nu_{n} {k}$', unit=' ')
             GRB_wrap.overwrite_priors = overwrite_priors
+
+            indx = np.intersect1d(indices,
+                np.arange(  24 + 4 * ( mm + ii),
+                            24 + 4 * ((mm + ii) + 1))) % n_per_split
             GRB._split_array_job_to_4_channels(models = [model],
-                indices = np.intersect1d(indices,
-                                    np.arange(  24 + 4 * ( mm + ii),
-                                                24 + 4 * ((mm + ii) + 1))),
-                channels = [0, 1, 2, 3])
+                indices = indx, channels = channels)
 
     # should be at index 48 by now
     directory_label = 'delta'
@@ -102,7 +104,6 @@ def analysis_for_3770(indices):
                 directory_label = directory_label)
     GRB_wrap.offsets = [0, 4000, 8000, -3000]
     ## need to break up into indices (belowwww)
-    keys = ['XsL', 'XsXs'] #= 8 indices
     model_dict = {}
     for key in keys:
         model_dict[key] = create_model_from_key(key,
@@ -116,10 +117,12 @@ def analysis_for_3770(indices):
                 overwrite_priors[f'gamma_{n}_{k}'] = bilbyDeltaFunction(1,  latex_label = f'$\\gamma$ {n} {k}')
                 overwrite_priors[f'nu_{n}_{k}'] = bilbyDeltaFunction(1,     latex_label = f'$\\nu$ {n} {k}')
         GRB_wrap.overwrite_priors = overwrite_priors
+
+        indx = np.intersect1d(indices,
+            np.arange(  48 + 4 *  mm,
+                        48 + 4 * (mm + 1))) % n_per_split
         GRB._split_array_job_to_4_channels(models = [model],
-            indices = np.intersect1d(indices,
-                            np.arange(48 + 4 * mm, 48 + 4 * (mm + 1))),
-            channels = [0, 1, 2, 3])
+            indices = indx, channels = channels)
 
     directory_label = 'gaussian'
     GRB_wrap = PulseFitter(3770, times = (-.1, 1),
@@ -129,7 +132,6 @@ def analysis_for_3770(indices):
                 directory_label = directory_label)
     GRB_wrap.offsets = [0, 4000, 8000, -3000]
     ## need to break up into indices (belowwww)
-    keys = ['XsL', 'XsXs'] #= 8 indices
     model_dict = {}
     for key in keys:
         model_dict[key] = create_model_from_key(key,
@@ -156,10 +158,11 @@ def analysis_for_3770(indices):
             overwrite_priors[f'nu_{n}_d'] = bilbyGaussian(
                 mu = 2.7, sigma = 5,    latex_label = f'$\\nu$ {n} d')
         GRB_wrap.overwrite_priors = overwrite_priors
+
+        indx = np.intersect1d(indices,
+            np.arange(56 + 4 * mm, 56 + 4 * (mm + 1))) % n_per_split
         GRB._split_array_job_to_4_channels(models = [model],
-            indices = np.intersect1d(indices,
-                            np.arange(56 + 4 * mm, 56 + 4 * (mm + 1))),
-            channels = [0, 1, 2, 3])
+            indices = indx, channels = [0, 1, 2, 3])
 # at index 64 by now.... DONE
 
 
@@ -180,8 +183,8 @@ if __name__ == '__main__':
         rc('text', usetex=True)
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
-        SAMPLER = 'Nestle'
-        analysis_for_3770([1])
+        SAMPLER = 'nestle'
+        analysis_for_3770([14])
 
 
     else:
