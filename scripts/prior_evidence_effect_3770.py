@@ -1,4 +1,5 @@
 import sys, os
+import time
 import argparse
 import numpy as np
 
@@ -181,7 +182,7 @@ def run_delta_priors(   indices,
             print('loop_idx = ', loop_idx)
         indx = np.intersect1d(indices, loop_idx)  % n_per_split
         if not test:
-            GRB._split_array_job_to_4_channels(models = [model],
+            GRB_wrap._split_array_job_to_4_channels(models = [model],
                 indices = indx, channels = channels)
         else:
             print('index passed = ', indx)
@@ -238,13 +239,16 @@ def run_gaussian_priors(    indices,
             print('loop_idx = ', loop_idx)
         indx = np.intersect1d(indices, loop_idx)  % n_per_split
         if not test:
-            GRB._split_array_job_to_4_channels(models = [model],
+            GRB_wrap._split_array_job_to_4_channels(models = [model],
                 indices = indx, channels = channels)
         else:
             print('index passed = ', indx)
 
 
 def analysis_for_3770(indices, test):
+    iddy = indices[0]
+    print(iddy)
+    time.sleep(iddy * 100)
 
     nSamples    = 2000
     model_keys  = ['XsL', 'XsXs']
@@ -309,8 +313,6 @@ if __name__ == '__main__':
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'nestle'
-
-
         analysis_for_3770(np.arange(64), test = True)
 
 
