@@ -132,9 +132,9 @@ def run_flat_priors(    indices,
                 print(indices)
                 print(ii, mm)
                 print('loop_idx = ', loop_idx)
-            indx = np.intersect1d(indices, loop_idx) % n_per_split
+            indx = np.intersect1d(indices, loop_idx) % 4
             if not test:
-                GRB._split_array_job_to_4_channels(models = [model],
+                GRB_wrap._split_array_job_to_4_channels(models = [model],
                     indices = indx, channels = channels)
             else:
                 print('index passed = ', indx)
@@ -180,7 +180,7 @@ def run_delta_priors(   indices,
             print(indices)
             print(mm)
             print('loop_idx = ', loop_idx)
-        indx = np.intersect1d(indices, loop_idx)  % n_per_split
+        indx = np.intersect1d(indices, loop_idx) % 4
         if not test:
             GRB_wrap._split_array_job_to_4_channels(models = [model],
                 indices = indx, channels = channels)
@@ -237,7 +237,7 @@ def run_gaussian_priors(    indices,
             print(indices)
             print(mm)
             print('loop_idx = ', loop_idx)
-        indx = np.intersect1d(indices, loop_idx)  % n_per_split
+        indx = np.intersect1d(indices, loop_idx) % 4
         if not test:
             GRB_wrap._split_array_job_to_4_channels(models = [model],
                 indices = indx, channels = channels)
@@ -246,9 +246,9 @@ def run_gaussian_priors(    indices,
 
 
 def analysis_for_3770(indices, test):
-    iddy = indices[0]
-    print(iddy)
-    time.sleep(iddy * 100)
+    if not test:
+        iddy = indices[0]
+        time.sleep(iddy * 100)
 
     nSamples    = 2000
     model_keys  = ['XsL', 'XsXs']
@@ -286,7 +286,7 @@ def analysis_for_3770(indices, test):
     current_idx   = end_idx
     end_idx       = current_idx + n_per_split * 1 # 1 prior set for this function
     gauss_indices = np.intersect1d(indices, np.arange(current_idx, end_idx))
-    if len(delta_indices) > 0:
+    if len(gauss_indices) > 0:
         print('Original indices passed to Gaussian prior function: ', gauss_indices)
         gauss_indices -= current_idx # resets to 0-8 as per OG
         run_gaussian_priors(gauss_indices, model_keys, channels,
@@ -313,7 +313,9 @@ if __name__ == '__main__':
         rc('text.latex',
         preamble=r'\usepackage{amsmath}\usepackage{amssymb}\usepackage{amsfonts}')
         SAMPLER = 'nestle'
-        analysis_for_3770(np.arange(64), test = True)
+
+        # analysis_for_3770(np.arange(64), test = True)
+        analysis_for_3770(np.array([6]), test = False) # 63 is max
 
 
     else:
