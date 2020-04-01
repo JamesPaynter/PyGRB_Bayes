@@ -58,8 +58,10 @@ class PulseFitter(Admin, EvidenceTables):
         print('\n\n\n')
 
         self.variable = kwargs.get('variable')
-        self.kwargs = kwargs
-
+        self.kwargs   = kwargs
+        # what is self.kwargs used for i can't remember, but put it like
+        # self.make_key_kwargs      = kwargs.get('make_key_kwargs')
+        # as i think that's what it was intended for
 
         (self.start, self.end)   = times
         self.colours             = ['red', 'orange', 'green', 'blue']
@@ -70,6 +72,7 @@ class PulseFitter(Admin, EvidenceTables):
         self.nSamples            = nSamples
         self.trigger             = trigger
         self.injection_parameters= kwargs.get('injection_parameters')
+        self.sampler_kwargs      = kwargs.get('sampler_kwargs')
         self.save                = save
 
 
@@ -152,6 +155,7 @@ class PulseFitter(Admin, EvidenceTables):
             self.main_1_channel(i, model)
         self.get_residuals(channels = channels, model = model)
 
+
     def main_1_channel(self, channel, model):
         self._setup_labels(model)
 
@@ -166,7 +170,6 @@ class PulseFitter(Admin, EvidenceTables):
                             **self.kwargs)
         priors = prior_shell.return_prior_dict()
 
-        print(self.overwrite_priors)
         if self.overwrite_priors:
             for key in self.overwrite_priors:
                 prior_keys = [*priors]
@@ -188,6 +191,8 @@ class PulseFitter(Admin, EvidenceTables):
                                     label      = result_label,
                                     save       = self.save,
                           injection_parameters = self.injection_parameters)
+                          #,
+                            #                   **self.sampler_kwargs)
         plotname = f'{self.outdir}/{result_label}_corner.pdf'
         result.plot_corner(filename = plotname)
 
@@ -230,7 +235,8 @@ class PulseFitter(Admin, EvidenceTables):
                                     outdir     = self.outdir,
                                     label      = result_label,
                                     save       = self.save,
-                          injection_parameters = self.injection_parameters)
+                          injection_parameters = self.injection_parameters,
+                          **self.sampler_kwargs)
         plotname = f'{self.outdir}/{result_label}_corner.pdf'
         result.plot_corner(filename = plotname)
 
@@ -259,7 +265,6 @@ class PulseFitter(Admin, EvidenceTables):
         strings = { 'fstring' : self.fstring,
                     'clabels' : self.clabels,
                     'outdir'  : self.outdir}
-
         nDraws = 1000
         count_fits      = np.zeros((len(self.GRB.bin_left),4))
         residuals       = np.zeros((len(self.GRB.bin_left),4))
@@ -304,8 +309,10 @@ class PulseFitter(Admin, EvidenceTables):
                                                 likelihood.calculate_rate_lens)
                 for ii in range(nDraws):
                     p_draw = {}
+                    int_range = len(posteriors[f'background_{k}'])
+                    jj = np.random.randint(int_range)
                     for key in posteriors:
-                        p_draw[key] = np.random.choice(posteriors[key])
+                        p_draw[key] = posteriors[key][jj]
                     posterior_draws[:,ii] = likelihood._sum_rates(x, p_draw,
                                                 likelihood.calculate_rate_lens)
             else:
@@ -313,8 +320,10 @@ class PulseFitter(Admin, EvidenceTables):
                                                 likelihood.calculate_rate)
                 for ii in range(nDraws):
                     p_draw = {}
+                    int_range = len(posteriors[f'background_{k}'])
+                    jj = np.random.randint(int_range)
                     for key in posteriors:
-                        p_draw[key] = np.random.choice(posteriors[key])
+                        p_draw[key] = posteriors[key][jj]
                     posterior_draws[:,ii] = likelihood._sum_rates(x, p_draw,
                                                 likelihood.calculate_rate)
 
@@ -326,6 +335,7 @@ class PulseFitter(Admin, EvidenceTables):
             rates_fit_i = counts_fit / widths
             rates_err_i = np.sqrt(self.GRB.counts[:,i]) / widths
             strings['widths'] = widths
+            strings['p_type'] = 'paper'
             posterior_draws   = posterior_draws / widths[:,None]
             posterior_lines[:,:,i] = posterior_draws
             PlotPulseFit(   x = self.GRB.bin_left, y = rates_i,

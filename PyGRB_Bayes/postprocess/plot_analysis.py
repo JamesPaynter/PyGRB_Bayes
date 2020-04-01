@@ -36,13 +36,42 @@ class PlotPulseFit(object):
         clabels = kwargs.get('clabels')
         outdir  = kwargs.get('outdir')
         widths  = kwargs.get('widths')
-        n_axes  = 1 + 3 +1
-        width   = 3.321
+        p_type  = kwargs.get('p_type')
+
+        n_axes  = 1 + 3 + 1
+
+        if p_type == 'presentation':
+            heights = [3, 1] + [0.6]
+            n_axes  = 3
+            print('WIDTH CHANGED FROM 3.321 TO 8 FOR PRESENTATIONS')
+            width   = 8
+            plot_dict = dict()
+            plot_dict['linewidth'] = 1.0
+
+        elif p_type == 'paper':
+            heights = [3, 1, 3, 3] + [0.6]
+            width   = 3.321
+            plot_dict = dict()
+            plot_dict['linewidth'] = 0.4
+
+        elif p_type == 'thesis':
+            print("Not yet implemented, try 'paper'.")
+
+        elif p_type == 'animation':
+            print("Not yet implemented, try 'presentation'.")
+
+        else:
+            print('Please specify the purpose of this plot')
+
+
         # arbitrary scaled height
         height  = (width / 1.8) * 2
         # ratio of the heights of each of the subpanels
         # 5 for main to 1 per residual seems to work well (for 4 or 1 channel)
-        heights = [3, 1, 3, 3] + [0.6]
+
+
+
+
         # heights = [5] + ([1 for i in range(n_axes - 2)]) + [0.6]
         # constrained_layout = False -> don't mess with my placing
         fig     = plt.figure(figsize = (width, height), constrained_layout=False)
@@ -53,8 +82,13 @@ class PlotPulseFit(object):
                                     hspace=0.0, wspace=0.0)
         # axes label on the LHS of plot
         ax      = fig.add_subplot(spec[0:2, 0], frameon = False)
+
+        # HACKED
         ax2     = fig.add_subplot(spec[2, 0], frameon = False)
         ax3     = fig.add_subplot(spec[3, 0], frameon = False)
+        # HACKED
+
+
         # main plot axes
         fig_ax1 = fig.add_subplot(spec[0, 1])
         # list of residual channel axes to append to
@@ -62,7 +96,11 @@ class PlotPulseFit(object):
 
         k = [channels]
         fig_ax1.plot(   x, y, c = y_cols,
+                        # drawstyle='steps-mid', linewidth = 1)
+                        # HACKED
                         drawstyle='steps-mid', linewidth = 0.4)
+        # fig_ax1.plot(x, y_fit, 'k', linewidth = 1)
+        # HACKED
         fig_ax1.plot(x, y_fit, 'k', linewidth = 0.4)
         if posterior_draws is not None:
             drawLines = []
@@ -70,7 +108,7 @@ class PlotPulseFit(object):
                 drawLines.append(x)
                 drawLines.append(posterior_draws[:,ii])
             d = {'c': 'k', 'linewidth' : 0.5, 'alpha' : 0.02}
-            # kwogs = [d for i in range(nDraws)]
+            kwogs = [d for i in range(nDraws)]
             fig_ax1.plot(*drawLines, **d)
             # fig_ax1.plot(*drawLines, 'k', linewidth = 0.5, alpha = 0.02)
 
@@ -87,6 +125,8 @@ class PlotPulseFit(object):
         difference = y - y_fit
         # plot that residual
         axes_list[0].plot(  x, difference, c = y_cols,
+                            # drawstyle='steps-mid',  linewidth = 1)
+                            # HACKED
                             drawstyle='steps-mid',  linewidth = 0.4)
 
 
@@ -95,6 +135,8 @@ class PlotPulseFit(object):
                                      step = 'mid', color = y_cols,
                                      alpha = 0.15)
         axes_list[0].axhline(0, c = 'k', linewidth = 0.2)
+        # HACKED
+        axes_list[0].axhline(0, c = 'k', linewidth = 0.5)
 
         fig_ax1.set_ylim(bottom = min(y - y_err), top = max(y + y_err))
 
@@ -104,10 +146,12 @@ class PlotPulseFit(object):
         ticks = ticks[0:2] if len(ticks) > 2 else ticks
         axes_list[0].set_yticks(ticks)
 
+
+        #  HACKEDDDDD
         PlotPulseFit._make_correlogram(axes_list[1], x, difference)
+        axes_list[1].set_xlim(x[0], x[-1])
 
         axes_list[0].set_xlim(x[0], x[-1])
-        axes_list[1].set_xlim(x[0], x[-1])
 
 
         ax.tick_params(labelcolor='none', top=False,
@@ -117,8 +161,10 @@ class PlotPulseFit(object):
         ax3.tick_params(labelcolor='none', top=False,
                         bottom=False, left=False, right=False)
         ax.set_ylabel('counts / sec')
+        # HACKED
         ax2.set_ylabel('Correlogram')
         ax3.set_ylabel('Probability Plot')
+        # HACKED
         plt.subplots_adjust(left=0.16)
         plt.subplots_adjust(right=0.98)
         plt.subplots_adjust(top=0.98)
@@ -128,7 +174,10 @@ class PlotPulseFit(object):
 
         fig_ax1.set_xlim(x[0], x[-1])
 
-        plot_name=f'{outdir}/{fstring}_result_{clabels[channels[0]]}_rates.pdf'
+        if p_type == 'animation':
+            plot_name=f'{outdir}/anim/{fstring}_result_{clabels[channels[0]]}_rates.png'
+        else:
+            plot_name=f'{outdir}/{fstring}_result_{clabels[channels[0]]}_rates.pdf'
         fig.savefig(plot_name)
         plt.close(fig)
 
