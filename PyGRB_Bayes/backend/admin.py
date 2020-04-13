@@ -104,11 +104,12 @@ class Admin(metaclass=ABCMeta):
             directory += '/null_model'
         directory += '_' + str(self.num_pulses)
 
-        directory += '_' + self._get_pulse_list()
+        directory += '_' + self.model['name']
+        # directory += '_' + self._get_pulse_list()
+        # if self.directory_label:
+        #     directory += '_' + str(self.directory_label)
         if self.MC_counter:
             directory += '_' + str(self.MC_counter)
-        if self.directory_label:
-            directory += '_' + str(self.directory_label)
         return directory
 
     def _get_file_string(self):

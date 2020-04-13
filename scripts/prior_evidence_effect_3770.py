@@ -295,6 +295,54 @@ def analysis_for_3770(indices, test):
 
 
 
+def evidence_for_3770():
+    nSamples    = 2000
+    model_keys  = ['XsL', 'XsXs']
+    channels    = [0, 1, 2, 3]
+
+
+    directory_labels = [    'small_box_log_flat_nr',
+                            'mid_box_log_flat_nr',
+                            'large_box_log_flat_nr',
+                            'small_box_flat_nr',
+                            'mid_box_flat_nr',
+                            'large_box_flat_nr',
+                            'delta_nr',
+                            'gaussian_nr']
+
+    model_dict = {}
+    for key in model_keys:
+        for directory_label in directory_labels:
+            m_key = f'{key}_{directory_label}'
+            model_dict[m_key] = create_model_from_key(key,
+                        custom_name = f'{key}_{directory_label}')
+
+    models = [model for key, model in model_dict.items()]
+    GRB = PulseFitter(3770, times = (-.1, 1),
+            datatype = 'tte', nSamples = nSamples, sampler = SAMPLER,
+            priors_pulse_start = -.1, priors_pulse_end = 0.6,
+            priors_td_lo = 0,  priors_td_hi = 0.5)
+    GRB.offsets = [0, 4000, 8000, -3000]
+
+    # for model in model_dict:
+    #     print(model, model_dict[model])
+    # GRB.get_evidence_from_models(model_dict)
+    for model in models:
+        print(model)
+        try:
+            GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+        except:
+            pass
+
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(   description = 'Core bilby wrapper')
     parser.add_argument('--HPC', action = 'store_true',
@@ -315,8 +363,8 @@ if __name__ == '__main__':
         SAMPLER = 'nestle'
 
         # analysis_for_3770(np.arange(64), test = True)
-        analysis_for_3770(np.array([6]), test = False) # 63 is max
-
+        # analysis_for_3770(np.array([6]), test = False) # 63 is max
+        evidence_for_3770()
 
     else:
         SAMPLER = 'dynesty'

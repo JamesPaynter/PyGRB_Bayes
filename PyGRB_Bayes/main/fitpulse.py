@@ -82,7 +82,7 @@ class PulseFitter(Admin, EvidenceTables):
         self.priors_td_hi       = priors_td_hi
 
         self.MC_counter          = None
-        # intialise model dict
+        # intialise dict of models
         self.models = {}
         self.offsets = None
         self.directory_label  = kwargs.get('directory_label')
@@ -112,19 +112,10 @@ class PulseFitter(Admin, EvidenceTables):
 
 
     def _split_array_job_to_4_channels(self, models, indices, channels = None):
-        # if not channels:
-        # print(f'''_split_array_job_to_4_channels(
-        # models = {models},
-        # indices = {indices},
-        # channels = {channels}''')
         for idx in indices:
             n_channels = 4
             m_index    = idx // n_channels
             channel    = idx %  n_channels
-            # print(f'''_split_array_job_to_4_channels(
-            # model = {models[m_index]},
-            # index = {idx},
-            # channel = {channel}''')
             self.main_1_channel(channel, models[m_index])
         # else:
             # for idx in indices:

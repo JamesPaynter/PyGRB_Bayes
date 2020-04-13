@@ -3,7 +3,7 @@ A preprocessing module to unpack the BATSE tte and discsc bfits FITS files.
 Written by James Paynter, 2020.
 """
 
-
+import os
 import numpy as np
 import pandas as pd
 from astropy.io import fits
@@ -76,11 +76,20 @@ class BATSESignal(SignalFramework):
         self.times     = times
         self.light_GRB = light_GRB
         # uses self.xx so that it has passed the AssertionErrors
-        relative_path = f'../data/{self.datatype}_bfits_{self.burst}.fits'
-        # put in a comment here about what Path does ?
-        self.path = Path(__file__).parent / relative_path
+            # # this uses data that is packaged with the program
+            # relative_path = f'../data/{self.datatype}_bfits_{self.burst}.fits'
+            # # put in a comment here about what Path does ?
+            # self.path = Path(__file__).parent / relative_path
+        # the following will do it in the cwd
+        relative_path = f'\\data\\{self.datatype}_bfits_{self.burst}.fits.gz'
+        p = f'{os.getcwd()}{relative_path}'
+        path = os.path.normpath(p)
+        print(path)
+        print('cwd = ', os.getcwd())
+        self.path = os.path.join(os.getcwd(), relative_path)
+        print(self.path)
         # with closes the file automatically after finished.
-        with fits.open(self.path) as hdu_list:
+        with fits.open(path) as hdu_list:
             self.data = hdu_list[-1].data
             ### initialise data arrays from fits file, over entire data set
             self.bin_left  = np.array(self.data['TIMES'][:, 0])

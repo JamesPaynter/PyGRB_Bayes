@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 
 from scipy.optimize import fsolve
 
+from astropy import cosmology
+
 from matplotlib import rc
 rc('font', **{'family': 'DejaVu Sans', 'serif': ['Computer Modern'],'size': 8})
 rc('text', usetex=True)
