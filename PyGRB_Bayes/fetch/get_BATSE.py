@@ -47,16 +47,16 @@ class GetBATSEBurst():
 
     def download_file(self):
         ''' Requests the file from the NASA server. '''
-        resource = join(self._root, self._file_name)
-        if not exists(resource):
+        path = join(self._root, self._file_name)
+        if not exists(path):
             remote = f'{self._url}/{self._file_name}'
             try:
-                urllib.request.urlretrieve(remote, resource)
+                urllib.request.urlretrieve(remote, path)
             except:
                 print(  f'The file:  << {self._file_name} >>  '
                         f'does not exist at the specified url:\n'
                         f'{remote}' )
-        return resource
+        self.path = path
 
 if __name__ == '__main__':
     pass

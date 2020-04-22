@@ -9,7 +9,8 @@ import pandas as pd
 from astropy.io import fits
 from pathlib import Path
 
-from PyGRB_Bayes.preprocess.abstract import SignalFramework
+from PyGRB_Bayes.fetch.get_BATSE        import GetBATSEBurst
+from PyGRB_Bayes.preprocess.abstract    import SignalFramework
 
 def make_GRB(**kwargs):
     GRB = BATSESignal(**kwargs)
@@ -75,21 +76,10 @@ class BATSESignal(SignalFramework):
 
         self.times     = times
         self.light_GRB = light_GRB
-        # uses self.xx so that it has passed the AssertionErrors
-            # # this uses data that is packaged with the program
-            # relative_path = f'../data/{self.datatype}_bfits_{self.burst}.fits'
-            # # put in a comment here about what Path does ?
-            # self.path = Path(__file__).parent / relative_path
-        # the following will do it in the cwd
-        relative_path = f'\\data\\{self.datatype}_bfits_{self.burst}.fits.gz'
-        p = f'{os.getcwd()}{relative_path}'
-        path = os.path.normpath(p)
-        print(path)
-        print('cwd = ', os.getcwd())
-        self.path = os.path.join(os.getcwd(), relative_path)
-        print(self.path)
+        # GetBATSEBurst downdloads file if it does not exist
+        fetch = GetBATSEBurst(trigger = self.burst, datatype = self.datatype)
         # with closes the file automatically after finished.
-        with fits.open(path) as hdu_list:
+        with fits.open(fetch.path) as hdu_list:
             self.data = hdu_list[-1].data
             ### initialise data arrays from fits file, over entire data set
             self.bin_left  = np.array(self.data['TIMES'][:, 0])
