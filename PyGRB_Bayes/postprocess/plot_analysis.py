@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import scipy.stats as stats
 
+from PyGRB_Bayes.postprocess.abp import AbstractBasePlot
 
 def autocorrelations(residuals):
     """ Do a test to see if they are Gaussian distributed? """
@@ -11,7 +12,7 @@ def autocorrelations(residuals):
     acf, acf2 = acf / np.max(acf), acf2 / np.max(acf2)
     return acf, acf2
 
-class PlotPulseFit(object):
+class PlotPulseFit(AbstractBasePlot):
     """docstring for PlotPulseFit."""
 
     def __init__(self, *args, **kwargs):
@@ -68,9 +69,6 @@ class PlotPulseFit(object):
         height  = (width / 1.8) * 2
         # ratio of the heights of each of the subpanels
         # 5 for main to 1 per residual seems to work well (for 4 or 1 channel)
-
-
-
 
         # heights = [5] + ([1 for i in range(n_axes - 2)]) + [0.6]
         # constrained_layout = False -> don't mess with my placing
@@ -514,3 +512,6 @@ class PlotPulseFit(object):
         plot_name = f'{outdir}/{fstring}_rates.pdf'
         fig.savefig(plot_name)
         plt.close(fig)
+
+if __name__ == '__main__':
+    pass
