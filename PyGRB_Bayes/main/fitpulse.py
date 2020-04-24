@@ -19,6 +19,7 @@ from PyGRB_Bayes.backend.makemodels import make_one_pulse_models
 from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
 # from PyGRB_Bayes.postprocess.plot_grb import GRBPlotter
 from PyGRB_Bayes.postprocess.plot_analysis import PlotPulseFit
+from PyGRB_Bayes.postprocess.plot_gl_posteriors import GravLens
 from PyGRB_Bayes.postprocess.make_evidence_tables import EvidenceTables
 
 
@@ -101,15 +102,6 @@ class PulseFitter(Admin, EvidenceTables):
         else:
             self.GRB = kwargs.get('GRB')
 
-        # if test:
-            # self.GRB = EmptyGRB()
-            # self.GRB.trigger = self.trigger
-            # self.GRB.start   = self.start
-            # self.GRB.end     = self.end
-            # self.GRB.datatype= self.datatype
-
-
-
 
     def _split_array_job_to_4_channels(self, models, indices, channels = None):
         for idx in indices:
@@ -117,15 +109,11 @@ class PulseFitter(Admin, EvidenceTables):
             m_index    = idx // n_channels
             channel    = idx %  n_channels
             self.main_1_channel(channel, models[m_index])
-        # else:
-            # for idx in indices:
-                # n_channels = len(channels)
-                # m_index    = idx // n_channels
-                # channel    = channels[idx % n_channels]
-                # self.main_1_channel(channel, models[m_index])
-
-
-
+        # for idx in indices:
+            # n_channels = len(channels)
+            # m_index    = idx // n_channels
+            # channel    = channels[idx % n_channels]
+            # self.main_1_channel(channel, models[m_index])
 
     def test_pulse_type(self, indices, channels):
         self.models = make_one_pulse_models()
@@ -167,8 +155,6 @@ class PulseFitter(Admin, EvidenceTables):
                 if key in prior_keys:
                     priors[key] = self.overwrite_priors[key]
 
-        for k in [*priors]:
-            print(k, priors[k])
         x = self.GRB.bin_left
         y = np.rint(self.GRB.counts[:,i]).astype('uint')
         likelihood = PoissonRate(x, y, i, **self.model)
@@ -250,6 +236,8 @@ class PulseFitter(Admin, EvidenceTables):
         #     summary = result.get_one_dimensional_median_and_error_bar(parameter)
         #     MAP[parameter] = summary.median
         self.get_residuals(channels = channels, model = model)
+
+
 
     def get_residuals(self, channels, model):
         self._setup_labels(model)
@@ -353,6 +341,10 @@ class PulseFitter(Admin, EvidenceTables):
                             # posterior_draws = posterior_lines,
                             # nDraws = nDraws,
                             **strings)
+            if model['lens']:
+                GravLens(   fstring = self.fstring,
+                            outdir  = self.outdir,
+                            p_type  = 'presentation')
 
 if __name__ == '__main__':
     pass

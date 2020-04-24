@@ -16,7 +16,8 @@ class PlotPulseFit(AbstractBasePlot):
     """docstring for PlotPulseFit."""
 
     def __init__(self, *args, **kwargs):
-        super(PlotPulseFit, self).__init__()
+        self.plot_type = kwargs.get('p_type', 'presentation')
+        super(PlotPulseFit, self).__init__(plot_type = self.plot_type)
         channels = kwargs.get('channels')
         datatype = kwargs.get('datatype')
         if datatype != 'tte_list':
