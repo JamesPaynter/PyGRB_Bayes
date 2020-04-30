@@ -2,6 +2,7 @@ import numpy as np
 import corner
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import scipy.stats as stats
 
 import bilby
 
@@ -15,22 +16,15 @@ class GravLens(AbstractBasePlot):
         self.plot_type = kwargs.get('p_type', 'presentation')
         super(GravLens, self).__init__(plot_type = self.plot_type)
 
-        const_c = 299792458
-        const_G = 6.67430e-11
-        solar_M = 1.998e30
-        self.point_prefactor = 0.5 * np.power(const_c, 3) / const_G
-
-        # self.delt_array  = t_posterios
-        # self.delmu_array = mu_posteriors
-
         self.fstring = kwargs.get('fstring')
         self.outdir  = kwargs.get('outdir')
         self.colours = ['red', 'orange', 'green', 'blue']
         self.clabels = ['1', '2', '3', '4']
 
         self.plot_delmu_delt()
+        self.plot_mass_from_delmu_delt()
 
-    def generate_2x2_plot(self):
+    def generate_plot(self):
         height = self.plot_dict['width'] / 1.618
         # fig = plt.figure(figsize = (self.plot_dict['width'], height),
         #                  constrained_layout = False)
@@ -54,7 +48,7 @@ class GravLens(AbstractBasePlot):
 
 
     def plot_delmu_delt(self):
-        fig, axes = self.generate_2x2_plot()
+        fig, axes = self.generate_plot()
 
         axes.set_xlabel('Time Delay, $\\Delta t$ (s)',
                         fontsize = self.plot_dict['font_size'])
@@ -74,12 +68,11 @@ class GravLens(AbstractBasePlot):
             range = bounds)
 
         #  ****************
-        import scipy.stats as stats
         Zs     = []
         (xmin, xmax) = bounds[0]
         (ymin, ymax) = bounds[1]
         # j makes it complex number, then end points *are* included
-        X, Y = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+        X, Y = np.mgrid[xmin:xmax:200j, ymin:ymax:200j]
         # flattens X and Y into 1D arrays and then vstacks
         # eg. [[1,1,1,1,1,],[1,1,1,1,1]]
         positions = np.vstack([X.ravel(), Y.ravel()])
@@ -103,7 +96,7 @@ class GravLens(AbstractBasePlot):
         H = np.ones(X.shape)
         for Z in Zs:
             H = np.multiply(H,Z)
-
+        self.sum_posteriors = (X, Y, H)
         # Compute the density levels.
         # copied / adapted from corner.hist2d
         levels=(1 - np.exp(-0.5), 1 - np.exp(-2), 1 - np.exp(-9 / 2.))
@@ -144,27 +137,68 @@ class GravLens(AbstractBasePlot):
 
         plot_name = f'{self.outdir}/{self.fstring}_delmu_delt.{self.plot_dict["ext"]}'
         fig.savefig(plot_name)
+        plt.close(fig)
+
+
+    @staticmethod
+    def return_mass(time, mag):
+        c_cubed = 2.6944e25
+        const_G = 6.67430e-11
+        solar_M = 1.998e30
+        prefactor = 0.5 * c_cubed / const_G / solar_M
+        f_r = np.reciprocal( np.log(mag) + (mag - 1) / np.sqrt(mag) )
+        return prefactor * time * f_r
+
+    def open_result_file(self, fstring, outdir, clabel):
+        result_label = f'{fstring}_result_{clabel}'
+        open_result  = f'{outdir}/{result_label}_result.json'
+        return bilby.result.read_in_result(filename = open_result)
+
+
+    def plot_mass_kde(self, time, mag, colour, axes):
+        m = self.return_mass(time, mag)
+        m = m[m > 0]
+        m = m[m < 1e6]
+        density = stats.gaussian_kde(m)
+        xs = np.geomspace(min(m), max(m), 100)
+        axes.plot(xs, density(xs), color = colour, linewidth = 0.2)
+        axes.fill_between(xs, density(xs), color = colour, alpha = 0.2)
 
 
     def plot_mass_from_delmu_delt(self):
-        f_r = np.reciprocal(
-                np.log(self.delmu_array) +
-                (self.delmu_array - 1) / np.sqrt(self.delmu_array)
-                )
-        mass_z = self.point_prefactor * self.delt_array * f_r
+        fig, axes = self.generate_plot()
+        for ii in range(4):
+            result = self.open_result_file( fstring = self.fstring,
+                                            outdir  = self.outdir,
+                                            clabel  = self.clabels[ii])
+            x = result.posterior['time_delay'].values
+            y = result.posterior['magnification_ratio'].values
 
-        fig, axes = self.generate_2x2_plot()
-        axes[0].set_xlabel('Mass, $(1+z_\\textsc{l}) M_\\textsc{l}$ (M$_{\\odot}$)',
+            self.plot_mass_kde( time = x, mag = 1 / y,
+                                colour = self.colours[ii], axes = axes)
+
+        (X, Y, H) = self.sum_posteriors
+        X, Y, H = X.ravel(), Y.ravel(), H.ravel()
+        P = H / np.sum(H)
+        idx = np.random.choice(len(X), size = 10000, replace = True, p = P)
+        x, y = X[idx], Y[idx]
+        self.plot_mass_kde( time = x, mag = np.reciprocal(y),
+                            colour = 'black', axes = axes)
+
+        axes.set_xlabel('Mass, $(1+z_\\textsc{l}) M_\\textsc{l}$ (M$_{\\odot}$)',
                         fontsize = self.plot_dict['font_size'])
-        axes[1].set_ylabel('Probability Density',
+        axes.set_ylabel('Probability Density',
                 fontsize = self.plot_dict['font_size'])
-
+        axes.set_xlim(1e4, 1e6)
+        axes.set_xscale('log')
+        axes.tick_params(axis='y', which = 'both', left = False, right = False, labelleft = False)
         plot_name = f'{self.outdir}/{self.fstring}_mass.{self.plot_dict["ext"]}'
         fig.savefig(plot_name)
+        plt.close(fig)
 
 
     def plot_vel_disp_from_delmu_delt(self):
-        fig, axes = self.generate_2x2_plot()
+        fig, axes = self.generate_plot()
         axes[0].set_xlabel('Velocity Dispersion, $\\sigma$ (km  sec$^{-1}$)',
                         fontsize = self.plot_dict['font_size'])
         axes[1].set_ylabel('Probability Density',

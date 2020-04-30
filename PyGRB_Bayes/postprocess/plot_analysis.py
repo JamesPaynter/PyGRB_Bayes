@@ -299,10 +299,14 @@ class PlotPulseFit(AbstractBasePlot):
                                         y[:,k] + y_offsets[k] - y_err[:,k],
                                         step = 'mid', color = y_cols[k],
                                         alpha = 0.15)
-                # if posterior_draws is not None:
-                #     for ii in range(nDraws):
-                #         fig_ax1.plot(x, posterior_draws[:,ii] + y_offsets[k],
-                #                     'k', linewidth = 0.4, alpha = 0.01)
+                if posterior_draws is not None:
+                    drawLines = []
+                    for ii in range(nDraws):
+                        drawLines.append(x)
+                        drawLines.append(posterior_draws[:,ii,i]+ y_offsets[k])
+                    d = {'c': 'k', 'linewidth' : 0.5, 'alpha' : 0.02}
+                    kwogs = [d for i in range(nDraws)]
+                    fig_ax1.plot(*drawLines, **d)
             else:
                 fig_ax1.plot(   x, y[:,k], c = y_cols[k],
                                 drawstyle='steps-mid', linewidth = 0.4)
@@ -310,10 +314,14 @@ class PlotPulseFit(AbstractBasePlot):
                 #, label = plot_legend)
                 fig_ax1.fill_between(x, y[:,k] + y_err[:,k], y[:,k] - y_err[:,k], step = 'mid',
                                         color = y_cols[k], alpha = 0.15)
-                # if posterior_draws is not None:
-                #     for ii in range(nDraws):
-                #         fig_ax1.plot(x, posterior_draws[:,ii],
-                #                     'k', linewidth = 0.4, alpha = 0.01)
+                if posterior_draws is not None:
+                    drawLines = []
+                    for ii in range(nDraws):
+                        drawLines.append(x)
+                        drawLines.append(posterior_draws[:,ii,i])
+                    d = {'c': 'k', 'linewidth' : 0.5, 'alpha' : 0.02}
+                    kwogs = [d for i in range(nDraws)]
+                    fig_ax1.plot(*drawLines, **d)
             # append another axes to the residual list
             axes_list.append(fig.add_subplot(spec[i+1, 1]))
             # get the residual

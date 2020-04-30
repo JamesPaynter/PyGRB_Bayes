@@ -331,6 +331,7 @@ def evidence_for_3770():
         print(model)
         try:
             GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+            GRB.lens_calc(channels = [0, 1, 2, 3], model = model)
         except:
             pass
 

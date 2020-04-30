@@ -32,18 +32,20 @@ def evidence_for_3770():
     for samples in num_samples:
         GRB = load_3770(sampler=SAMPLER, nSamples=samples)
         GRB.offsets = [0, 4000, 8000, -3000]
-        # model_dict = make_two_pulse_models()
-        keys = ['FL', 'XL']
-        model_dict = {}
-        for key in keys:
-            model_dict[key] = create_model_from_key(key)
+        model_dict = make_two_pulse_models()
+        # keys = ['FL']#, 'XL']
+        # model_dict = {}
+        # for key in keys:
+        #     model_dict[key] = create_model_from_key(key)
         models = [model for key, model in model_dict.items()]
         for model in models:
+            print(model)
             # try:
             # GRB.main_joint_multi_channel(channels = [0, 1, 2, 3], model = model)
             GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
+            GRB.lens_calc(    channels = [0, 1, 2, 3], model = model)
             # except:
-                # pass
+            #     pass
         # GRB.get_evidence_singular_lens()
 
 if __name__ == '__main__':

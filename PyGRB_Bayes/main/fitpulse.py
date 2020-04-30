@@ -172,22 +172,6 @@ class PulseFitter(Admin, EvidenceTables):
                             #                   **self.sampler_kwargs)
         plotname = f'{self.outdir}/{result_label}_corner.pdf'
         result.plot_corner(filename = plotname)
-
-        # MAP = dict()
-        # c_keys = ['a', 'b', 'c', 'd']
-        # k      = c_keys[i]
-        # for j in range(1, self.num_pulses + 1):
-        #     try:
-        #         key = f'constraint_{j}_{k}'
-        #         del priors[key]
-        #         key = f'constraint_{j}_{k}_res'
-        #         del priors[key]
-        #     except:
-        #         pass
-        # for parameter in priors:
-        #     summary = result.get_one_dimensional_median_and_error_bar(parameter)
-        #     MAP[parameter] = summary.median
-
         self.get_residuals(channels = [channel], model = model)
 
     def main_joint_multi_channel(self, channels, model):
@@ -216,26 +200,9 @@ class PulseFitter(Admin, EvidenceTables):
                           **self.sampler_kwargs)
         plotname = f'{self.outdir}/{result_label}_corner.pdf'
         result.plot_corner(filename = plotname)
-
-        # MAP = dict()
-        # c_keys = ['a', 'b', 'c', 'd']
-        # for i in channels:
-        #     k = c_keys[i]
-        #     for j in range(1, self.num_pulses + 1):
-        #         try:
-        #             key = f'constraint_{j}_{k}'
-        #             del priors[key]
-        #         except:
-        #             pass
-        #         try:
-        #             key = f'constraint_{j}_{k}_res'
-        #             del priors[key]
-        #         except:
-        #             pass
-        # for parameter in priors:
-        #     summary = result.get_one_dimensional_median_and_error_bar(parameter)
-        #     MAP[parameter] = summary.median
         self.get_residuals(channels = channels, model = model)
+
+
 
 
 
@@ -244,7 +211,7 @@ class PulseFitter(Admin, EvidenceTables):
         strings = { 'fstring' : self.fstring,
                     'clabels' : self.clabels,
                     'outdir'  : self.outdir}
-        nDraws = 1000
+        nDraws = 200
         count_fits      = np.zeros((len(self.GRB.bin_left),4))
         residuals       = np.zeros((len(self.GRB.bin_left),4))
         posterior_lines = np.zeros((len(self.GRB.bin_left),nDraws,4))
@@ -266,8 +233,6 @@ class PulseFitter(Admin, EvidenceTables):
             open_result  = f'{self.outdir}/{result_label}_result.json'
             result = bilby.result.read_in_result(filename=open_result)
 
-            MAP = dict()
-            posteriors = dict()
             c_keys = ['a', 'b', 'c', 'd']
             k      = c_keys[i]
             for j in range(1, self.num_pulses + 1):
@@ -276,54 +241,69 @@ class PulseFitter(Admin, EvidenceTables):
                     del priors[key]
                 except:
                     pass
+                try:
+                    key = f'constraint_{j}_{k}_res'
+                    del priors[key]
+                except:
+                    pass
+
+            posteriors = dict()
             for parameter in priors:
                 posteriors[parameter] = result.posterior[parameter].values
-                summary = result.get_one_dimensional_median_and_error_bar(
-                                parameter)
-                MAP[parameter] = summary.median
+            p_chain_len = len(posteriors[f'background_{k}'])
 
-            posterior_draws = np.zeros((len(x), nDraws))
+            posterior_draws = np.zeros((len(x), p_chain_len))
             if model['lens']:
-                counts_fit = likelihood._sum_rates(x, MAP,
-                                                likelihood.calculate_rate_lens)
                 for ii in range(nDraws):
                     p_draw = {}
-                    int_range = len(posteriors[f'background_{k}'])
-                    jj = np.random.randint(int_range)
+                    jj = np.random.randint(p_chain_len)
                     for key in posteriors:
                         p_draw[key] = posteriors[key][jj]
                     posterior_draws[:,ii] = likelihood._sum_rates(x, p_draw,
                                                 likelihood.calculate_rate_lens)
+
+                for jj in range(p_chain_len):
+                    for key in posteriors:
+                        p_draw[key] = posteriors[key][jj]
+                    posterior_draws[:,jj] = likelihood._sum_rates(x, p_draw,
+                                                likelihood.calculate_rate_lens)
+                posterior_draws_median = np.median(posterior_draws, axis = 1)
+
             else:
-                counts_fit = likelihood._sum_rates(x, MAP,
-                                                likelihood.calculate_rate)
                 for ii in range(nDraws):
                     p_draw = {}
-                    int_range = len(posteriors[f'background_{k}'])
-                    jj = np.random.randint(int_range)
+                    jj = np.random.randint(p_chain_len)
                     for key in posteriors:
                         p_draw[key] = posteriors[key][jj]
                     posterior_draws[:,ii] = likelihood._sum_rates(x, p_draw,
                                                 likelihood.calculate_rate)
 
-            count_fits[:,i]= counts_fit
-            residuals[:,i] = self.GRB.counts[:,i] - counts_fit
+                for jj in range():
+                    for key in posteriors:
+                        p_draw[key] = posteriors[key][jj]
+                    posterior_draws[:,jj] = likelihood._sum_rates(x, p_draw,
+                                                likelihood.calculate_rate)
+                posterior_draws_median = np.median(posterior_draws, axis = 1)
+
+            count_fits[:,i]= posterior_draws_median
+            residuals[:,i] = self.GRB.counts[:,i] - posterior_draws_median
 
             widths = self.GRB.bin_right - self.GRB.bin_left
             rates_i= self.GRB.counts[:,i] / widths
-            rates_fit_i = counts_fit / widths
+            rates_fit_i = posterior_draws_median / widths
             rates_err_i = np.sqrt(self.GRB.counts[:,i]) / widths
             strings['widths'] = widths
             strings['p_type'] = 'paper'
             posterior_draws   = posterior_draws / widths[:,None]
-            posterior_lines[:,:,i] = posterior_draws
+            posterior_lines[:,:,i] = posterior_draws[:,
+                            np.random.randint(p_chain_len, size = nDraws)]
             PlotPulseFit(   x = self.GRB.bin_left, y = rates_i,
                             y_err = rates_err_i,
                             y_cols = self.GRB.colours[i],
                             y_fit = rates_fit_i,
                             channels = [i],
                             datatype = self.datatype,
-                            posterior_draws = posterior_draws,
+                            posterior_draws = posterior_lines[:,:,i],
                             nDraws = nDraws,
                             **strings)
 
@@ -338,10 +318,13 @@ class PulseFitter(Admin, EvidenceTables):
                             y_fit = rates_fit,
                             channels = channels,
                             datatype = self.datatype,
-                            # posterior_draws = posterior_lines,
-                            # nDraws = nDraws,
+                            posterior_draws = posterior_lines,
+                            nDraws = nDraws,
                             **strings)
-            if model['lens']:
+
+    def lens_calc(self, channels, model):
+        self._setup_labels(model)
+        if model['lens']:
                 GravLens(   fstring = self.fstring,
                             outdir  = self.outdir,
                             p_type  = 'presentation')
