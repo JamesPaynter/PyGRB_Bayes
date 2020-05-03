@@ -12,15 +12,15 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'PyGRB_Bayes'
-copyright = '2020, James Paynter'
+copyright = '2019-2020, James Paynter'
 author = 'James Paynter'
 
 # The short X.Y version
@@ -42,11 +42,14 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
+    'sphinx.ext.napoleon',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
 ]
+
+napoleon_google_docstring = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -136,7 +139,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'PyGRB_Bayes.tex', 'PyGRB\\_Bayes Documentation',
-     'James Paynter', 'manual'),
+     author, 'manual'),
 ]
 
 
@@ -157,7 +160,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'PyGRB_Bayes', 'PyGRB_Bayes Documentation',
-     author, 'PyGRB_Bayes', 'One line description of project.',
+     author, 'PyGRB_Bayes', 'A GRB light-curve analysis package.',
      'Miscellaneous'),
 ]
 
