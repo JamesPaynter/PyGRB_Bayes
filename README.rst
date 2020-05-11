@@ -1,4 +1,6 @@
-# PyGRB_Bayes
+=====
+PyGRB_Bayes
+=====
 A GRB light-curve analysis package.
 
 
