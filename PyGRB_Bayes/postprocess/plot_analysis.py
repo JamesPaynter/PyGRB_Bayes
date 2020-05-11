@@ -263,6 +263,7 @@ class PlotPulseFit(AbstractBasePlot):
         nDraws  = kwargs.get('nDraws')
         posterior_draws  = kwargs.get('posterior_draws')
 
+        return_axes  = kwargs.get('return_axes')
         # number axes is the main plot plus one per channel for residuals
         # extra axis for x-label
         n_axes  = len(channels) + 2
@@ -294,7 +295,8 @@ class PlotPulseFit(AbstractBasePlot):
                 fig_ax1.plot(   x, y[:,k] + y_offsets[k], c = y_cols[k],
                                 drawstyle='steps-mid', linewidth = 0.4,
                                 label = line_label)
-                fig_ax1.plot(x, y_fit[:,k] + y_offsets[k], 'k', linewidth = 0.4)
+                if y_fit is not None:
+                    fig_ax1.plot(x, y_fit[:,k] + y_offsets[k], 'k', linewidth = 0.4)
                 fig_ax1.fill_between(x, y[:,k] + y_offsets[k] + y_err[:,k],
                                         y[:,k] + y_offsets[k] - y_err[:,k],
                                         step = 'mid', color = y_cols[k],
@@ -310,7 +312,8 @@ class PlotPulseFit(AbstractBasePlot):
             else:
                 fig_ax1.plot(   x, y[:,k], c = y_cols[k],
                                 drawstyle='steps-mid', linewidth = 0.4)
-                fig_ax1.plot(x, y_fit, 'k', linewidth = 0.4)
+                if y_fit is not None:
+                    fig_ax1.plot(x, y_fit, 'k', linewidth = 0.4)
                 #, label = plot_legend)
                 fig_ax1.fill_between(x, y[:,k] + y_err[:,k], y[:,k] - y_err[:,k], step = 'mid',
                                         color = y_cols[k], alpha = 0.15)
@@ -325,22 +328,23 @@ class PlotPulseFit(AbstractBasePlot):
             # append another axes to the residual list
             axes_list.append(fig.add_subplot(spec[i+1, 1]))
             # get the residual
-            difference = y[:,k] - y_fit[:,k]
-            # plot that residual
-            axes_list[i].fill_between(x, y_err[:,k],
-                                         -y_err[:,k],
-                                         step = 'mid', color = y_cols[k],
-                                         alpha = 0.15)
-            axes_list[i].axhline(0, c = 'k', linewidth = 0.2)
-            axes_list[i].plot(  x, difference, c = y_cols[k],
-                                drawstyle='steps-mid',  linewidth = 0.4)
-            # set the axes limits for the newly plotted axis
-            axes_list[i].set_xlim(x[0], x[-1])
-            # get rid of x ticks
-            if i < len(channels) - 1:
-                axes_list[i].set_xticks(())
-            tick = int(np.max(difference) * 0.67 / 100) * 100
-            axes_list[i].set_yticks(([int(0), tick]))
+            if y_fit is not None:
+                difference = y[:,k] - y_fit[:,k]
+                # plot that residual
+                axes_list[i].fill_between(x, y_err[:,k],
+                                             -y_err[:,k],
+                                             step = 'mid', color = y_cols[k],
+                                             alpha = 0.15)
+                axes_list[i].axhline(0, c = 'k', linewidth = 0.2)
+                axes_list[i].plot(  x, difference, c = y_cols[k],
+                                    drawstyle='steps-mid',  linewidth = 0.4)
+                # set the axes limits for the newly plotted axis
+                axes_list[i].set_xlim(x[0], x[-1])
+                # get rid of x ticks
+                if i < len(channels) - 1:
+                    axes_list[i].set_xticks(())
+                tick = int(np.max(difference) * 0.67 / 100) * 100
+                axes_list[i].set_yticks(([int(0), tick]))
 
         axes_list[-1].set_xlabel('time since trigger (s)')
         ax.tick_params(labelcolor='none', top=False,
@@ -356,9 +360,12 @@ class PlotPulseFit(AbstractBasePlot):
             fig_ax1.legend()
 
         fig_ax1.set_xlim(x[0], x[-1])
-        plot_name = f'{outdir}/{fstring}_rates.pdf'
-        fig.savefig(plot_name)
-        plt.close(fig)
+        if not return_axes:
+            plot_name = f'{outdir}/{fstring}_rates.pdf'
+            fig.savefig(plot_name)
+            plt.close(fig)
+        else:
+            return fig_ax1
 
     @staticmethod
     def plot_single_channel_tte(x, y, y_cols, y_fit, channels,**strings):

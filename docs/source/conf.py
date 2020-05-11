@@ -40,16 +40,15 @@ release = '0.0.1'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
+    'sphinx.ext.napoleon',
 ]
 
+# use numpy docstring
 napoleon_google_docstring = False
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -139,7 +138,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'PyGRB_Bayes.tex', 'PyGRB\\_Bayes Documentation',
-     author, 'manual'),
+     'James Paynter', 'manual'),
 ]
 
 
@@ -171,8 +170,3 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
-
-# -- Options for todo extension ----------------------------------------------
-
-# If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = True

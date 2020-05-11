@@ -1,19 +1,29 @@
 .. PyGRB_Bayes documentation master file, created by
-   sphinx-quickstart on Wed Feb 26 16:57:18 2020.
+   sphinx-quickstart on Mon May 11 10:17:16 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PyGRB_Bayes's documentation!
+Welcome to PyGRB Bayes's documentation!
 =======================================
 
+* :ref:`user-docs`
+* :ref:`api-docs`
+
+.. _user-docs:
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+   :caption: Documentation:
 
    readme
+
+.. _api-docs:
+
+.. toctree::
+   :maxdepth: 4
+   :caption: API Reference
+
    modules
-
-
 
 Indices and tables
 ==================

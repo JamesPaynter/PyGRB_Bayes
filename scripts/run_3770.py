@@ -14,6 +14,8 @@ def load_3770(sampler = 'dynesty', nSamples = 100):
     test = PulseFitter(3770, times = (-.1, 1),
                 datatype = 'tte', nSamples = nSamples, sampler = sampler,
                 priors_pulse_start = -.1, priors_pulse_end = 0.6,
+                # the SG residual fits too late, need to edit pulse start time
+                # priors for separate pulses
                 priors_td_lo = 0,  priors_td_hi = 0.5)
     return test
 
@@ -39,11 +41,12 @@ def evidence_for_3770():
         #     model_dict[key] = create_model_from_key(key)
         models = [model for key, model in model_dict.items()]
         for model in models:
-            print(model)
             # try:
             # GRB.main_joint_multi_channel(channels = [0, 1, 2, 3], model = model)
             GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
-            GRB.lens_calc(    channels = [0, 1, 2, 3], model = model)
+
+            lens_bounds = [(0.37, 0.42), (0.60, 1.8)]
+            GRB.lens_calc(model = model, lens_bounds = lens_bounds)
             # except:
             #     pass
         # GRB.get_evidence_singular_lens()

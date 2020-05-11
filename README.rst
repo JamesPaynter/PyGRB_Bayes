@@ -7,7 +7,7 @@ A GRB light-curve analysis package.
 
 
 Directory Structure
---------
+-------------------
 
 
 | .
@@ -16,11 +16,11 @@ Directory Structure
 | ├── docs                   # Documentation files
 | ├── products               # All created data-products will be saved in this folder (initially empty)
 | ├── scripts                # My scripts which use this program (may be deleted later)
-| ├── tests                  # Test scripts
-| ├── .codecov.yml            
-| ├── .gitignore               
-| ├── .travis.yml             
-| ├── LICENSE                 
+| ├── tests                  # Unit tests
+| ├── .codecov.yml
+| ├── .gitignore
+| ├── .travis.yml
+| ├── LICENSE
 | ├── README.md
 | ├── requirements.txt
 | └── setup.py
@@ -28,5 +28,9 @@ Directory Structure
 
 
 What it does
---------
+------------
 Code to download GRB light-curves from internet archives (at the moment only BATSE implemented). The code is then able to create light-curves from either pre-binned data or time-tagged photon-event data. Light-curves may then be fitted with with pulse models, and further analysed.
+
+
+.. include::
+   /docs/source/test.rst

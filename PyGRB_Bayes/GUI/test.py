@@ -59,35 +59,42 @@ class CustomMainWindow(QtWidgets.QMainWindow):
 
         # Place the matplotlib figure
         self.myFig = CustomFigCanvas()
-        self.LAYOUT_A.addWidget(self.myFig, *(0,1))
+        self.LAYOUT_A.addWidget(self.myFig, *(0,1,2,1))
 
 
         self.show()
 
 
     def TriggerButtonAction(self):
-        print(self.TriggerButton.text())
-        # self.myFig.zoomIn(0.1)
+        self.myFig.getTrigger(int(self.TriggerButton.text()))
 
     def DataButtonAction(self):
         print(self.DataButton.text())
 
+
+from PyGRB_Bayes.main.fitpulse import PulseFitter
+import matplotlib.pyplot as plt
 class CustomFigCanvas(FigureCanvas):
 
     def __init__(self):
-        self.fig = Figure(figsize=(5,5), dpi=100)
-        self.ax1 = self.fig.add_subplot(111)
+        self.fig  = Figure(figsize=(5,5), dpi=100)
+        self.axes = self.fig.add_subplot(111)
         FigureCanvas.__init__(self, self.fig)
         # TimedAnimation.__init__(self, self.fig, interval = 50, blit = True)
 
+        self.datatype = 'discsc'
+        self.times = 'T90'
 
-    def zoomIn(self, value):
-        bottom = self.ax1.get_ylim()[0]
-        top = self.ax1.get_ylim()[1]
-        bottom += value
-        top -= value
-        self.ax1.set_ylim(bottom,top)
+    def getTrigger(self, trigger):
+        self.GRB = PulseFitter(trigger, times = self.times,
+                    datatype = self.datatype, nSamples = None, sampler = None,
+                    priors_pulse_start = None, priors_pulse_end = None)
+
+        axes = self.GRB.plot_naked(  channels = [0, 1, 2, 3])
+        self.axes = axes
+        # plt.show(fig)
         self.draw()
+        plt.autoscale()
 
 
 

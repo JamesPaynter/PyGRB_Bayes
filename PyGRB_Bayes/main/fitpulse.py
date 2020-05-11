@@ -1,30 +1,24 @@
-import os
-import sys
 import numpy  as np
 
-# os.chdir(os.path.dirname(sys.argv[0]))
-## makes the scripts location the current working directory rather than the
-## directory the script was launched from
+
 import bilby
 from bilby.core.likelihood import JointLikelihood as bilbyJointLikelihood
 
 from PyGRB_Bayes.preprocess import BATSEpreprocess
 from PyGRB_Bayes.preprocess import GRB_class
-from PyGRB_Bayes.backend.admin import Admin, mkdir
+from PyGRB_Bayes.backend.admin import Admin
 from PyGRB_Bayes.backend.makepriors import MakePriors
 from PyGRB_Bayes.backend.multipriors import MultiPriors
 from PyGRB_Bayes.backend.rateclass import PoissonRate
-from PyGRB_Bayes.backend.makemodels import create_model_from_key
 from PyGRB_Bayes.backend.makemodels import make_one_pulse_models
 from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
-# from PyGRB_Bayes.postprocess.plot_grb import GRBPlotter
 from PyGRB_Bayes.postprocess.plot_analysis import PlotPulseFit
 from PyGRB_Bayes.postprocess.plot_gl_posteriors import GravLens
 from PyGRB_Bayes.postprocess.make_evidence_tables import EvidenceTables
 
 
 class PulseFitter(Admin, EvidenceTables):
-    ''' Wrapper object for Bayesian analysis. '''
+    """ Wrapper object for Bayesian analysis. """
 
     def __init__(self,  trigger, times, datatype,
                         priors_pulse_start, priors_pulse_end,
@@ -63,8 +57,9 @@ class PulseFitter(Admin, EvidenceTables):
         # what is self.kwargs used for i can't remember, but put it like
         # self.make_key_kwargs      = kwargs.get('make_key_kwargs')
         # as i think that's what it was intended for
+        # it is passed to make priors
 
-        (self.start, self.end)   = times
+
         self.colours             = ['red', 'orange', 'green', 'blue']
         self.clabels             = ['1', '2', '3', '4']
         self.datatype            = datatype
@@ -73,7 +68,7 @@ class PulseFitter(Admin, EvidenceTables):
         self.nSamples            = nSamples
         self.trigger             = trigger
         self.injection_parameters= kwargs.get('injection_parameters')
-        self.sampler_kwargs      = kwargs.get('sampler_kwargs')
+        # self.sampler_kwargs      = kwargs.get('sampler_kwargs')
         self.save                = save
 
 
@@ -96,24 +91,32 @@ class PulseFitter(Admin, EvidenceTables):
                 self.GRB = GRB_class.make_GRB(
                     trigger = self.trigger, datatype = self.datatype, **kwargs)
             else:
-                self.GRB = BATSEpreprocess.make_GRB(
-                    burst = self.trigger, times = (self.start, self.end),
-                    datatype = self.datatype, bgs = False)
+                try:
+                    (self.start, self.end) = times
+                    self.GRB = BATSEpreprocess.make_GRB(
+                        burst = self.trigger, times = (self.start, self.end),
+                        datatype = self.datatype, bgs = False)
+                except:
+                    self.GRB = BATSEpreprocess.make_GRB(
+                        burst = self.trigger, times = times,
+                        datatype = self.datatype, bgs = False)
+                    self.start = self.GRB.bin_left[60]
+                    self.end   = self.GRB.bin_right[-1]
         else:
             self.GRB = kwargs.get('GRB')
 
 
     def _split_array_job_to_4_channels(self, models, indices, channels = None):
-        for idx in indices:
-            n_channels = 4
-            m_index    = idx // n_channels
-            channel    = idx %  n_channels
-            self.main_1_channel(channel, models[m_index])
         # for idx in indices:
-            # n_channels = len(channels)
-            # m_index    = idx // n_channels
-            # channel    = channels[idx % n_channels]
-            # self.main_1_channel(channel, models[m_index])
+        #     n_channels = 4
+        #     m_index    = idx // n_channels
+        #     channel    = idx %  n_channels
+        #     self.main_1_channel(channel, models[m_index])
+        for idx in indices:
+            n_channels = len(channels)
+            m_index    = idx // n_channels
+            channel    = channels[idx % n_channels]
+            self.main_1_channel(channel, models[m_index])
 
     def test_pulse_type(self, indices, channels):
         self.models = make_one_pulse_models()
@@ -160,19 +163,20 @@ class PulseFitter(Admin, EvidenceTables):
         likelihood = PoissonRate(x, y, i, **self.model)
 
         result_label = f'{self.fstring}_result_{self.clabels[i]}'
-        result = bilby.run_sampler( likelihood = likelihood,
-                                    priors     = priors,
-                                    sampler    = self.sampler,
-                                    nlive      = self.nSamples,
-                                    outdir     = self.outdir,
-                                    label      = result_label,
-                                    save       = self.save,
-                          injection_parameters = self.injection_parameters)
-                          #,
-                            #                   **self.sampler_kwargs)
-        plotname = f'{self.outdir}/{result_label}_corner.pdf'
-        result.plot_corner(filename = plotname)
-        self.get_residuals(channels = [channel], model = model)
+        plot_label   = f'{self.outdir}/{result_label}_corner.pdf'
+        self._run_bilby( likelihood, priors, model, [channel],
+                        result_label, plot_label)
+        # I put the following code into _run_bilby
+        # result = bilby.run_sampler( likelihood = likelihood,
+        #                             priors     = priors,
+        #                             sampler    = self.sampler,
+        #                             nlive      = self.nSamples,
+        #                             outdir     = self.outdir,
+        #                             label      = result_label,
+        #                             save       = self.save,
+        #                   injection_parameters = self.injection_parameters)
+        # result.plot_corner(filename = plot_label)
+        # self.get_residuals(channels = [channel], model = model)
 
     def main_joint_multi_channel(self, channels, model):
         self._setup_labels(model)
@@ -189,22 +193,29 @@ class PulseFitter(Admin, EvidenceTables):
             likelihoods.append(PoissonRate(x, y, i, **self.model))
         joint_likelihood = bilbyJointLikelihood(*likelihoods)
         result_label = f'{self.fstring}_result_all'
-        result = bilby.run_sampler( likelihood = joint_likelihood,
-                                    priors     = priors,
-                                    sampler    = self.sampler,
-                                    nlive      = self.nSamples,
-                                    outdir     = self.outdir,
-                                    label      = result_label,
-                                    save       = self.save,
-                          injection_parameters = self.injection_parameters,
-                          **self.sampler_kwargs)
-        plotname = f'{self.outdir}/{result_label}_corner.pdf'
-        result.plot_corner(filename = plotname)
+        plot_label   = f'{self.outdir}/{result_label}_corner.pdf'
+        self._run_bilby( joint_likelihood, priors, model, channels,
+                        result_label, plot_label)
+
+    def _run_bilby(self, likelihood, priors, model, channels,
+                         result_label, plot_label):
+        """ Calls to bilby.run_sampler given a likelihood, priors and model.
+            Channels should be passed as a list, even if a single value.
+            result_label and plot_label are the names for the resultant plots
+            and data.
+        """
+        result = bilby.run_sampler(likelihood   = likelihood,
+                                   priors       = priors,
+                                   sampler      = self.sampler,
+                                   nlive        = self.nSamples,
+                                   outdir       = self.outdir,
+                                   label        = result_label,
+                                   save         = self.save,
+                           injection_parameters = self.injection_parameters)
+                           # ,
+                                   # **self.sampler_kwargs)
+        result.plot_corner(filename = plot_label)
         self.get_residuals(channels = channels, model = model)
-
-
-
-
 
     def get_residuals(self, channels, model):
         self._setup_labels(model)
@@ -254,15 +265,8 @@ class PulseFitter(Admin, EvidenceTables):
 
             posterior_draws = np.zeros((len(x), p_chain_len))
             if model['lens']:
-                for ii in range(nDraws):
-                    p_draw = {}
-                    jj = np.random.randint(p_chain_len)
-                    for key in posteriors:
-                        p_draw[key] = posteriors[key][jj]
-                    posterior_draws[:,ii] = likelihood._sum_rates(x, p_draw,
-                                                likelihood.calculate_rate_lens)
-
                 for jj in range(p_chain_len):
+                    p_draw = {}
                     for key in posteriors:
                         p_draw[key] = posteriors[key][jj]
                     posterior_draws[:,jj] = likelihood._sum_rates(x, p_draw,
@@ -270,22 +274,15 @@ class PulseFitter(Admin, EvidenceTables):
                 posterior_draws_median = np.median(posterior_draws, axis = 1)
 
             else:
-                for ii in range(nDraws):
+                for jj in range(p_chain_len):
                     p_draw = {}
-                    jj = np.random.randint(p_chain_len)
-                    for key in posteriors:
-                        p_draw[key] = posteriors[key][jj]
-                    posterior_draws[:,ii] = likelihood._sum_rates(x, p_draw,
-                                                likelihood.calculate_rate)
-
-                for jj in range():
                     for key in posteriors:
                         p_draw[key] = posteriors[key][jj]
                     posterior_draws[:,jj] = likelihood._sum_rates(x, p_draw,
                                                 likelihood.calculate_rate)
                 posterior_draws_median = np.median(posterior_draws, axis = 1)
 
-            count_fits[:,i]= posterior_draws_median
+            count_fits[:,i] = posterior_draws_median
             residuals[:,i] = self.GRB.counts[:,i] - posterior_draws_median
 
             widths = self.GRB.bin_right - self.GRB.bin_left
@@ -308,10 +305,9 @@ class PulseFitter(Admin, EvidenceTables):
                             **strings)
 
         widths = self.GRB.bin_right - self.GRB.bin_left
-        rates  = self.GRB.counts        / widths[:,None]
-        rates_fit       = count_fits    / widths[:,None]
-        rates_err       = np.sqrt(self.GRB.counts) / widths[:,None]
-        residual_rates  = residuals     / widths[:,None]
+        rates  = self.GRB.counts / widths[:,None]
+        rates_fit = count_fits   / widths[:,None]
+        rates_err = np.sqrt(self.GRB.counts) / widths[:,None]
         if len(channels) > 1:
             PlotPulseFit(   x = self.GRB.bin_left, y = rates, y_err = rates_err,
                             y_cols = self.GRB.colours, y_offsets = self.offsets,
@@ -322,12 +318,26 @@ class PulseFitter(Admin, EvidenceTables):
                             nDraws = nDraws,
                             **strings)
 
-    def lens_calc(self, channels, model):
+    def plot_naked(self, channels):
+        widths      = self.GRB.bin_right - self.GRB.bin_left
+        rates       = self.GRB.counts / widths[:,None]
+        rates_err   = np.sqrt(self.GRB.counts) / widths[:,None]
+        return PlotPulseFit(x = self.GRB.bin_left,
+                            y = rates, y_err = rates_err,
+                            y_cols = self.GRB.colours, y_offsets = self.offsets,
+                            y_fit = None,
+                            channels = channels,
+                            datatype = self.datatype,
+                            posterior_draws = None,
+                            nDraws = None,
+                            return_axes = True)
+
+    def lens_calc(self, model, **kwargs):
         self._setup_labels(model)
         if model['lens']:
                 GravLens(   fstring = self.fstring,
                             outdir  = self.outdir,
-                            p_type  = 'presentation')
+                            p_type  = 'paper_two_col', **kwargs)
 
 if __name__ == '__main__':
     pass

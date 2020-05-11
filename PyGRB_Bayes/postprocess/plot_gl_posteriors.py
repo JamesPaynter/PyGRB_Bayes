@@ -16,6 +16,7 @@ class GravLens(AbstractBasePlot):
         self.plot_type = kwargs.get('p_type', 'presentation')
         super(GravLens, self).__init__(plot_type = self.plot_type)
 
+        self.lens_bounds = kwargs.get('lens_bounds')
         self.fstring = kwargs.get('fstring')
         self.outdir  = kwargs.get('outdir')
         self.colours = ['red', 'orange', 'green', 'blue']
@@ -24,38 +25,23 @@ class GravLens(AbstractBasePlot):
         self.plot_delmu_delt()
         self.plot_mass_from_delmu_delt()
 
-    def generate_plot(self):
+    def _generate_plot(self):
         height = self.plot_dict['width'] / 1.618
-        # fig = plt.figure(figsize = (self.plot_dict['width'], height),
-        #                  constrained_layout = False)
-        fig, axes = plt.subplots( figsize = (self.plot_dict['width'], height),
-                                constrained_layout = True)
-        # # plot is in upper right corner of 2x2 grid
-        # # top left and bottom right are for axes labels
-        # spec = gridspec.GridSpec(   ncols = 2, nrows = 2,
-        #                             figure = fig,
-        #                             height_ratios = [0.95, 0.05],
-        #                             width_ratios  = [0.05, 0.95],
-        #                             hspace = 0.0, wspace = 0.0)
-        # x_ax = fig.add_subplot(spec[0, 0], frameon = False)
-        # y_ax = fig.add_subplot(spec[1, 1], frameon = False)
-        # p_ax = fig.add_subplot(spec[0, 1], frameon = False)
-        # x_ax =
-        # y_ax =
-        # axes = [x_ax, y_ax, p_ax]
+        fig, axes = plt.subplots(   figsize = (self.plot_dict['width'], height),
+                                    constrained_layout = True)
         return fig, axes
 
 
 
     def plot_delmu_delt(self):
-        fig, axes = self.generate_plot()
+        fig, axes = self._generate_plot()
 
         axes.set_xlabel('Time Delay, $\\Delta t$ (s)',
                         fontsize = self.plot_dict['font_size'])
         axes.set_ylabel('Magnification Ratio, $r$',
                         fontsize = self.plot_dict['font_size'])
         labels = ['$\\Delta t$', '$r$']
-        bounds = [(0.37, 0.42), (0.50, 1.5)]
+        bounds = self.lens_bounds
         defaults_kwargs = dict(
             bins=50, smooth=0.9,
             label_kwargs=dict(fontsize=self.plot_dict['font_size']),
@@ -84,7 +70,7 @@ class GravLens(AbstractBasePlot):
             result = bilby.result.read_in_result(filename = open_result)
 
             x = result.posterior['time_delay'].values
-            y = result.posterior['magnification_ratio'].values
+            y = 1 / result.posterior['magnification_ratio'].values
             defaults_kwargs['color'] = self.colours[ii]
             corner.hist2d(x, y, **defaults_kwargs, fig = fig)
 
@@ -133,7 +119,7 @@ class GravLens(AbstractBasePlot):
                         colors = contour_cmap   )
         axes.contour(X, Y, H, V, colors = 'black')
         # copied / adapted from corner.hist2d
-
+        # axes.set_ylim(bottom = ymin)
 
         plot_name = f'{self.outdir}/{self.fstring}_delmu_delt.{self.plot_dict["ext"]}'
         fig.savefig(plot_name)
@@ -141,7 +127,12 @@ class GravLens(AbstractBasePlot):
 
 
     @staticmethod
-    def return_mass(time, mag):
+    def _return_mass(time, mag):
+        """ Returns the lens mass for a given time delay and magnification
+            ratio. The returned value is M(1+z_l) if the lens is cosmological.
+
+            See Narayan & Wallington (1992), or Krauss & Small (1991).
+        """
         c_cubed = 2.6944e25
         const_G = 6.67430e-11
         solar_M = 1.998e30
@@ -155,42 +146,50 @@ class GravLens(AbstractBasePlot):
         return bilby.result.read_in_result(filename = open_result)
 
 
-    def plot_mass_kde(self, time, mag, colour, axes):
-        m = self.return_mass(time, mag)
+    def _draw_mass_kde(self, time, mag, colour, axes):
+        """ Draws """
+        m = self._return_mass(time, mag)
+        # cuts off negative masses, which 'exist' for mag ratio greater than 1.
         m = m[m > 0]
-        m = m[m < 1e6]
+        print(colour, np.percentile(m, q = [15.86, 50, 84.14]))
+        m = m[m < 2e5]
         density = stats.gaussian_kde(m)
         xs = np.geomspace(min(m), max(m), 100)
-        axes.plot(xs, density(xs), color = colour, linewidth = 0.2)
-        axes.fill_between(xs, density(xs), color = colour, alpha = 0.2)
-
+        dens = density(xs)
+        axes.plot(        xs, dens, color = colour, linewidth = 0.2)
+        axes.fill_between(xs, dens, color = colour, alpha = 0.2)
+        return np.max(dens)
 
     def plot_mass_from_delmu_delt(self):
-        fig, axes = self.generate_plot()
+        fig, axes = self._generate_plot()
+        ymax = - np.inf
         for ii in range(4):
             result = self.open_result_file( fstring = self.fstring,
                                             outdir  = self.outdir,
                                             clabel  = self.clabels[ii])
             x = result.posterior['time_delay'].values
-            y = result.posterior['magnification_ratio'].values
+            y = 1 / result.posterior['magnification_ratio'].values
 
-            self.plot_mass_kde( time = x, mag = 1 / y,
-                                colour = self.colours[ii], axes = axes)
+            ymax = max(ymax, self._draw_mass_kde( time = x, mag = y,
+                                colour = self.colours[ii], axes = axes))
 
         (X, Y, H) = self.sum_posteriors
         X, Y, H = X.ravel(), Y.ravel(), H.ravel()
         P = H / np.sum(H)
         idx = np.random.choice(len(X), size = 10000, replace = True, p = P)
         x, y = X[idx], Y[idx]
-        self.plot_mass_kde( time = x, mag = np.reciprocal(y),
-                            colour = 'black', axes = axes)
+        ymax = max(ymax, self._draw_mass_kde( time = x, mag = y,
+                            colour = 'black', axes = axes))
 
-        axes.set_xlabel('Mass, $(1+z_\\textsc{l}) M_\\textsc{l}$ (M$_{\\odot}$)',
+        axes.set_xlabel('Lens mass, $(1+z_\\textsc{l}) M_\\textsc{l}$ (M$_{\\odot}$)',
                         fontsize = self.plot_dict['font_size'])
         axes.set_ylabel('Probability Density',
                 fontsize = self.plot_dict['font_size'])
-        axes.set_xlim(1e4, 1e6)
+        axes.set_xlim(1e4, 2e5)
         axes.set_xscale('log')
+        ymin = 0.0001 * ymax
+        # axes.set_ylim(bottom = ymin)
+        # axes.set_yscale('log')
         axes.tick_params(axis='y', which = 'both', left = False, right = False, labelleft = False)
         plot_name = f'{self.outdir}/{self.fstring}_mass.{self.plot_dict["ext"]}'
         fig.savefig(plot_name)
@@ -198,7 +197,7 @@ class GravLens(AbstractBasePlot):
 
 
     def plot_vel_disp_from_delmu_delt(self):
-        fig, axes = self.generate_plot()
+        fig, axes = self._generate_plot()
         axes[0].set_xlabel('Velocity Dispersion, $\\sigma$ (km  sec$^{-1}$)',
                         fontsize = self.plot_dict['font_size'])
         axes[1].set_ylabel('Probability Density',
