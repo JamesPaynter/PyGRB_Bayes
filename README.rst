@@ -1,5 +1,3 @@
-|PyPI| |Python| |Travis| |AppVeyor| |ReadTheDocs| |Coverage| |JOSS|
-
 PyGRB_Bayes
 ===========
 A GRB light-curve analysis package.
@@ -31,5 +29,4 @@ Directory Structure
 
 What it does
 --------
-Code to download GRB light-curves from internet archives (at the moment only 
-BATSE implemented). The code is then able to create light-curves from either pre-binned data or time-tagged photon-event data. Light-curves may then be fitted with with pulse models, and further analysed.
+Code to download GRB light-curves from internet archives (at the moment only BATSE implemented). The code is then able to create light-curves from either pre-binned data or time-tagged photon-event data. Light-curves may then be fitted with with pulse models, and further analysed.
