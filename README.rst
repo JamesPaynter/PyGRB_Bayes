@@ -33,4 +33,4 @@ Code to download GRB light-curves from internet archives (at the moment only BAT
 
 
 .. include::
-   docs/source/test.rst
+   ./docs/source/test.rst
