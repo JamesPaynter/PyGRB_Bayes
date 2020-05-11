@@ -11,6 +11,7 @@ Directory Structure
 --------
 
 ::
+
 .
 ├── PyGRB_Bayes             # The code is in this folder and sub-folders
 ├── data                    # Data downloaded by the software will be placed in this folder (initially empty)
@@ -25,6 +26,7 @@ Directory Structure
 ├── README.md
 ├── requirements.txt
 └── setup.py
+
 ::
 
 
