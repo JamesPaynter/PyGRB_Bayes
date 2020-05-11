@@ -42,7 +42,7 @@ Pulse types
 -----
 Description of GRB pulse phenomenology.
 
-.. figure:: docs/source/images/B_6630__d_NL200__rates.pdf
+.. figure:: docs/source/images/B_6630__d_NL200__rates.png
     :width: 100%
     :align: center
     :alt: a GRB light-curve
