@@ -10,7 +10,6 @@ Directory Structure
 -------------------
 
 
-| .
 | ├── PyGRB_Bayes            # The code is in this folder and sub-folders
 | ├── data                   # Data downloaded by the software will be placed in this folder (initially empty)
 | ├── docs                   # Documentation files
@@ -33,4 +32,4 @@ Code to download GRB light-curves from internet archives (at the moment only BAT
 
 
 .. include::
-   ./docs/source/test.rst
+   test.rst
