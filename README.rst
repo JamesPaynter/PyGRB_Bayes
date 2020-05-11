@@ -41,6 +41,7 @@ Code to download GRB light-curves from internet archives (at the moment only BAT
 Pulse types
 -----
 Description of GRB pulse phenomenology.
+
 .. image:: /docs/source/images/B_6630__d_NL200__rates.pdf
 
 .. inclusion-marker-pulse-types-end
