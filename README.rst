@@ -1,3 +1,5 @@
+[![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
+
 PyGRB Bayes
 ===========
 .. inclusion-marker-one-liner-start
