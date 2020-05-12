@@ -1,4 +1,4 @@
-[![astropy](http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat)](http://www.astropy.org/)
+|AstroPy|
 
 PyGRB Bayes
 ===========
@@ -39,3 +39,8 @@ Usage
 Instructions on how to use the code.
 
 .. inclusion-marker-usage-end
+
+
+.. |AstroPy| image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
+    :target: http://www.astropy.org/
+    :alt: astropy
