@@ -8,26 +8,6 @@ A GRB light-curve analysis package.
 
 
 
-
-Directory Structure
--------------------
-
-
-| ├── PyGRB_Bayes            # The code is in this folder and sub-folders
-| ├── data                   # Data downloaded by the software will be placed in this folder (initially empty)
-| ├── docs                   # Documentation files
-| ├── products               # All created data-products will be saved in this folder (initially empty)
-| ├── scripts                # My scripts which use this program (may be deleted later)
-| ├── tests                  # Unit tests
-| ├── .codecov.yml
-| ├── .gitignore
-| ├── .travis.yml
-| ├── LICENSE
-| ├── README.md
-| ├── requirements.txt
-| └── setup.py
-
-
 .. inclusion-marker-what-it-does-start
 What it does
 ------------
