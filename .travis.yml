@@ -35,10 +35,11 @@ install:
 script:
   # If you were testing on your own machine, what command do you execute to run your code? Hint: Starts with `py`...
   - pytest
+  - coverage run tests.py
 
 # If all the tests passed, update `codecov`. Ensures your coverage is ALWAYS relevant.
 # Comment out these lines once Travis is working and you have Codecov linked to GitHub.
 after_success:
-  #- codecov
+  - codecov
   #- bash <(curl -s https://codecov.io/bash)
   - curl -s https://codecov.io/bash | bash
