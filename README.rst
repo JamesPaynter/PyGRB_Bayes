@@ -1,4 +1,4 @@
-|AstroPy|
+|AstroPy| |Coverage|
 
 PyGRB
 =====
@@ -46,3 +46,7 @@ Instructions on how to use the code.
 .. |AstroPy| image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
     :alt: astropy
+    
+.. |Coverage| image:: https://img.shields.io/codecov/c/github/gh/JamesPaynter/PyGRB/master.svg?logo=codecov&logoColor=white&label=Coverage
+    :target: https://codecov.io/gh/JamesPaynter/PyGRB/branches/master
+    :alt: CodeCov - Coverage Status
