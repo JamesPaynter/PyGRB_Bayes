@@ -1,11 +1,11 @@
 import sys, os
 import numpy as np
 import argparse
-from PyGRB_Bayes.main.fitpulse import PulseFitter
-from PyGRB_Bayes.main.visualisations import AnimateConvergence
-from PyGRB_Bayes.backend.makemodels import create_model_from_key
-from PyGRB_Bayes.backend.makemodels import make_one_pulse_models
-from PyGRB_Bayes.backend.makemodels import make_two_pulse_models
+from PyGRB.main.fitpulse import PulseFitter
+from PyGRB.main.visualisations import AnimateConvergence
+from PyGRB.backend.makemodels import create_model_from_key
+from PyGRB.backend.makemodels import make_one_pulse_models
+from PyGRB.backend.makemodels import make_two_pulse_models
 
 np.seterr(divide='ignore', invalid='ignore', over = 'ignore')
 

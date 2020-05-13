@@ -1,8 +1,8 @@
 import sys, os
 
 import argparse
-from PyGRB_Bayes.main.fitpulse import PulseFitter
-from PyGRB_Bayes.backend.makemodels import create_model_from_key
+from PyGRB.main.fitpulse import PulseFitter
+from PyGRB.backend.makemodels import create_model_from_key
 
 
 def load_3770(sampler = 'dynesty', nSamples = 100):

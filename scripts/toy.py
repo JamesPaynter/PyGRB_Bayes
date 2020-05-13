@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from PyGRB_Bayes.backend.rate_functions import FRED_pulse
+from PyGRB.backend.rate_functions import FRED_pulse
 
-from PyGRB_Bayes.preprocess.GRB_class import BATSEGRB
-from PyGRB_Bayes.preprocess.BATSEpreprocess import BATSESignal
+from PyGRB.preprocess.GRB_class import BATSEGRB
+from PyGRB.preprocess.BATSEpreprocess import BATSESignal
 
 
 grb = BATSEGRB(3770, 'TTE_list', live_detectors = np.arange(5,8), verbose = False)
@@ -13,7 +13,7 @@ grb2 = BATSESignal(3770, 'tte', times = (-0.132, 1.45))
 
 
 sampling_frequency = 2e-6 # 2 microseconds
-time  = grb.bin_left #np.linspace(-0.1, 0.9, int(1 / sampling_frequency))
+time  = grb.bin_left PyGRBnp.linspace(-0.1, 0.9, int(1 / sampling_frequency))
 
 y = FRED_pulse(time, start = -0.05, scale = .03, tau = 0.05, xi = 1.5)
 y+= FRED_pulse(time, start =  0.34, scale = .02, tau = 0.05, xi = 1.5)
@@ -42,8 +42,8 @@ for i in range(4):
 plt.plot(grb2.bin_left, count2[:-1], 'k', drawstyle = 'steps-mid')
 plt.show()
 
-#
-# #!/usr/bin/env python
+PyGRB
+# PyGRB!/usr/bin/env python
 # """
 # An example of how to use bilby to perform paramater estimation for
 # non-gravitational wave data. In this case, fitting the half-life and
@@ -53,28 +53,28 @@ plt.show()
 # import bilby
 # import numpy as np
 # import matplotlib.pyplot as plt
-#
+PyGRB
 # from bilby.core.likelihood import PoissonLikelihood
 # from bilby.core.prior import LogUniform
-#
+PyGRB
 # # A few simple setup steps
 # label = 'radioactive_decay'
 # outdir = 'outdir'
 # bilby.utils.check_directory_exists_and_if_not_mkdir(outdir)
-#
+PyGRB
 # # generate a set of counts per minute for n_init atoms of
 # # Polonium 214 in atto-moles with a half-life of 20 minutes
 # n_avogadro = 6.02214078e23
 # halflife = 20
 # atto = 1e-18
 # n_init = 1e-19 / atto
-#
-#
+PyGRB
+PyGRB
 # def decay_rate(delta_t, halflife, n_init):
 #     """
 #     Get the decay rate of a radioactive substance in a range of time intervals
 #     (in minutes). n_init is in moles.
-#
+PyGRB
 #     Parameters
 #     ----------
 #     delta_t: float, array-like
@@ -84,33 +84,33 @@ plt.show()
 #     n_init: int, float
 #         Initial nummber of atoms
 #     """
-#
+PyGRB
 #     times = np.cumsum(delta_t)
 #     times = np.insert(times, 0, 0.0)
-#
+PyGRB
 #     n_atoms = n_init * atto * n_avogadro
-#
+PyGRB
 #     rates = (np.exp(-np.log(2) * (times[:-1] / halflife)) -
 #              np.exp(- np.log(2) * (times[1:] / halflife))) * n_atoms / delta_t
-#
+PyGRB
 #     return rates
-#
-#
+PyGRB
+PyGRB
 # # Now we define the injection parameters which we make simulated data with
 # injection_parameters = dict(halflife=halflife, n_init=n_init)
-#
+PyGRB
 # # These lines of code generate the fake data. Note the ** just unpacks the
 # # contents of the injection_parameters when calling the model function.
 # sampling_frequency = 1
 # time_duration = 300
 # time = np.arange(0, time_duration, 1 / sampling_frequency)
 # delta_t = np.diff(time)
-#
+PyGRB
 # rates = decay_rate(delta_t, **injection_parameters)
 # # get radioactive counts
 # counts = np.random.poisson(rates)
 # theoretical = decay_rate(delta_t, **injection_parameters)
-#
+PyGRB
 # # We quickly plot the data to check it looks sensible
 # fig, ax = plt.subplots()
 # ax.semilogy(time[:-1], counts, 'o', label='data')
@@ -119,18 +119,18 @@ plt.show()
 # ax.set_ylabel('counts')
 # ax.legend()
 # fig.savefig('{}/{}_data.png'.format(outdir, label))
-#
+PyGRB
 # # Now lets instantiate a version of the Poisson Likelihood, giving it
 # # the time intervals, counts and rate model
 # likelihood = PoissonLikelihood(delta_t, counts, decay_rate)
-#
+PyGRB
 # # Make the prior
 # priors = dict()
 # priors['halflife'] = LogUniform(
 #     1e-5, 1e5, latex_label='$t_{1/2}$', unit='min')
 # priors['n_init'] = LogUniform(
 #     1e-25 / atto, 1e-10 / atto, latex_label='$N_0$', unit='attomole')
-#
+PyGRB
 # # And run sampler
 # result = bilby.run_sampler(
 #     likelihood=likelihood, priors=priors, sampler='Nestle',
