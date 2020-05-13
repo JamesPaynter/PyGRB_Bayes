@@ -1,4 +1,4 @@
-|AstroPy| |Coverage|
+|AstroPy| |Travis| |Coverage|
 
 PyGRB
 =====
@@ -46,6 +46,10 @@ Instructions on how to use the code.
 .. |AstroPy| image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
     :alt: astropy
+    
+.. |Travis| image:: https://travis-ci.com/JamesPaynter/PyGRB.svg?branch=master
+  :alt: Travis Badge
+  :target: https://travis-ci.com/JamesPaynter/PyGRB
     
 .. |Coverage| image:: https://img.shields.io/codecov/c/github/gh/JamesPaynter/PyGRB/master.svg?logo=codecov&logoColor=white&label=Coverage
     :target: https://codecov.io/gh/JamesPaynter/PyGRB/branches/master
