@@ -14,6 +14,7 @@ setuptools.setup(
     url='https://github.com/JamesPaynter/PyGRB',
     packages=setuptools.find_packages(),
     package_dir = {'PyGRB' : 'PyGRB'},
+    package_data={'PyGRB_Bayes': ['data/*']},
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: BSD 3-Clause License',
