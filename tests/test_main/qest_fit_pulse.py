@@ -3,12 +3,12 @@ import shutil
 
 
 
-from PyGRB_Bayes.main.fitpulse import PulseFitter
-from PyGRB_Bayes.backend.rate_functions import *
-from PyGRB_Bayes.backend.makemodels import create_model_dict
-from PyGRB_Bayes.backend.makemodels import create_model_from_key
-from PyGRB_Bayes.preprocess.simulated_grb import GRB_discsc, GRB_tte
-from PyGRB_Bayes.postprocess.plot_grb import GRBPlotter
+from PyGRB.main.fitpulse import PulseFitter
+from PyGRB.backend.rate_functions import *
+from PyGRB.backend.makemodels import create_model_dict
+from PyGRB.backend.makemodels import create_model_from_key
+from PyGRB.preprocess.simulated_grb import GRB_discsc, GRB_tte
+from PyGRB.postprocess.plot_grb import GRBPlotter
 
 
 class TestFredFit(unittest.TestCase):

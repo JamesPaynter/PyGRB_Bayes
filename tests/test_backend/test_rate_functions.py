@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import (assert_almost_equal, assert_equal, assert_allclose,
                            assert_array_almost_equal, assert_)
 
-from PyGRB_Bayes.backend.rate_functions import *
+from PyGRB.backend.rate_functions import *
 
 MIN_FLOAT = sys.float_info[3]
 

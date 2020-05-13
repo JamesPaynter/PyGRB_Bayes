@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=source
 set BUILDDIR=build
-set SPHINXPROJ=PyGRB_Bayes
+set SPHINXPROJ=PyGRB
 
 if "%1" == "" goto help
 

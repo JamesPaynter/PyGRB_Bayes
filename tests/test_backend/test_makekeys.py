@@ -1,5 +1,5 @@
 import unittest
-from PyGRB_Bayes.backend.makekeys import MakeKeys
+from PyGRB.backend.makekeys import MakeKeys
 
 class TestMakeKeys(unittest.TestCase):
 

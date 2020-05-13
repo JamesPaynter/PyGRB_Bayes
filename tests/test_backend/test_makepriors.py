@@ -5,7 +5,7 @@ from bilby.core.prior       import Uniform          as bilbyUniform
 from bilby.core.prior       import Constraint       as bilbyConstraint
 from bilby.core.prior       import LogUniform       as bilbyLogUniform
 
-from PyGRB_Bayes.backend.makepriors import MakePriors
+from PyGRB.backend.makepriors import MakePriors
 
 class TestMakePriors(unittest.TestCase):
 

@@ -3,8 +3,8 @@ import unittest
 
 from scipy.special import gammaln
 
-from PyGRB_Bayes.backend.makepriors import MakePriors
-from PyGRB_Bayes.backend.rateclass  import PoissonRate
+from PyGRB.backend.makepriors import MakePriors
+from PyGRB.backend.rateclass  import PoissonRate
 
 
 

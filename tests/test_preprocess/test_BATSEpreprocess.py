@@ -1,6 +1,6 @@
 import unittest
 
-from PyGRB_Bayes.preprocess.BATSEpreprocess import BATSESignal
+from PyGRB.preprocess.BATSEpreprocess import BATSESignal
 
 
 class TestBATSESignal(unittest.TestCase):

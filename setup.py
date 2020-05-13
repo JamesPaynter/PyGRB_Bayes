@@ -1,20 +1,19 @@
 import setuptools
 
-with open('README.md', 'r') as fh:
+with open('README.rst', 'r') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='PyGRB_Bayes-jpaynter',
+    name='PyGRB-jpaynter',
     version='0.0.1',
     author='James Paynter',
     author_email='jpaynter@student.unimelb.edu.au',
     description='Opens GRB FITS files, fits pulses to light-curves using Bilby.',
     long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/JamesPaynter/PyGRB_Bayes',
+    long_description_content_type='text/x-rst',
+    url='https://github.com/JamesPaynter/PyGRB',
     packages=setuptools.find_packages(),
-    package_dir = {'PyGRB_Bayes' : 'PyGRB_Bayes'},
-    package_data={ 'PyGRB_Bayes' : ['data/*', 'data/TTE_list_data/*']},
+    package_dir = {'PyGRB' : 'PyGRB'},
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: BSD 3-Clause License',
