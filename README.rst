@@ -1,4 +1,4 @@
-|AstroPy| |Travis| |Coverage|
+|Travis| |Coverage| |AstroPy| 
 
 PyGRB
 =====
