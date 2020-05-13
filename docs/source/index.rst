@@ -23,7 +23,11 @@ Welcome to PyGRB Bayes's documentation!
    :maxdepth: 4
    :caption: API Reference
 
-   modules
+   api/PyGRB_Bayes.backend
+   api/PyGRB_Bayes.fetch
+   api/PyGRB_Bayes.main
+   api/PyGRB_Bayes.postprocess
+   api/PyGRB_Bayes.preprocess
 
 Indices and tables
 ==================
