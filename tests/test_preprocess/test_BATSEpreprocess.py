@@ -57,7 +57,7 @@ class TestBATSESignal(unittest.TestCase):
     def test_BATSE_4B_catalogue(self):
         times = 'T90'
         test  = BATSESignal(self.burst,  datatype = self.datatype,
-                                        times = times, bgs = self.bgs)
+                                         times = times, bgs = self.bgs)
 
     def test_file_not_found(self):
         pass
