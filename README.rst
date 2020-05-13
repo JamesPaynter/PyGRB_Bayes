@@ -1,7 +1,7 @@
 |AstroPy|
 
-PyGRB Bayes
-============
+PyGRB
+=====
 .. inclusion-marker-one-liner-start
 A GRB light-curve analysis package.
 
