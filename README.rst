@@ -47,9 +47,9 @@ Instructions on how to use the code.
     :target: http://www.astropy.org/
     :alt: astropy
     
-.. |Travis| image:: https://travis-ci.com/JamesPaynter/PyGRB.svg?branch=master
+.. |Travis| image:: https://travis-ci.com/JamesPaynter/PyGRB_Bayes.svg?branch=master
   :alt: Travis Badge
-  :target: https://travis-ci.com/JamesPaynter/PyGRB
+  :target: https://travis-ci.com/JamesPaynter/PyGRB_Bayes
     
 .. |Coverage| image:: https://img.shields.io/codecov/c/github/gh/JamesPaynter/PyGRB/master.svg?logo=codecov&logoColor=white&label=Coverage
     :target: https://codecov.io/gh/JamesPaynter/PyGRB/branches/master
