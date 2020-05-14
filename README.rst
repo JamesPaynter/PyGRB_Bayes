@@ -43,6 +43,15 @@ Instructions on how to use the code.
 .. inclusion-marker-usage-end
 
 
+Coverage
+--------
+
+.. figure:: https://codecov.io/gh/JamesPaynter/PyGRB/branch/master/graphs/sunburst.svg
+    :width: 100%
+    :align: center
+    :alt: Codecov Sunburst
+
+
 .. |AstroPy| image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
     :alt: astropy
