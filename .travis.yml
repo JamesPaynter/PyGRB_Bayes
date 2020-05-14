@@ -24,7 +24,8 @@ before_install:
   - pip install -r requirements.txt
   - python setup.py install
   - pip install pytest pytest-cov
-  - pip install coverage
+  - pip install codecov
+  #- pip install coverage
 
 install:
   - python setup.py sdist bdist_wheel
@@ -36,3 +37,5 @@ after_success:
   - codecov
   #- curl -s https://codecov.io/bash | bash
   # https://github.com/codecov/codecov-bash/issues/94 codecov errors re: bash
+
+# https://github.com/codecov/example-python
