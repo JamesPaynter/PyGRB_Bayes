@@ -34,3 +34,4 @@ script:
 after_success:
   - codecov
   #- curl -s https://codecov.io/bash | bash
+  # https://github.com/codecov/codecov-bash/issues/94 codecov errors re: bash
