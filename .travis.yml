@@ -31,7 +31,7 @@ install:
   - python setup.py sdist bdist_wheel
 
 script:
-  - pytest --cov=./
+  - pytest --cov
 
 after_success:
   - codecov
