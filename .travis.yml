@@ -4,7 +4,6 @@ language: python
 notifications:
   email:
     recipients:
-      # Please don't email me.  Put your email here.
       - jpaynter@student.unimelb.edu.au
     on_success: change
     on_failure: always
@@ -21,24 +20,22 @@ matrix:
     #  language: generic # 'language: python' is an error on Travis CI macOS
 
 before_install:
-  # Before installing any packages, check that pip is up to date.
   - python -m pip install --upgrade pip setuptools wheel
   - pip install -r requirements.txt
   - python setup.py install
-  - pip install coverage
+  - pip install pytest pytest-cov
+  - pip install codecov
+  #- pip install coverage
 
 install:
-  # Remember how we said it was a good idea to keep everything in a requirements file?
   - python setup.py sdist bdist_wheel
-  #- python3 -m pip install -r requirements.txt
 
 script:
-  # If you were testing on your own machine, what command do you execute to run your code? Hint: Starts with `py`...
-  - pytest
+  - pytest --cov
 
-# If all the tests passed, update `codecov`. Ensures your coverage is ALWAYS relevant.
-# Comment out these lines once Travis is working and you have Codecov linked to GitHub.
 after_success:
   - codecov
-  #- bash <(curl -s https://codecov.io/bash)
-  - curl -s https://codecov.io/bash | bash
+  #- curl -s https://codecov.io/bash | bash
+  # https://github.com/codecov/codecov-bash/issues/94 codecov errors re: bash
+
+# https://github.com/codecov/example-python
