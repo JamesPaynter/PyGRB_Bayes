@@ -51,6 +51,6 @@ Instructions on how to use the code.
   :alt: Travis Badge
   :target: https://travis-ci.com/JamesPaynter/PyGRB
     
-.. |Coverage| image:: https://img.shields.io/codecov/c/github/gh/JamesPaynter/PyGRB/master.svg?logo=codecov&logoColor=white&label=Coverage
-    :target: https://codecov.io/gh/JamesPaynter/PyGRB/branches/master
+.. |Coverage| image:: https://codecov.io/gh/JamesPaynter/PyGRB/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/JamesPaynter/PyGRB
     :alt: CodeCov - Coverage Status
