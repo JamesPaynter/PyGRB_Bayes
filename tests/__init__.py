@@ -1,3 +1,6 @@
+# NEED THIS INIT FOR PYTEST --COV TO GENERATE A PROPER REPORT
+
+
 # Found the answer:
 #
 # DO NOT put a __init__.py file in a folder containing TESTS if
