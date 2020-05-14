@@ -26,7 +26,7 @@ Pulse types
 Description of GRB pulse phenomenology.
 
 .. figure:: docs/source/images/T6630F.PNG
-    :width: 100%
+    :width: 80%
     :align: center
     :alt: a GRB light-curve
 
@@ -47,9 +47,13 @@ Coverage
 --------
 
 .. figure:: https://codecov.io/gh/JamesPaynter/PyGRB/branch/master/graphs/sunburst.svg
-    :width: 100%
+    :width: 40%
     :align: center
     :alt: Codecov Sunburst
+
+
+
+
 
 
 .. |AstroPy| image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
