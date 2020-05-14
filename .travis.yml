@@ -32,6 +32,4 @@ script:
   - pytest
 
 after_success:
-  - coverage
-  #- bash <(curl -s https://codecov.io/bash)
   - curl -s https://codecov.io/bash | bash
