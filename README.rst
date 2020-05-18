@@ -25,8 +25,13 @@ Pulse types
 ------------
 Description of GRB pulse phenomenology.
 
+.. math::
+
+   $I(t) = A \exp{ - \\xi \left( \frac{t - \Delta}{\tau} + \frac{\tau}{t-\Delta} \right)}$
+
+
 .. figure:: docs/source/images/T6630F.PNG
-    :width: 100%
+    :width: 80%
     :align: center
     :alt: a GRB light-curve
 
@@ -43,6 +48,19 @@ Instructions on how to use the code.
 .. inclusion-marker-usage-end
 
 
+Coverage
+--------
+
+.. figure:: https://codecov.io/gh/JamesPaynter/PyGRB/branch/master/graphs/sunburst.svg
+    :width: 40%
+    :align: center
+    :alt: Codecov Sunburst
+
+
+
+
+
+
 .. |AstroPy| image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
     :target: http://www.astropy.org/
     :alt: astropy
@@ -51,6 +69,6 @@ Instructions on how to use the code.
   :alt: Travis Badge
   :target: https://travis-ci.com/JamesPaynter/PyGRB
     
-.. |Coverage| image:: https://img.shields.io/codecov/c/github/gh/JamesPaynter/PyGRB/master.svg?logo=codecov&logoColor=white&label=Coverage
-    :target: https://codecov.io/gh/JamesPaynter/PyGRB/branches/master
+.. |Coverage| image:: https://codecov.io/gh/JamesPaynter/PyGRB/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/JamesPaynter/PyGRB
     :alt: CodeCov - Coverage Status
