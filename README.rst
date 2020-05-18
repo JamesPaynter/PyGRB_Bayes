@@ -27,7 +27,7 @@ Description of GRB pulse phenomenology.
 
 .. math::
 
-   $I(t) = A \exp{ - \xi \left( \frac{t - \Delta}{\tau} + \frac{\tau}{t-\Delta} \right)}$
+   $I(t) = A \exp{ - \\xi \left( \frac{t - \Delta}{\tau} + \frac{\tau}{t-\Delta} \right)}$
 
 
 .. figure:: docs/source/images/T6630F.PNG
