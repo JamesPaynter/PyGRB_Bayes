@@ -1,6 +1,9 @@
 Welcome to PyGRB's documentation!
 =================================
 
+Instructions on how to use the package are provided in User Documentation
+
+
 * :ref:`user-docs`
 * :ref:`api-docs`
 
@@ -8,7 +11,7 @@ Welcome to PyGRB's documentation!
 
 .. toctree::
    :maxdepth: 3
-   :caption: Documentation:
+   :caption: User Documentation:
 
    user/readme
    user/pulses
