@@ -1,10 +1,5 @@
-.. PyGRB documentation master file, created by
-   sphinx-quickstart on Mon May 11 10:17:16 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to PyGRB's documentation!
-=======================================
+=================================
 
 * :ref:`user-docs`
 * :ref:`api-docs`
@@ -15,7 +10,11 @@ Welcome to PyGRB's documentation!
    :maxdepth: 3
    :caption: Documentation:
 
-   readme
+   user/readme
+   user/pulses
+   user/sampling
+   user/analysis
+
 
 .. _api-docs:
 
