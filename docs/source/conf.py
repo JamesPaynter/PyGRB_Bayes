@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'PyGRB_Bayes'
+project = 'PyGRB'
 copyright = '2019-2020, James Paynter'
 author = 'James Paynter'
 
@@ -110,7 +110,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'PyGRB_Bayesdoc'
+htmlhelp_basename = 'PyGRBdoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -137,7 +137,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'PyGRB_Bayes.tex', 'PyGRB\\_Bayes Documentation',
+    (master_doc, 'PyGRB.tex', 'PyGRB\ Documentation',
      'James Paynter', 'manual'),
 ]
 
@@ -147,7 +147,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pygrb_bayes', 'PyGRB_Bayes Documentation',
+    (master_doc, 'PyGRB', 'PyGRB Documentation',
      [author], 1)
 ]
 
@@ -158,8 +158,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'PyGRB_Bayes', 'PyGRB_Bayes Documentation',
-     author, 'PyGRB_Bayes', 'A GRB light-curve analysis package.',
+    (master_doc, 'PyGRB', 'PyGRB Documentation',
+     author, 'PyGRB', 'A GRB light-curve analysis package.',
      'Miscellaneous'),
 ]
 
