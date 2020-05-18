@@ -1,5 +1,6 @@
-|Travis| |Coverage| |AstroPy| 
+|Travis| |Coverage| |Docs| |AstroPy| 
 
+=====
 PyGRB
 =====
 .. inclusion-marker-one-liner-start
@@ -73,3 +74,7 @@ Coverage
 .. |Coverage| image:: https://codecov.io/gh/JamesPaynter/PyGRB/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/JamesPaynter/PyGRB
     :alt: CodeCov - Coverage Status
+    
+.. |Docs| image:: https://readthedocs.org/projects/pygrb/badge/?version=latest
+    :target: https://pygrb.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
