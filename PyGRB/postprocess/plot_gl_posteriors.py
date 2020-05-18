@@ -151,7 +151,7 @@ class GravLens(AbstractBasePlot):
         m = self._return_mass(time, mag)
         # cuts off negative masses, which 'exist' for mag ratio greater than 1.
         m = m[m > 0]
-        print(colour, np.percentile(m, q = [15.86, 50, 84.14]))
+        print(colour, np.percentile(m, q = [5, 50, 95]))
         m = m[m < 2e5]
         density = stats.gaussian_kde(m)
         xs = np.geomspace(min(m), max(m), 100)
