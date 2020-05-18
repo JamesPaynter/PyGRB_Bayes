@@ -1,4 +1,6 @@
 |Travis| |Coverage| |Docs| |AstroPy| 
+
+=====
 PyGRB
 =====
 .. inclusion-marker-one-liner-start
