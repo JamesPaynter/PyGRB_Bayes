@@ -33,7 +33,8 @@ Description of GRB pulse phenomenology.
 
 
 .. figure:: docs/source/images/T6630F.PNG
-    :scale: 50%
+    :figwidth: 50%
+    :width: 80%
     :align: center
     :alt: a GRB light-curve
 
