@@ -56,8 +56,7 @@ Under the Hood
 
 
 .. figure:: docs/source/images/pulse_fit_animation.gif
-    :figwidth: 5%
-    :width: 5%
+    :scale: 5%
     :align: center
     :alt: a GRB light-curve fit animation
 
