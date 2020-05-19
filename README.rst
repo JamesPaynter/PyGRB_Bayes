@@ -48,6 +48,23 @@ Usage
 ------
 Instructions on how to use the code.
 
+
+
+  .. code-block:: JSON
+
+    {
+      "key": "value"
+    }
+
+  .. code-block:: python
+
+    pygments_style = 'sphinx'
+
+
+  .. code-block:: ruby
+
+    print "Hello, World!\n"
+
 .. inclusion-marker-usage-end
 
 
