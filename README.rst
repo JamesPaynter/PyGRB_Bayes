@@ -32,7 +32,7 @@ Description of GRB pulse phenomenology.
     :alt: FRED eqn: $I(t) = A \exp{ - \xi \left( \frac{t - \Delta}{\tau} + \frac{\tau}{t-\Delta} \right)}$
 
 
-.. figure:: docs/source/images/T6630F.PNG
+.. figure:: docs/source/images/T6630F.png
     :figwidth: 50%
     :width: 80%
     :align: center
