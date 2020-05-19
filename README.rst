@@ -49,21 +49,11 @@ Usage
 Instructions on how to use the code.
 
 
-
-  .. code-block:: JSON
-
-    {
-      "key": "value"
-    }
-
   .. code-block:: python
 
-    pygments_style = 'sphinx'
+     print("Hello, World!\n")
 
 
-  .. code-block:: ruby
-
-    print "Hello, World!\n"
 
 .. inclusion-marker-usage-end
 
@@ -73,7 +63,6 @@ Under the Hood
 
 
 .. image:: docs/source/images/pulse_fit_animation.gif
-    :scale: 5%
     :align: center
     :alt: a GRB light-curve fit animation
 
