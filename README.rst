@@ -27,13 +27,13 @@ Pulse types
 Description of GRB pulse phenomenology.
 
 .. figure:: docs/source/images/equations/FRED.gif
-    :width: 80%
+    :width: 100%
     :align: center
     :alt: FRED eqn: $I(t) = A \exp{ - \xi \left( \frac{t - \Delta}{\tau} + \frac{\tau}{t-\Delta} \right)}$
 
 
 .. figure:: docs/source/images/T6630F.PNG
-    :width: 80%
+    :width: 60%
     :align: center
     :alt: a GRB light-curve
 
@@ -54,7 +54,7 @@ Coverage
 --------
 
 .. figure:: https://codecov.io/gh/JamesPaynter/PyGRB/branch/master/graphs/sunburst.svg
-    :width: 40%
+    :width: 20%
     :align: center
     :alt: Codecov Sunburst
 
