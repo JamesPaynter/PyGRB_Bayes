@@ -17,6 +17,9 @@ def gaussian_pulse(times, start, scale, sigma):
 
 
 def FRED_pulse(times, start, scale, tau, xi):
+    """
+
+    """
     return np.where(times - start <= 0, MIN_FLOAT, scale * np.exp( - xi * (
     (tau / np.where(times - start <= 0, times - start - MIN_FLOAT, times - start + MIN_FLOAT))
     + ((times - start) / (tau + MIN_FLOAT)) - 2.)))

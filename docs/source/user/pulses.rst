@@ -5,6 +5,8 @@ A standard gamma-ray burst looks like
 
 
 
+
+
 A simple pulse parameterisation one might imagine is a Gaussian, like those used to model emission lines in eg. quasar spectra.
 The equation for a Gaussian pulse is
 
