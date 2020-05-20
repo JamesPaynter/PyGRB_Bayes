@@ -1,7 +1,29 @@
-PyGRB
-=====
+Sampling
+========
 
-.. include::
-  ../../README.rst
-  :start-after: inclusion-marker-what-it-does-start
-  :end-before: inclusion-marker-what-it-does-end
+A short overview of nested sampling.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Further reading
+---------------
+
+
+
+https://dynesty.readthedocs.io/en/latest/overview.html
+
+https://dynesty.readthedocs.io/en/latest/dynamic.html
+
+https://lscsoft.docs.ligo.org/bilby/basics-of-parameter-estimation.html

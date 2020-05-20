@@ -91,8 +91,6 @@ class BATSESignal(SignalFramework):
             self.counts = np.array([np.multiply(self.rates[:, i],
                     self.bin_right - self.bin_left) for i in range(4)]).T
             self.count_err = np.sqrt(self.counts)
-            # could delete this line
-            # self.rates_max = self.data['RATES'][:, :].max()
             self.t90_st, self.end = self.bin_left[0], self.bin_right[-1]
             try:
                 (self.t90_st, self.end) = times
@@ -116,7 +114,10 @@ class BATSESignal(SignalFramework):
                     print(fnf_error)
 
     def _read_T90_table(self):
-        """ Potentially deprecated now information is stored in 4B.csv file.
+        """ Opens the BATSE T90 bursts as a pandas object. Searches for the
+            current burst's trigger, T90, T90 error, and T90 start time.
+            Throws an exception if the burst is not found in the T90 table.
+            (i.e. no T90 exists for this burst).
         """
         table = self._open_T90_excel()
         self.burst_list     = table['trigger_num']

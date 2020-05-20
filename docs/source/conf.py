@@ -40,14 +40,21 @@ release = '0.0.1'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.coverage',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.viewcode',
+    'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
 ]
 
 # use numpy docstring
 napoleon_google_docstring = False
+
+# Intersphinx configuration
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
+                       'numpy': ('https://docs.scipy.org/doc/numpy', None),
+                       'matplotlib': ('https://matplotlib.org', None)}
 
 
 # Add any paths that contain templates here, relative to this directory.
