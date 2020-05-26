@@ -32,6 +32,12 @@ def load_973(sampler = 'dynesty', nSamples = 100):
                 priors_td_lo = 0,  priors_td_hi = 30)
     return test
 
+def load_7475(sampler = 'dynesty', nSamples = 200):
+    test = PulseFitter(8099, times = (-2, 60),
+                datatype = 'discsc', nSamples = nSamples, sampler = sampler,
+                priors_pulse_start = -5, priors_pulse_end = 30)
+    return test
+
 def load_8099(sampler = 'dynesty', nSamples = 200):
     test = PulseFitter(8099, times = (2, 15),
                 datatype = 'discsc', nSamples = nSamples, sampler = sampler,
@@ -57,16 +63,17 @@ def load_3770_b(times, sampler = 'dynesty', nSamples = 100):
 
 
 def fit_one_fred():
-    GRB = PulseFitter(6630, times = (-3, 20),
+    GRB = PulseFitter(7475, times = (-2, 60), p_type = 'docs',
                 datatype = 'discsc', nSamples = 200, sampler = 'nestle',
-                priors_pulse_start = 0, priors_pulse_end = 15)
-    keys = ['Fs', 'F']
+                priors_pulse_start = -5, priors_pulse_end = 30)
+    keys = ['F']
     model_dict = {}
     for key in keys:
         model_dict[key] = create_model_from_key(key)
     models = [model for key, model in model_dict.items()]
     for model in models:
-        GRB.main_multi_channel(channels = [0, 1, 2, 3], model = model)
+        # GRB.main_multi_channel(channels = [0, 1, 2, 3], model = model)
+        GRB.get_residuals(channels = [0, 1, 2, 3], model = model)
 
 
 if __name__ == '__main__':

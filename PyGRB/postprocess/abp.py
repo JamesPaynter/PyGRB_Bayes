@@ -10,11 +10,22 @@ class AbstractBasePlot(object):
             # specific to single_channel_plot
             self.plot_dict['heights']   = [3, 1] + [0.6]
             # specific to single_channel_plot
-            n_axes  = 3
+            self.plot_dict['n_axes']    = 3
             self.plot_dict['width']     = 8
             self.plot_dict['p_type']    = 'presentation'
             self.plot_dict['linewidth'] = 1.0
             self.plot_dict['font_size'] = 22
+            self.plot_dict['ext']       = 'png'
+
+        elif plot_type == 'docs':
+            # specific to single_channel_plot
+            self.plot_dict['heights']   = [1.5, 0.5] + [0.3]
+            # specific to single_channel_plot
+            self.plot_dict['n_axes']    = 3
+            self.plot_dict['width']     = 4
+            self.plot_dict['p_type']    = 'docs'
+            self.plot_dict['linewidth'] = 0.6
+            self.plot_dict['font_size'] = 14
             self.plot_dict['ext']       = 'png'
 
         elif plot_type == 'paper_one_col':

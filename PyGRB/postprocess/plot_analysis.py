@@ -30,8 +30,8 @@ class PlotPulseFit(AbstractBasePlot):
                 self.plot_multi_channel_tte(*args, **kwargs)
             else:
                 self.plot_single_channel_tte(*args, **kwargs)
-    @staticmethod
-    def plot_single_channel(x, y, y_err, y_cols, y_fit, channels,**kwargs):
+
+    def plot_single_channel(self, x, y, y_err, y_cols, y_fit, channels,**kwargs):
         posterior_draws  = kwargs.get('posterior_draws')
         nDraws  = kwargs.get('nDraws')
         fstring = kwargs.get('fstring')
@@ -40,53 +40,26 @@ class PlotPulseFit(AbstractBasePlot):
         widths  = kwargs.get('widths')
         p_type  = kwargs.get('p_type')
 
-        n_axes  = 1 + 3 + 1
-
-        if p_type == 'presentation':
-            heights = [3, 1] + [0.6]
-            n_axes  = 3
-            print('WIDTH CHANGED FROM 3.321 TO 8 FOR PRESENTATIONS')
-            width   = 8
-            plot_dict = dict()
-            plot_dict['linewidth'] = 1.0
-
-        elif p_type == 'paper':
-            heights = [3, 1, 3, 3] + [0.6]
-            width   = 3.321
-            plot_dict = dict()
-            plot_dict['linewidth'] = 0.4
-
-        elif p_type == 'thesis':
-            print("Not yet implemented, try 'paper'.")
-
-        elif p_type == 'animation':
-            print("Not yet implemented, try 'presentation'.")
-
-        else:
-            print('Please specify the purpose of this plot')
-
-
         # arbitrary scaled height
-        height  = (width / 1.8) * 2
+        height  = (self.plot_dict['width'] / 1.8) * 2
         # ratio of the heights of each of the subpanels
         # 5 for main to 1 per residual seems to work well (for 4 or 1 channel)
 
         # heights = [5] + ([1 for i in range(n_axes - 2)]) + [0.6]
         # constrained_layout = False -> don't mess with my placing
-        fig     = plt.figure(figsize = (width, height), constrained_layout=False)
+        fig     = plt.figure(   figsize = (self.plot_dict['width'], height),
+                                constrained_layout = False)
         # add an extra column on the left for the main axes labels
-        spec    = gridspec.GridSpec(ncols=2, nrows=n_axes, figure=fig,
-                                    height_ratios=heights,
+        spec    = gridspec.GridSpec(ncols=2, nrows = self.plot_dict['n_axes'],
+                                    figure=fig,
+                                    height_ratios = self.plot_dict['heights'],
                                     width_ratios=[0.05, 0.95],
                                     hspace=0.0, wspace=0.0)
         # axes label on the LHS of plot
-        ax      = fig.add_subplot(spec[0:2, 0], frameon = False)
-
-        # HACKED
-        ax2     = fig.add_subplot(spec[2, 0], frameon = False)
-        ax3     = fig.add_subplot(spec[3, 0], frameon = False)
-        # HACKED
-
+        ax = fig.add_subplot(spec[0:2, 0], frameon = False)
+        if self.plot_dict['n_axes'] > 3:
+            ax2 = fig.add_subplot(spec[2, 0], frameon = False)
+            ax3 = fig.add_subplot(spec[3, 0], frameon = False)
 
         # main plot axes
         fig_ax1 = fig.add_subplot(spec[0, 1])
@@ -95,21 +68,18 @@ class PlotPulseFit(AbstractBasePlot):
 
         k = [channels]
         fig_ax1.plot(   x, y, c = y_cols,
-                        # drawstyle='steps-mid', linewidth = 1)
-                        # HACKED
-                        drawstyle='steps-mid', linewidth = 0.4)
+                        drawstyle='steps-mid',
+                        linewidth = self.plot_dict['linewidth'])
         # fig_ax1.plot(x, y_fit, 'k', linewidth = 1)
-        # HACKED
-        fig_ax1.plot(x, y_fit, 'k', linewidth = 0.4)
+        # # HACKED
+        fig_ax1.plot(x, y_fit, 'k', linewidth = self.plot_dict['linewidth'])
         if posterior_draws is not None:
             drawLines = []
             for ii in range(nDraws):
                 drawLines.append(x)
                 drawLines.append(posterior_draws[:,ii])
             d = {'c': 'k', 'linewidth' : 0.5, 'alpha' : 0.02}
-            kwogs = [d for i in range(nDraws)]
             fig_ax1.plot(*drawLines, **d)
-            # fig_ax1.plot(*drawLines, 'k', linewidth = 0.5, alpha = 0.02)
 
         fig_ax1.fill_between(x, y + y_err, y - y_err, step = 'mid',
                                 color = y_cols, alpha = 0.15)
@@ -118,7 +88,7 @@ class PlotPulseFit(AbstractBasePlot):
         ticks = ticks[1:] if ticks[0] == 0 else ticks
         fig_ax1.set_yticks(ticks)
 
-        for i in range(n_axes - 2):
+        for i in range(self.plot_dict['n_axes'] - 2):
             axes_list.append(fig.add_subplot(spec[i+1, 1]))
         # get the residual
         difference = y - y_fit
@@ -143,41 +113,32 @@ class PlotPulseFit(AbstractBasePlot):
         ticks = axes_list[0].get_yticks()
         ticks = [int(tick) for tick in ticks if tick >= 0]
         ticks = ticks[0:2] if len(ticks) > 2 else ticks
-        axes_list[0].set_yticks(ticks)
-
-
-        #  HACKEDDDDD
-        PlotPulseFit._make_correlogram(axes_list[1], x, difference)
-        axes_list[1].set_xlim(x[0], x[-1])
-
+        fig_ax1.set_xlim(x[0], x[-1])
         axes_list[0].set_xlim(x[0], x[-1])
-
-
+        axes_list[0].set_yticks(ticks)
         ax.tick_params(labelcolor='none', top=False,
                         bottom=False, left=False, right=False)
-        ax2.tick_params(labelcolor='none', top=False,
-                        bottom=False, left=False, right=False)
-        ax3.tick_params(labelcolor='none', top=False,
-                        bottom=False, left=False, right=False)
         ax.set_ylabel('counts / sec')
-        # HACKED
-        ax2.set_ylabel('Correlogram')
-        ax3.set_ylabel('Probability Plot')
-        # HACKED
+        if self.plot_dict['n_axes'] > 3:
+            PlotPulseFit._make_correlogram(axes_list[1], x, difference)
+            PlotPulseFit._make_PP_plot(axes_list[2], difference)
+            axes_list[1].set_xlim(x[0], x[-1])
+            ax2.tick_params(labelcolor='none', top=False,
+                            bottom=False, left=False, right=False)
+            ax3.tick_params(labelcolor='none', top=False,
+                            bottom=False, left=False, right=False)
+            ax2.set_ylabel('Correlogram')
+            ax3.set_ylabel('Probability Plot')
         plt.subplots_adjust(left=0.16)
         plt.subplots_adjust(right=0.98)
         plt.subplots_adjust(top=0.98)
         plt.subplots_adjust(bottom=0.05)
 
-        PlotPulseFit._make_PP_plot(axes_list[2], difference)
-
-        fig_ax1.set_xlim(x[0], x[-1])
-
         if p_type == 'animation':
-            plot_name=f'{outdir}/anim/{fstring}_result_{clabels[channels[0]]}_rates.png'
+            plot_name=f'{outdir}/anim/{fstring}_result_{clabels[channels[0]]}_rates.{self.plot_dict["ext"]}'
         else:
-            plot_name=f'{outdir}/{fstring}_result_{clabels[channels[0]]}_rates.pdf'
-        fig.savefig(plot_name)
+            plot_name=f'{outdir}/{fstring}_result_{clabels[channels[0]]}_rates.{self.plot_dict["ext"]}'
+        fig.savefig(plot_name, dpi = 200)
         plt.close(fig)
 
     @staticmethod
@@ -255,8 +216,8 @@ class PlotPulseFit(AbstractBasePlot):
         axes.set_xlabel('time since trigger (s)')
         axes.legend()
 
-    @staticmethod
-    def plot_multi_channel(x, y, y_err, y_cols, y_offsets, y_fit, channels, **kwargs):
+    def plot_multi_channel(self,    x, y, y_err, y_cols, y_offsets, y_fit,
+                                    channels, **kwargs):
         fstring = kwargs.get('fstring')
         clabels = kwargs.get('clabels')
         outdir  = kwargs.get('outdir')
@@ -289,42 +250,41 @@ class PlotPulseFit(AbstractBasePlot):
         axes_list = []
 
         for i, k in enumerate(channels):
-            # adds offsets if there is more than one channel
-            if y_offsets:
-                line_label = f'offset {y_offsets[k]:+,}'
-                fig_ax1.plot(   x, y[:,k] + y_offsets[k], c = y_cols[k],
-                                drawstyle='steps-mid', linewidth = 0.4,
-                                label = line_label)
-                if y_fit is not None:
-                    fig_ax1.plot(x, y_fit[:,k] + y_offsets[k], 'k', linewidth = 0.4)
-                fig_ax1.fill_between(x, y[:,k] + y_offsets[k] + y_err[:,k],
-                                        y[:,k] + y_offsets[k] - y_err[:,k],
-                                        step = 'mid', color = y_cols[k],
-                                        alpha = 0.15)
-                if posterior_draws is not None:
-                    drawLines = []
-                    for ii in range(nDraws):
-                        drawLines.append(x)
-                        drawLines.append(posterior_draws[:,ii,i]+ y_offsets[k])
-                    d = {'c': 'k', 'linewidth' : 0.5, 'alpha' : 0.02}
-                    kwogs = [d for i in range(nDraws)]
-                    fig_ax1.plot(*drawLines, **d)
-            else:
-                fig_ax1.plot(   x, y[:,k], c = y_cols[k],
-                                drawstyle='steps-mid', linewidth = 0.4)
-                if y_fit is not None:
-                    fig_ax1.plot(x, y_fit, 'k', linewidth = 0.4)
-                #, label = plot_legend)
-                fig_ax1.fill_between(x, y[:,k] + y_err[:,k], y[:,k] - y_err[:,k], step = 'mid',
-                                        color = y_cols[k], alpha = 0.15)
-                if posterior_draws is not None:
-                    drawLines = []
-                    for ii in range(nDraws):
-                        drawLines.append(x)
-                        drawLines.append(posterior_draws[:,ii,i])
-                    d = {'c': 'k', 'linewidth' : 0.5, 'alpha' : 0.02}
-                    kwogs = [d for i in range(nDraws)]
-                    fig_ax1.plot(*drawLines, **d)
+            if type(y_offsets) is not np.ndarray:
+                y_offsets = np.zeros(4)
+            line_label = f'offset {y_offsets[k]:+,}'
+            fig_ax1.plot(   x, y[:,k] + y_offsets[k], c = y_cols[k],
+                            drawstyle='steps-mid', linewidth = 0.4,
+                            label = line_label)
+            if y_fit is not None:
+                fig_ax1.plot(x, y_fit[:,k] + y_offsets[k], 'k', linewidth = 0.4)
+            fig_ax1.fill_between(x, y[:,k] + y_offsets[k] + y_err[:,k],
+                                    y[:,k] + y_offsets[k] - y_err[:,k],
+                                    step = 'mid', color = y_cols[k],
+                                    alpha = 0.15)
+            if posterior_draws is not None:
+                drawLines = []
+                for ii in range(nDraws):
+                    drawLines.append(x)
+                    drawLines.append(posterior_draws[:,ii,i] + y_offsets[k])
+                d = {'c': 'k', 'linewidth' : 0.5, 'alpha' : 0.02}
+                fig_ax1.plot(*drawLines, **d)
+            # else:
+            #     fig_ax1.plot(   x, y[:,k], c = y_cols[k],
+            #                     drawstyle='steps-mid', linewidth = 0.4)
+            #     if y_fit is not None:
+            #         fig_ax1.plot(x, y_fit, 'k', linewidth = 0.4)
+            #     #, label = plot_legend)
+            #     fig_ax1.fill_between(x, y[:,k] + y_err[:,k], y[:,k] - y_err[:,k], step = 'mid',
+            #                             color = y_cols[k], alpha = 0.15)
+            #     if posterior_draws is not None:
+            #         drawLines = []
+            #         for ii in range(nDraws):
+            #             drawLines.append(x)
+            #             drawLines.append(posterior_draws[:,ii,i])
+            #         d = {'c': 'k', 'linewidth' : 0.5, 'alpha' : 0.02}
+            #         kwogs = [d for i in range(nDraws)]
+            #         fig_ax1.plot(*drawLines, **d)
             # append another axes to the residual list
             axes_list.append(fig.add_subplot(spec[i+1, 1]))
             # get the residual
@@ -356,13 +316,16 @@ class PlotPulseFit(AbstractBasePlot):
         plt.subplots_adjust(bottom=0.05)
 
         fig_ax1.ticklabel_format(axis = 'y', style = 'sci')
-        if y_offsets:
+        if y_offsets.any() > 0:
             fig_ax1.legend()
 
         fig_ax1.set_xlim(x[0], x[-1])
+        if self.plot_dict['p_type'] == 'animation':
+            plot_name=f'{outdir}/anim/{fstring}_rates.{self.plot_dict["ext"]}'
+        else:
+            plot_name=f'{outdir}/{fstring}_rates.{self.plot_dict["ext"]}'
         if not return_axes:
-            plot_name = f'{outdir}/{fstring}_rates.pdf'
-            fig.savefig(plot_name)
+            fig.savefig(plot_name, dpi = 200)
             plt.close(fig)
         else:
             return fig_ax1

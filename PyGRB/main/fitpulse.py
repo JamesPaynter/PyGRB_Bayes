@@ -81,6 +81,7 @@ class PulseFitter(Admin, EvidenceTables):
         # intialise dict of models
         self.models = {}
         self.offsets = None
+        self.p_type  = kwargs.get('p_type')
         self.directory_label  = kwargs.get('directory_label')
         self.overwrite_priors = kwargs.get('overwrite_priors')
 
@@ -290,7 +291,7 @@ class PulseFitter(Admin, EvidenceTables):
             rates_fit_i = posterior_draws_median / widths
             rates_err_i = np.sqrt(self.GRB.counts[:,i]) / widths
             strings['widths'] = widths
-            strings['p_type'] = 'paper'
+            strings['p_type'] = self.p_type
             posterior_draws   = posterior_draws / widths[:,None]
             posterior_lines[:,:,i] = posterior_draws[:,
                             np.random.randint(p_chain_len, size = nDraws)]
@@ -337,7 +338,7 @@ class PulseFitter(Admin, EvidenceTables):
         if model['lens']:
                 GravLens(   fstring = self.fstring,
                             outdir  = self.outdir,
-                            p_type  = 'paper_two_col', **kwargs)
+                            p_type  = self.p_type, **kwargs)
 
 if __name__ == '__main__':
     pass
